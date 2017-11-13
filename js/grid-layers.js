@@ -1,17 +1,10 @@
-/* global Point, Rectangle, Layer */
+/* global Point, Rectangle, Layer, LayerManager */
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
-const layerManager = {
-  layers: [],
-  currentLayer: undefined,
-  selection: {
-    active: false,
-    rect: new Rectangle()
-  }
-};
+const layerManager = new LayerManager();
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
@@ -38,6 +31,13 @@ function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
   });
 }
 
+function update() {
+  if (layerManager.layersChanged) {
+    console.log('update layer thingy');
+    layerManager.layersChanged = false;
+  }
+}
+
 function render() {
   ctx.save();
   ctx.fillStyle = 'rgb(200, 200, 200)';
@@ -60,7 +60,9 @@ function render() {
   ctx.restore();
 }
 
+
 function mainLoop() {
+  update();
   render();
   requestAnimationFrame(mainLoop);
 }
@@ -74,10 +76,7 @@ canvas.addEventListener('mousedown', event => {
 
 document.body.addEventListener('mouseup', event => {
   layerManager.selection.active = false;
-  const layer = new Layer(...layerManager.selection.rect);
-  layer.subdivisions = 3;
-  layerManager.layers.push(layer);
-
+  layerManager.addLayer(...layerManager.selection.rect, 3);
 });
 
 canvas.addEventListener('mousemove', event => {
