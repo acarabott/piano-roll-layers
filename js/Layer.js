@@ -5,9 +5,11 @@ class Layer {
     this.width = width;
     this.height = height;
     this.subdivision = 1;
+    this.active = true;
   }
 
   render(ctx) {
+    if (!this.active) { return; }
     ctx.save();
     ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
     // ctx.strokeRect(this.x, this.y, this.width, this.height);

@@ -5,6 +5,9 @@ canvas.height = 400;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 const layerManager = new LayerManager();
+const controls = document.createElement('div');
+controls.id = 'controls';
+document.body.appendChild(controls);
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
@@ -33,7 +36,8 @@ function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
 
 function update() {
   if (layerManager.layersChanged) {
-    console.log('update layer thingy');
+    const layerList = layerManager.list;
+    controls.appendChild(layerList);
     layerManager.layersChanged = false;
   }
 }
@@ -76,7 +80,10 @@ canvas.addEventListener('mousedown', event => {
 
 document.body.addEventListener('mouseup', event => {
   layerManager.selection.active = false;
-  layerManager.addLayer(...layerManager.selection.rect, 3);
+
+  if (event.srcElement === canvas) {
+    layerManager.addLayer(...layerManager.selection.rect, 3);
+  }
 });
 
 canvas.addEventListener('mousemove', event => {
