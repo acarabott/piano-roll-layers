@@ -99,7 +99,10 @@ document.body.addEventListener('mouseup', event => {
   layerManager.selection.active = false;
 
   if (event.srcElement === canvas) {
-    layerManager.addLayer(...layerManager.selection.rect, 3);
+    const selRect = layerManager.selection.rect;
+    if (selRect.width > 0 && selRect.height > 0) {
+      layerManager.addLayer(...selRect, 3);
+    }
   }
 });
 
