@@ -1,14 +1,26 @@
-/* global Rectangle */
+/* global Point, Rectangle, Layer */
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
+const layerManager = {
+  layers: [],
+  currentLayer: undefined,
+  selection: {
+    active: false,
+    rect: new Rectangle()
+  }
+};
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
     func(i);
   }
+}
+
+function constrain(val, min=0, max=1.0) {
+  return Math.min(Math.min(val, max), min);
 }
 
 function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
@@ -26,7 +38,6 @@ function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
   });
 }
 
-
 function render() {
   ctx.save();
   ctx.fillStyle = 'rgb(200, 200, 200)';
@@ -34,19 +45,47 @@ function render() {
 
   const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
   renderPiano(ctx, keyRect, 12);
-  const patternRect = new Rectangle(keyRect.br[0],
+  const patternRect = new Rectangle(keyRect.br.x,
                                     keyRect.y,
                                     canvas.width - keyRect.width,
                                     keyRect.height);
   renderPiano(ctx, patternRect, 12, 0.2);
 
+  layerManager.layers.forEach(layer => layer.render(ctx));
+
+  if (layerManager.selection.active) {
+    ctx.strokeStyle = '#000';
+    ctx.strokeRect(...layerManager.selection.rect);
+  }
   ctx.restore();
 }
 
 function mainLoop() {
   render();
-  // requestAnimationFrame(mainLoop);
+  requestAnimationFrame(mainLoop);
 }
 
+canvas.addEventListener('mousedown', event => {
+  layerManager.selection.active = true;
+  const point = new Point(event.offsetX, event.offsetY);
+  layerManager.selection.rect.tl = point;
+  layerManager.selection.rect.br = point;
+});
+
+document.body.addEventListener('mouseup', event => {
+  layerManager.selection.active = false;
+  const layer = new Layer(...layerManager.selection.rect);
+  layer.subdivisions = 3;
+  layerManager.layers.push(layer);
+
+});
+
+canvas.addEventListener('mousemove', event => {
+  if (layerManager.selection.active) {
+    const x = event.offsetX;
+    const y = event.offsetY;
+    layerManager.selection.rect.br = new Point(x, y);
+  }
+});
 
 document.addEventListener('DOMContentLoaded', mainLoop);
