@@ -1,0 +1,12 @@
+body {
+  font-family: "Avenir";
+  font-weight: 400;
+}
+
+h1 {
+  font-weight: 100;
+}
+
+canvas {
+  border: 1px black solid;
+}
