@@ -8,6 +8,16 @@ const layerManager = new LayerManager();
 const controls = document.createElement('div');
 controls.id = 'controls';
 document.body.appendChild(controls);
+let snapping = true;
+const NUM_KEYS = 20;
+
+const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
+const patternRect = new Rectangle(keyRect.br.x,
+                                  keyRect.y,
+                                  canvas.width - keyRect.width,
+                                  keyRect.height);
+
+
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
@@ -47,13 +57,8 @@ function render() {
   ctx.fillStyle = 'rgb(200, 200, 200)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
-  renderPiano(ctx, keyRect, 12);
-  const patternRect = new Rectangle(keyRect.br.x,
-                                    keyRect.y,
-                                    canvas.width - keyRect.width,
-                                    keyRect.height);
-  renderPiano(ctx, patternRect, 12, 0.2);
+  renderPiano(ctx, keyRect, NUM_KEYS);
+  renderPiano(ctx, patternRect, NUM_KEYS, 0.2);
 
   layerManager.layers.forEach(layer => layer.render(ctx));
 
@@ -71,9 +76,21 @@ function mainLoop() {
   requestAnimationFrame(mainLoop);
 }
 
+function getSnappedPoint(point, containerRect, vertDivision) {
+  const x = point.x;
+  const vertStep = containerRect.height / vertDivision;
+  const distanceToStepAbove = point.y % vertStep;
+  const y = point.y - distanceToStepAbove + (distanceToStepAbove > (vertStep / 2)
+                                              ? vertStep
+                                              : 0);
+
+  return new Point(x, y);
+}
+
 canvas.addEventListener('mousedown', event => {
   layerManager.selection.active = true;
-  const point = new Point(event.offsetX, event.offsetY);
+  let point = new Point(event.offsetX, event.offsetY);
+  if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS); }
   layerManager.selection.rect.tl = point;
   layerManager.selection.rect.br = point;
 });
@@ -88,9 +105,9 @@ document.body.addEventListener('mouseup', event => {
 
 canvas.addEventListener('mousemove', event => {
   if (layerManager.selection.active) {
-    const x = event.offsetX;
-    const y = event.offsetY;
-    layerManager.selection.rect.br = new Point(x, y);
+    let point = new Point(event.offsetX, event.offsetY);
+    if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS); }
+    layerManager.selection.rect.br = point;
   }
 });
 
