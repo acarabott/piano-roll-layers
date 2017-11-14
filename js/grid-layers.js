@@ -3,7 +3,8 @@
 /*
   TODO:
 
-  - drag move layers
+  - resize layers
+  - copy layer
   - text in each chunk? 1 2 3 4
 */
 
