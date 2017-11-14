@@ -8,10 +8,13 @@ class Layer {
     this.height = height;
     this.subdivision = 1;
     this.active = true;
+    this.highlight = false;
   }
 
   render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
     if (!this.active) { return; }
+
+    const widthMultiplier = this.highlight ? 2 : 1;
     ctx.save();
     ctx.strokeStyle = style;
 
@@ -20,7 +23,7 @@ class Layer {
     // ctx.strokeRect(this.x, this.y, this.width, this.height);
 
     // subdivisions
-    ctx.lineWidth = width;
+    ctx.lineWidth = width * widthMultiplier;
     this.rects.forEach(rect => {
       ctx.strokeRect(...rect);
     });
@@ -28,7 +31,7 @@ class Layer {
 
     // border
     // ctx.setLineDash([20, 10]);
-    ctx.lineWidth = width * 4;
+    ctx.lineWidth = width * widthMultiplier * 4;
     // ctx.strokeStyle = 'rgb(255, 0, 0)';
     ctx.strokeRect(this.x, this.y, this.width, this.height);
 
@@ -41,5 +44,9 @@ class Layer {
     return Array.from(Array(this.subdivision)).map((_, i ) => {
       return new Rectangle(this.x + i * subWidth, this.y, subWidth, this.height);
     });
+  }
+
+  get frame() {
+    return new Rectangle(this.x, this.y, this.width, this.height);
   }
 }

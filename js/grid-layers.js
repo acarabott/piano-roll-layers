@@ -149,7 +149,7 @@ function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
   return new Point(x, y);
 }
 
-function getSnappedMouse(event) {
+function getPointFromInput(event) {
   let point = new Point(event.offsetX, event.offsetY);
   const rects = layerManager.layers.map(l => l.rects).reduce((cur, prev) => {
     return prev.concat(cur);
@@ -159,29 +159,53 @@ function getSnappedMouse(event) {
 }
 
 canvas.addEventListener('mousedown', event => {
-  layerManager.selection.active = true;
-  const point = getSnappedMouse(event);
-  layerManager.selection.rect.tl = point;
-  layerManager.selection.rect.br = point;
+  if (layerManager.highlightedLayers.length > 0) {
+    layerManager.draggingLayer = layerManager.highlightedLayers[0];
+  }
+  else {
+    layerManager.selection.active = true;
+    const point = getPointFromInput(event);
+    layerManager.selection.rect.tl = point;
+    layerManager.selection.rect.br = point;
+  }
 });
 
 document.addEventListener('mouseup', event => {
-  layerManager.selection.active = false;
+  layerManager.draggingLayer = undefined;
 
   if (event.srcElement === canvas) {
-    const selRect = layerManager.selection.rect;
-    if (selRect.width > 0 && selRect.height > 0) {
-      const layer = layerManager.addLayer(...selRect, currentSubdivision());
-      layerManager.currentLayer = layer;
-      subdivisionInput.focus();
+    if (layerManager.selection.active) {
+      layerManager.selection.active = false;
+      const selRect = layerManager.selection.rect;
+      if (selRect.width > 0 && selRect.height > 0) {
+        const layer = layerManager.addLayer(...selRect, currentSubdivision());
+        layerManager.currentLayer = layer;
+        subdivisionInput.focus();
+      }
     }
   }
 });
 
 canvas.addEventListener('mousemove', event => {
+  // selection
   if (layerManager.selection.active) {
-    const point = getSnappedMouse(event);
+    const point = getPointFromInput(event);
     layerManager.selection.rect.br = point;
+  }
+
+  // highlight on hover
+  if (!layerManager.selection.active) {
+    const point = new Point(event.offsetX, event.offsetY);
+    layerManager.layers.forEach(layer => {
+      layer.highlight = layer.frame.isPointOnLine(point, 1);
+    });
+  }
+
+  // dragging layer
+  if (layerManager.draggingLayer !== undefined) {
+    const point = getPointFromInput(event);
+    layerManager.draggingLayer.x = point.x;
+    layerManager.draggingLayer.y = point.y;
   }
 });
 

@@ -3,7 +3,8 @@
 class LayerManager {
   constructor() {
     this._layers = [];
-    this._currentLayer = undefined;
+    this.currentLayer = undefined;
+    this.draggingLayer = undefined;
     this.selection = {
       active: false,
       rect: new Rectangle()
@@ -69,13 +70,7 @@ class LayerManager {
     return this._list;
   }
 
-  get currentLayer() {
-    return this._currentLayer;
-  }
-
-  set currentLayer(layer) {
-    if (layer instanceof Layer || layer === undefined) {
-      this._currentLayer = layer;
-    }
+  get highlightedLayers() {
+    return this._layers.filter(layer => layer.highlight);
   }
 }

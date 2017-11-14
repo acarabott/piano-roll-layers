@@ -45,4 +45,16 @@ class Rectangle {
   // contains(point) {
   //   return point.gte(this.tl) && point.lte(this.br);
   // }
+
+  isPointOnLine(point, threshold = 1) {
+    const inX = point.x >= this.x && point.x <= this.br.x;
+    const inY = point.y >= this.tl.y && point.y <= this.br.y;
+
+    const onTop =    Math.abs(point.y - this.y) <= threshold && inX;
+    const onRight =  Math.abs(point.x - this.br.x) <= threshold && inY;
+    const onBottom = Math.abs(point.y - this.br.y) <= threshold && inX;
+    const onLeft =   Math.abs(point.x - this.x) <= threshold && inY;
+
+    return onTop || onRight || onBottom || onLeft;
+  }
 }
