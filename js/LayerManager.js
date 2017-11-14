@@ -6,7 +6,9 @@ class LayerManager {
     this.currentLayer = undefined;
     this.dragging = {
       layer: undefined,
-      offset: new Point(0, 0)
+      offset: new Point(0, 0),
+      copy: false,
+      origin: new Point(0, 0)
     };
     this.selection = {
       active: false,

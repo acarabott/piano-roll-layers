@@ -165,9 +165,11 @@ function getPointFromInput(event) {
 
 canvas.addEventListener('mousedown', event => {
   if (layerManager.highlightedLayers.length > 0) {
-    layerManager.dragging.layer = layerManager.highlightedLayers[0];
+    const chosen = layerManager.highlightedLayers[0];
+    layerManager.dragging.origin = chosen.frame.tl;
+    layerManager.dragging.layer = chosen;
     const point = new Point(event.offsetX, event.offsetY);
-    layerManager.dragging.offset = point.subtract(layerManager.dragging.layer.frame.tl);
+    layerManager.dragging.offset = point.subtract(chosen.frame.tl);
   }
   else {
     layerManager.selection.active = true;
@@ -178,8 +180,6 @@ canvas.addEventListener('mousedown', event => {
 });
 
 document.addEventListener('mouseup', event => {
-  layerManager.dragging.layer = undefined;
-
   if (event.srcElement === canvas) {
     if (layerManager.selection.active) {
       layerManager.selection.active = false;
@@ -190,6 +190,20 @@ document.addEventListener('mouseup', event => {
         subdivisionInput.focus();
       }
     }
+
+    if (layerManager.dragging.copy) {
+      // copy the layer
+      layerManager.addLayer(...layerManager.dragging.layer.frame,
+                            layerManager.dragging.layer.subdivision);
+
+      // reset the original
+      layerManager.dragging.layer.x = layerManager.dragging.origin.x;
+      layerManager.dragging.layer.y = layerManager.dragging.origin.y;
+    }
+  }
+
+  if (layerManager.dragging.layer !== undefined) {
+    layerManager.dragging.layer = undefined;
   }
 });
 
@@ -220,6 +234,7 @@ canvas.addEventListener('mousemove', event => {
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
+  if (event.key === 'Alt') { layerManager.dragging.copy = true; }
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
   // key='Alt'        code='AltLeft'
@@ -239,6 +254,7 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keyup', event => {
   if (event.key === 'Shift' && !snapping) { snapping = true; }
+  if (event.key === 'Alt') { layerManager.dragging.copy = false; }
 });
 
 subdivisionInput.addEventListener('input', event => {
