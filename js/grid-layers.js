@@ -1,9 +1,12 @@
 /* global Point, Rectangle, Layer, LayerManager */
 
-// blue: rgb(43, 156, 212);
-// red: rgb(212, 100, 100);
-// orange: rgb(249, 182, 118);
-// green: rgb(43, 212, 156);
+const color = {
+  blue:   'rgb(43, 156, 212)',
+  red:    'rgb(212, 100, 100)',
+  orange: 'rgb(249, 182, 118)',
+  green:  'rgb(43, 212, 156)',
+  black:  'rgb(0, 0, 0)'
+};
 
 const canvas = document.createElement('canvas');
 canvas.width = 800;
@@ -25,13 +28,19 @@ const controls = document.createElement('div');
 controls.id = 'controls';
 document.body.appendChild(controls);
 const subdivisionInput = document.createElement('input');
+subdivisionInput.id = 'subdivision';
 subdivisionInput.type = 'number';
 subdivisionInput.value = 3;
-subdivisionInput.min = 0;
+subdivisionInput.min = 1;
+const subdivisionLabel = document.createElement('label');
+subdivisionLabel.htmlFor = 'subdivision';
+subdivisionLabel.textContent = 'Subdivision: ';
+controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
 
 function currentSubdivision() {
-  return subdivisionInput.valueAsNumber;
+  const value = subdivisionInput.valueAsNumber;
+  return isFinite(value) ? value : 1;
 }
 
 // Helper functions
@@ -39,13 +48,23 @@ function currentSubdivision() {
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
-    func(i);
+    func(i, n);
   }
 }
 
 function constrain(val, min=0, max=1.0) {
   return Math.min(Math.min(val, max), min);
 }
+
+function rrand(min, max) {
+  return min + (Math.random() * (max - min));
+}
+
+function rrandint(min, max) {
+  return Math.floor(rrand(min, max));
+}
+
+
 
 // Render functions
 // -----------------------------------------------------------------------------
@@ -67,16 +86,21 @@ function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
 
 function render() {
   ctx.save();
-  ctx.fillStyle = 'rgb(200, 200, 200)';
+  ctx.fillStyle = 'rgb(255, 255, 255)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   renderPiano(ctx, keyRect, NUM_KEYS);
-  renderPiano(ctx, patternRect, NUM_KEYS, 0.2);
+  renderPiano(ctx, patternRect, NUM_KEYS, 0.1);
 
-  layerManager.layers.forEach(layer => layer.render(ctx));
+  layerManager.layers.forEach(layer => {
+    const isCurrent = layer === layerManager.currentLayer;
+    layer.render(ctx, isCurrent ? color.blue : color.black,
+                 isCurrent ? 3 : 1);
+  });
 
   if (layerManager.selection.active) {
-    ctx.strokeStyle = 'rgb(43, 212, 156)';
+    ctx.strokeStyle = color.green;
+    ctx.setLineDash([20, 10]);
     ctx.lineWidth = 4;
     ctx.strokeRect(...layerManager.selection.rect);
   }
@@ -140,7 +164,9 @@ document.addEventListener('mouseup', event => {
   if (event.srcElement === canvas) {
     const selRect = layerManager.selection.rect;
     if (selRect.width > 0 && selRect.height > 0) {
-      layerManager.addLayer(...selRect, currentSubdivision());
+      const layer = layerManager.addLayer(...selRect, currentSubdivision());
+      layerManager.currentLayer = layer;
+      subdivisionInput.focus();
     }
   }
 });
@@ -152,6 +178,35 @@ canvas.addEventListener('mousemove', event => {
   }
 });
 
+document.addEventListener('keydown', event => {
+  // key='Shift'      code='ShiftLeft'
+  // key='Control'    code='ControlLeft'
+  // key='Alt'        code='AltLeft'
+  // key='Meta'       code='MetaLeft'
+  // key='Meta'       code='MetaLeft'
+
+  // switch (event.key) {
+  //   case '0':
+
+  //     break;
+  //   default:
+  //     // statements_def
+  //     break;
+  // }
+  // console.log(event);
+});
+
+subdivisionInput.addEventListener('input', event => {
+  const value = isFinite(subdivisionInput.valueAsNumber)
+    ? subdivisionInput.valueAsNumber
+    : 1;
+
+  if (layerManager.currentLayer !== undefined) {
+    layerManager.currentLayer.subdivision = value;
+    layerManager.layersChanged = true;
+  }
+});
+
 // main loop
 // -----------------------------------------------------------------------------
 function mainLoop() {
@@ -160,4 +215,16 @@ function mainLoop() {
   requestAnimationFrame(mainLoop);
 }
 
+function test() {
+  loop(4, (i, n) => {
+    const x = rrandint(0, canvas.width * 0.75);
+    const y = rrandint(0, canvas.height * 0.75);
+    const width = rrandint(canvas.width * 0.25, canvas.width - x);
+    const height = rrandint(canvas.height * 0.25, canvas.height - y);
+    const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
+    if (i === n - 1) { layerManager.currentLayer = layer; }
+  });
+}
+
+// test();
 document.addEventListener('DOMContentLoaded', mainLoop);

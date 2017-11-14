@@ -3,7 +3,7 @@
 class LayerManager {
   constructor() {
     this._layers = [];
-    this.currentLayer = undefined;
+    this._currentLayer = undefined;
     this.selection = {
       active: false,
       rect: new Rectangle()
@@ -17,6 +17,7 @@ class LayerManager {
     const layer = new Layer(x, y, width, height);
     layer.subdivision = subdivision;
     this._layers.push(layer);
+    return layer;
   }
 
   get layers() {
@@ -29,13 +30,25 @@ class LayerManager {
 
       this._layers.forEach((layer, i) => {
         const li = document.createElement('li');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = layer.active;
-        checkbox.addEventListener('change', event => {
-          layer.active = checkbox.checked;
+
+        const enabledInput = document.createElement('input');
+        enabledInput.type = 'checkbox';
+        enabledInput.checked = layer.active;
+        enabledInput.addEventListener('change', event => {
+          layer.active = enabledInput.checked;
         });
-        li.appendChild(checkbox);
+        li.appendChild(enabledInput);
+
+        const currentInput = document.createElement('input');
+        currentInput.type = 'radio';
+        currentInput.name = 'current';
+        currentInput.checked = layer === this._currentLayer;
+        currentInput.addEventListener('change', event => {
+          this.currentLayer = layer;
+          // this.layersChanged = true;
+        });
+        li.appendChild(currentInput);
+
 
         const label = document.createElement('span');
         label.textContent = `Layer ${i + 1} - ${layer.subdivision}`;
@@ -54,5 +67,15 @@ class LayerManager {
       });
     }
     return this._list;
+  }
+
+  get currentLayer() {
+    return this._currentLayer;
+  }
+
+  set currentLayer(layer) {
+    if (layer instanceof Layer || layer === undefined) {
+      this._currentLayer = layer;
+    }
   }
 }

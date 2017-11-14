@@ -10,12 +10,12 @@ class Layer {
     this.active = true;
   }
 
-  render(ctx) {
+  render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
     if (!this.active) { return; }
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 0, 0, 1.0)';
+    ctx.strokeStyle = style;
+    ctx.lineWidth = width;
     // ctx.strokeRect(this.x, this.y, this.width, this.height);
-
     const subWidth = this.width / this.subdivision;
     for (let i = 0; i < this.subdivision; i++) {
       ctx.strokeRect(this.x + i * subWidth, this.y, subWidth, this.height);
