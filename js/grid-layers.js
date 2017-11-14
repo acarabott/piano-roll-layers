@@ -15,6 +15,50 @@ const color = {
   black:  'rgb(0, 0, 0)'
 };
 
+const modes = {
+  layers: Symbol('layers'),
+  notes: Symbol('notes')
+};
+
+class ModeManager {
+  constructor() {
+    this._currentMode = modes.layers;
+    this.changed = true;
+  }
+
+  get currentMode() {
+    return this._currentMode;
+  }
+
+  set currentMode(mode) {
+    this._currentMode = mode;
+    this.changed = true;
+  }
+}
+
+class ModeManagerRenderer {
+  constructor(modeManager) {
+    this.modeManager = modeManager;
+    this.label = document.createElement('div');
+  }
+
+  update() {
+    if (this.modeManager.changed) {
+      const currentModeEntry = Object.entries(modes).find(pair => {
+        return pair[1] === this.modeManager.currentMode;
+      });
+      const label = currentModeEntry === undefined
+        ? ''
+        : `${currentModeEntry[0][0].toUpperCase()}${currentModeEntry[0].slice(1)}`;
+      this.label.textContent = `Mode: ${label}`;
+      this.modeManager.changed = false;
+    }
+  }
+}
+
+const modeManager = new ModeManager();
+const modeManagerRenderer = new ModeManagerRenderer(modeManager);
+
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
@@ -44,6 +88,7 @@ subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
 controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
+controls.appendChild(modeManagerRenderer.label);
 
 function currentSubdivision() {
   const value = subdivisionInput.valueAsNumber;
@@ -70,7 +115,6 @@ function rrand(min, max) {
 function rrandint(min, max) {
   return Math.floor(rrand(min, max));
 }
-
 
 
 // Render functions
@@ -131,6 +175,8 @@ function update() {
     controls.appendChild(layerList);
     layerManager.layersChanged = false;
   }
+
+  modeManagerRenderer.update();
 }
 
 // User Input
@@ -171,106 +217,120 @@ function getPointFromInput(event) {
 }
 
 canvas.addEventListener('mousedown', event => {
-  if (layerManager.highlightedLayers.length > 0) {
-    const chosen = layerManager.highlightedLayers[0];
-    layerManager.draggingLayer = chosen;
-    const point = new Point(event.offsetX, event.offsetY);
-    layerManager.dragging.offset = point.subtract(chosen.frame.tl);
+  if (modeManager.currentMode === modes.layers) {
+    if (layerManager.highlightedLayers.length > 0) {
+      const chosen = layerManager.highlightedLayers[0];
+      layerManager.draggingLayer = chosen;
+      const point = new Point(event.offsetX, event.offsetY);
+      layerManager.dragging.offset = point.subtract(chosen.frame.tl);
+    }
+    else {
+      layerManager.selection.active = true;
+      const point = getPointFromInput(event);
+      layerManager.selection.rect.tl = point;
+      layerManager.selection.rect.br = point;
+    }
   }
-  else {
-    layerManager.selection.active = true;
-    const point = getPointFromInput(event);
-    layerManager.selection.rect.tl = point;
-    layerManager.selection.rect.br = point;
+  else if (modeManager.currentMode === modes.notes) {
+    console.log('notes mousedown');
   }
 });
 
 document.addEventListener('mousedown', event => {
-  if (event.target !== canvas) {
-    layerManager.currentLayer = undefined;
+  if (modeManager.currentMode === modes.layers) {
+    if (event.target !== canvas) {
+      layerManager.currentLayer = undefined;
+    }
+  }
+  else if (modeManager.currentMode === modes.notes) {
+    console.log('notes mousedown2');
   }
 });
 
 document.addEventListener('mouseup', event => {
-  if (event.srcElement === canvas) {
-    if (layerManager.selection.active) {
-      layerManager.selection.active = false;
-      const selRect = layerManager.selection.rect;
-      if (selRect.width > 0 && selRect.height > 0) {
-        const layer = layerManager.addLayer(...selRect, currentSubdivision());
-        layerManager.currentLayer = layer;
+  if (modeManager.currentMode === modes.layers) {
+    if (event.srcElement === canvas) {
+      if (layerManager.selection.active) {
+        layerManager.selection.active = false;
+        const selRect = layerManager.selection.rect;
+        if (selRect.width > 0 && selRect.height > 0) {
+          const layer = layerManager.addLayer(...selRect, currentSubdivision());
+          layerManager.currentLayer = layer;
+          subdivisionInput.focus();
+        }
+      }
+
+      if (layerManager.dragging.layer !== undefined) {
+        if (layerManager.dragging.copy) {
+          // copy the layer
+          const layer = layerManager.addLayer(...layerManager.dragging.layer.frame,
+                                              layerManager.dragging.layer.subdivision);
+
+          // reset the original
+          layerManager.dragging.layer.x = layerManager.dragging.origin.x;
+          layerManager.dragging.layer.y = layerManager.dragging.origin.y;
+          layerManager.currentLayer = layer;
+        }
+        else {
+          // move the original
+          layerManager.dragging.sourceLayer.x = layerManager.dragging.layer.x;
+          layerManager.dragging.sourceLayer.y = layerManager.dragging.layer.y;
+
+          layerManager.currentLayer = layerManager.dragging.sourceLayer;
+        }
         subdivisionInput.focus();
+        layerManager.dragging.clear();
       }
-    }
-
-    if (layerManager.dragging.layer !== undefined) {
-      if (layerManager.dragging.copy) {
-        // copy the layer
-        const layer = layerManager.addLayer(...layerManager.dragging.layer.frame,
-                                            layerManager.dragging.layer.subdivision);
-
-        // reset the original
-        layerManager.dragging.layer.x = layerManager.dragging.origin.x;
-        layerManager.dragging.layer.y = layerManager.dragging.origin.y;
-        layerManager.currentLayer = layer;
-      }
-      else {
-        // move the original
-        layerManager.dragging.sourceLayer.x = layerManager.dragging.layer.x;
-        layerManager.dragging.sourceLayer.y = layerManager.dragging.layer.y;
-
-        layerManager.currentLayer = layerManager.dragging.sourceLayer;
-      }
-      subdivisionInput.focus();
-      layerManager.dragging.clear();
     }
   }
-
+  else if (modeManager.currentMode === modes.notes) {
+    console.log('notes mouseup');
+  }
 });
 
 canvas.addEventListener('mousemove', event => {
-  // selection
-  if (layerManager.selection.active) {
-    const point = getPointFromInput(event);
-    layerManager.selection.rect.br = point;
-  }
+  if (modeManager.currentMode === modes.layers) {
+    // selection
+    if (layerManager.selection.active) {
+      const point = getPointFromInput(event);
+      layerManager.selection.rect.br = point;
+    }
 
-  // highlight on hover
-  if (!layerManager.selection.active) {
-    const point = new Point(event.offsetX, event.offsetY);
-    layerManager.layers.forEach(layer => {
-      layer.highlight = layer.frame.isPointOnLine(point, 4);
-    });
-  }
+    // highlight on hover
+    if (!layerManager.selection.active) {
+      const point = new Point(event.offsetX, event.offsetY);
+      layerManager.layers.forEach(layer => {
+        layer.highlight = layer.frame.isPointOnLine(point, 4);
+      });
+    }
 
-  // dragging layer
-  if (layerManager.dragging.layer !== undefined) {
-    const inputPoint = new Point(event.offsetX, event.offsetY);
-    let origin = inputPoint.subtract(layerManager.dragging.offset);
-    if (snapping) { origin = snapPointToLayers(origin); }
-    layerManager.dragging.layer.x = origin.x;
-    layerManager.dragging.layer.y = origin.y;
+    // dragging layer
+    if (layerManager.dragging.layer !== undefined) {
+      const inputPoint = new Point(event.offsetX, event.offsetY);
+      let origin = inputPoint.subtract(layerManager.dragging.offset);
+      if (snapping) { origin = snapPointToLayers(origin); }
+      layerManager.dragging.layer.x = origin.x;
+      layerManager.dragging.layer.y = origin.y;
+    }
+  }
+  else if (modeManager.currentMode === modes.notes) {
+    console.log('notes mousemove');
   }
 });
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
   if (event.key === 'Alt') { layerManager.dragging.copy = true; }
+
+  if (document.activeElement !== subdivisionInput) {
+    if (event.key === '1') { modeManager.currentMode = modes.layers; }
+    if (event.key === '2') { modeManager.currentMode = modes.notes; }
+  }
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
   // key='Alt'        code='AltLeft'
   // key='Meta'       code='MetaLeft'
   // key='Meta'       code='MetaLeft'
-
-  // switch (event.key) {
-  //   case '0':
-
-  //     break;
-  //   default:
-  //     // statements_def
-  //     break;
-  // }
-  // console.log(event);
 });
 
 document.addEventListener('keyup', event => {
