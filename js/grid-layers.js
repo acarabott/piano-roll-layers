@@ -186,6 +186,7 @@ canvas.addEventListener('mousemove', event => {
 });
 
 document.addEventListener('keydown', event => {
+  if (event.key === 'Shift' && snapping) { snapping = false; }
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
   // key='Alt'        code='AltLeft'
@@ -201,6 +202,10 @@ document.addEventListener('keydown', event => {
   //     break;
   // }
   // console.log(event);
+});
+
+document.addEventListener('keyup', event => {
+  if (event.key === 'Shift' && !snapping) { snapping = true; }
 });
 
 subdivisionInput.addEventListener('input', event => {
