@@ -1,5 +1,12 @@
 /* global Point, Rectangle, Layer, LayerManager */
 
+/*
+  TODO:
+
+  - drag move layers
+  - text in each chunk? 1 2 3 4
+*/
+
 const color = {
   blue:   'rgb(43, 156, 212)',
   red:    'rgb(212, 100, 100)',
@@ -95,7 +102,7 @@ function render() {
   layerManager.layers.forEach(layer => {
     const isCurrent = layer === layerManager.currentLayer;
     layer.render(ctx, isCurrent ? color.blue : color.black,
-                 isCurrent ? 3 : 1);
+                 isCurrent ? 2 : 1);
   });
 
   if (layerManager.selection.active) {
@@ -217,10 +224,10 @@ function mainLoop() {
 
 function test() {
   loop(4, (i, n) => {
-    const x = rrandint(0, canvas.width * 0.75);
-    const y = rrandint(0, canvas.height * 0.75);
-    const width = rrandint(canvas.width * 0.25, canvas.width - x);
-    const height = rrandint(canvas.height * 0.25, canvas.height - y);
+    const x = rrandint(patternRect.x, patternRect.width * 0.75);
+    const y = rrandint(patternRect.y, patternRect.height * 0.75);
+    const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
+    const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
     const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
     if (i === n - 1) { layerManager.currentLayer = layer; }
   });

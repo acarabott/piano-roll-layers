@@ -14,12 +14,25 @@ class Layer {
     if (!this.active) { return; }
     ctx.save();
     ctx.strokeStyle = style;
-    ctx.lineWidth = width;
+
+    // border
+    // ctx.lineWidth = width ;
     // ctx.strokeRect(this.x, this.y, this.width, this.height);
-    const subWidth = this.width / this.subdivision;
-    for (let i = 0; i < this.subdivision; i++) {
-      ctx.strokeRect(this.x + i * subWidth, this.y, subWidth, this.height);
-    }
+
+    // subdivisions
+    ctx.lineWidth = width;
+    this.rects.forEach(rect => {
+      ctx.strokeRect(...rect);
+    });
+
+
+    // border
+    // ctx.setLineDash([20, 10]);
+    ctx.lineWidth = width * 4;
+    // ctx.strokeStyle = 'rgb(255, 0, 0)';
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+
     ctx.restore();
   }
 
