@@ -4,7 +4,6 @@
   TODO:
 
   - resize layers
-  - text in each chunk? 1 2 3 4
 */
 
 const color = {

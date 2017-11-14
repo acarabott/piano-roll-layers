@@ -24,8 +24,13 @@ class Layer {
 
     // subdivisions
     ctx.lineWidth = width * widthMultiplier;
-    this.rects.forEach(rect => {
+    this.rects.forEach((rect, i) => {
       ctx.strokeRect(...rect);
+      ctx.fillStyle = style;
+      const fontsize = 20;
+      ctx.font = `${fontsize}px Monaco`;
+      ctx.textAlign = 'center';
+      ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.5);
     });
 
 
