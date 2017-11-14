@@ -4,6 +4,7 @@
   TODO:
 
   - resize layers
+  - note input!!!!
 */
 
 const color = {
