@@ -24,6 +24,11 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   keyRect.height);
 
 
+let currentSubdivision = 3;
+
+
+// Helper functions
+// -----------------------------------------------------------------------------
 
 function loop(n, func) {
   for (let i = 0; i < n; i++) {
@@ -34,6 +39,9 @@ function loop(n, func) {
 function constrain(val, min=0, max=1.0) {
   return Math.min(Math.min(val, max), min);
 }
+
+// Render functions
+// -----------------------------------------------------------------------------
 
 function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
   const colors = ['w', 'b', 'w', 'b', 'w', 'w', 'b', 'w', 'b', 'w', 'b', 'w'];
@@ -48,14 +56,6 @@ function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
     ctx.strokeStyle = `rgba(100, 100, 100, ${alpha})`;
     ctx.strokeRect(drawRect.x, y, drawRect.width, keyHeight);
   });
-}
-
-function update() {
-  if (layerManager.layersChanged) {
-    const layerList = layerManager.list;
-    controls.appendChild(layerList);
-    layerManager.layersChanged = false;
-  }
 }
 
 function render() {
@@ -77,11 +77,18 @@ function render() {
 }
 
 
-function mainLoop() {
-  update();
-  render();
-  requestAnimationFrame(mainLoop);
+// Update loop
+// -----------------------------------------------------------------------------
+function update() {
+  if (layerManager.layersChanged) {
+    const layerList = layerManager.list;
+    controls.appendChild(layerList);
+    layerManager.layersChanged = false;
+  }
 }
+
+// User Input
+// -----------------------------------------------------------------------------
 
 function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
   let x = point.x;
@@ -120,13 +127,13 @@ canvas.addEventListener('mousedown', event => {
   layerManager.selection.rect.br = point;
 });
 
-document.body.addEventListener('mouseup', event => {
+document.addEventListener('mouseup', event => {
   layerManager.selection.active = false;
 
   if (event.srcElement === canvas) {
     const selRect = layerManager.selection.rect;
     if (selRect.width > 0 && selRect.height > 0) {
-      layerManager.addLayer(...selRect, 3);
+      layerManager.addLayer(...selRect, currentSubdivision);
     }
   }
 });
@@ -137,5 +144,13 @@ canvas.addEventListener('mousemove', event => {
     layerManager.selection.rect.br = point;
   }
 });
+
+// main loop
+// -----------------------------------------------------------------------------
+function mainLoop() {
+  update();
+  render();
+  requestAnimationFrame(mainLoop);
+}
 
 document.addEventListener('DOMContentLoaded', mainLoop);
