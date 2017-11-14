@@ -112,6 +112,14 @@ function render() {
     ctx.lineWidth = 4;
     ctx.strokeRect(...layerManager.selection.rect);
   }
+
+  if (layerManager.dragging.layer !== undefined) {
+    ctx.lineWidth = 2;
+    ctx.setLineDash([20, 10]);
+    ctx.strokeStyle = layerManager.dragging.copy ? color.green : color.black;
+    layerManager.dragging.layer.rects.forEach(rect => ctx.strokeRect(...rect));
+  }
+
   ctx.restore();
 }
 
@@ -166,8 +174,7 @@ function getPointFromInput(event) {
 canvas.addEventListener('mousedown', event => {
   if (layerManager.highlightedLayers.length > 0) {
     const chosen = layerManager.highlightedLayers[0];
-    layerManager.dragging.origin = chosen.frame.tl;
-    layerManager.dragging.layer = chosen;
+    layerManager.draggingLayer = chosen;
     const point = new Point(event.offsetX, event.offsetY);
     layerManager.dragging.offset = point.subtract(chosen.frame.tl);
   }
@@ -191,20 +198,29 @@ document.addEventListener('mouseup', event => {
       }
     }
 
-    if (layerManager.dragging.copy) {
-      // copy the layer
-      layerManager.addLayer(...layerManager.dragging.layer.frame,
-                            layerManager.dragging.layer.subdivision);
+    if (layerManager.dragging.layer !== undefined) {
+      if (layerManager.dragging.copy) {
+        // copy the layer
+        const layer = layerManager.addLayer(...layerManager.dragging.layer.frame,
+                                            layerManager.dragging.layer.subdivision);
 
-      // reset the original
-      layerManager.dragging.layer.x = layerManager.dragging.origin.x;
-      layerManager.dragging.layer.y = layerManager.dragging.origin.y;
+        // reset the original
+        layerManager.dragging.layer.x = layerManager.dragging.origin.x;
+        layerManager.dragging.layer.y = layerManager.dragging.origin.y;
+        layerManager.currentLayer = layer;
+      }
+      else {
+        // move the original
+        layerManager.dragging.sourceLayer.x = layerManager.dragging.layer.x;
+        layerManager.dragging.sourceLayer.y = layerManager.dragging.layer.y;
+
+        layerManager.currentLayer = layerManager.dragging.sourceLayer;
+      }
+      subdivisionInput.focus();
+      layerManager.dragging.clear();
     }
   }
 
-  if (layerManager.dragging.layer !== undefined) {
-    layerManager.dragging.layer = undefined;
-  }
 });
 
 canvas.addEventListener('mousemove', event => {

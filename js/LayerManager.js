@@ -5,10 +5,15 @@ class LayerManager {
     this._layers = [];
     this.currentLayer = undefined;
     this.dragging = {
+      sourceLayer: undefined,
       layer: undefined,
       offset: new Point(0, 0),
       copy: false,
-      origin: new Point(0, 0)
+      origin: new Point(0, 0),
+      clear() {
+        this.sourceLayer = undefined;
+        this.layer = undefined;
+      }
     };
     this.selection = {
       active: false,
@@ -77,5 +82,11 @@ class LayerManager {
 
   get highlightedLayers() {
     return this._layers.filter(layer => layer.highlight);
+  }
+
+  set draggingLayer(layer) {
+    this.dragging.sourceLayer = layer;
+    this.dragging.layer = layer.clone();
+    this.dragging.origin = layer.frame.tl;
   }
 }

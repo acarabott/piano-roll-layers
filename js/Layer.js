@@ -49,4 +49,10 @@ class Layer {
   get frame() {
     return new Rectangle(this.x, this.y, this.width, this.height);
   }
+
+  clone() {
+    const clone = new Layer(this.x, this.y, this.width, this.height);
+    clone.subdivision = this.subdivision;
+    return clone;
+  }
 }
