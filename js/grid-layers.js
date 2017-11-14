@@ -1,4 +1,10 @@
 /* global Point, Rectangle, Layer, LayerManager */
+
+// blue: rgb(43, 156, 212);
+// red: rgb(212, 100, 100);
+// orange: rgb(249, 182, 118);
+// green: rgb(43, 212, 156);
+
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
@@ -63,7 +69,8 @@ function render() {
   layerManager.layers.forEach(layer => layer.render(ctx));
 
   if (layerManager.selection.active) {
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = 'rgb(43, 212, 156)';
+    ctx.lineWidth = 4;
     ctx.strokeRect(...layerManager.selection.rect);
   }
   ctx.restore();
@@ -76,21 +83,39 @@ function mainLoop() {
   requestAnimationFrame(mainLoop);
 }
 
-function getSnappedPoint(point, containerRect, vertDivision) {
-  const x = point.x;
+function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
+  let x = point.x;
+  let minDistance = Infinity;
+  horzRects.forEach(rect => {
+    [rect.tl.x, rect.br.x].forEach(cx => {
+      const dist = Math.abs(cx - point.x);
+      if (dist < minDistance) {
+        minDistance = dist;
+        x = cx;
+      }
+    });
+  });
+
   const vertStep = containerRect.height / vertDivision;
   const distanceToStepAbove = point.y % vertStep;
   const y = point.y - distanceToStepAbove + (distanceToStepAbove > (vertStep / 2)
                                               ? vertStep
                                               : 0);
-
   return new Point(x, y);
+}
+
+function getSnappedMouse(event) {
+  let point = new Point(event.offsetX, event.offsetY);
+  const rects = layerManager.layers.map(l => l.rects).reduce((cur, prev) => {
+    return prev.concat(cur);
+  }, [patternRect]);
+  if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS, rects); }
+  return point;
 }
 
 canvas.addEventListener('mousedown', event => {
   layerManager.selection.active = true;
-  let point = new Point(event.offsetX, event.offsetY);
-  if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS); }
+  const point = getSnappedMouse(event);
   layerManager.selection.rect.tl = point;
   layerManager.selection.rect.br = point;
 });
@@ -108,8 +133,7 @@ document.body.addEventListener('mouseup', event => {
 
 canvas.addEventListener('mousemove', event => {
   if (layerManager.selection.active) {
-    let point = new Point(event.offsetX, event.offsetY);
-    if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS); }
+    const point = getSnappedMouse(event);
     layerManager.selection.rect.br = point;
   }
 });

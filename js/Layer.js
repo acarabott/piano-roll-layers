@@ -1,3 +1,5 @@
+/* global Rectangle */
+
 class Layer {
   constructor(x, y, width, height) {
     this.x = x;
@@ -19,5 +21,12 @@ class Layer {
       ctx.strokeRect(this.x + i * subWidth, this.y, subWidth, this.height);
     }
     ctx.restore();
+  }
+
+  get rects() {
+    const subWidth = this.width / this.subdivision;
+    return Array.from(Array(this.subdivision)).map((_, i ) => {
+      return new Rectangle(this.x + i * subWidth, this.y, subWidth, this.height);
+    });
   }
 }
