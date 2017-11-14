@@ -11,9 +11,6 @@ canvas.height = 400;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 const layerManager = new LayerManager();
-const controls = document.createElement('div');
-controls.id = 'controls';
-document.body.appendChild(controls);
 let snapping = true;
 const NUM_KEYS = 20;
 
@@ -24,8 +21,18 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   keyRect.height);
 
 
-let currentSubdivision = 3;
+const controls = document.createElement('div');
+controls.id = 'controls';
+document.body.appendChild(controls);
+const subdivisionInput = document.createElement('input');
+subdivisionInput.type = 'number';
+subdivisionInput.value = 3;
+subdivisionInput.min = 0;
+controls.appendChild(subdivisionInput);
 
+function currentSubdivision() {
+  return subdivisionInput.valueAsNumber;
+}
 
 // Helper functions
 // -----------------------------------------------------------------------------
@@ -133,7 +140,7 @@ document.addEventListener('mouseup', event => {
   if (event.srcElement === canvas) {
     const selRect = layerManager.selection.rect;
     if (selRect.width > 0 && selRect.height > 0) {
-      layerManager.addLayer(...selRect, currentSubdivision);
+      layerManager.addLayer(...selRect, currentSubdivision());
     }
   }
 });
