@@ -1,4 +1,4 @@
-/* global Rectangle, Layer */
+/* global Point, Rectangle, Layer */
 
 class LayerManager {
   constructor() {
@@ -7,7 +7,7 @@ class LayerManager {
     this.dragging = {
       layer: undefined,
       offset: new Point(0, 0)
-    }
+    };
     this.selection = {
       active: false,
       rect: new Rectangle()
