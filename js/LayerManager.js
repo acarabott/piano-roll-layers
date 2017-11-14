@@ -4,7 +4,10 @@ class LayerManager {
   constructor() {
     this._layers = [];
     this.currentLayer = undefined;
-    this.draggingLayer = undefined;
+    this.dragging = {
+      layer: undefined,
+      offset: new Point(0, 0)
+    }
     this.selection = {
       active: false,
       rect: new Rectangle()

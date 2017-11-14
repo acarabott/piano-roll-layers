@@ -149,18 +149,24 @@ function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
   return new Point(x, y);
 }
 
-function getPointFromInput(event) {
-  let point = new Point(event.offsetX, event.offsetY);
+function snapPointToLayers(point) {
   const rects = layerManager.layers.map(l => l.rects).reduce((cur, prev) => {
     return prev.concat(cur);
   }, [patternRect]);
-  if (snapping) { point = getSnappedPoint(point, patternRect, NUM_KEYS, rects); }
+  return getSnappedPoint(point, patternRect, NUM_KEYS, rects);
+}
+
+function getPointFromInput(event) {
+  let point = new Point(event.offsetX, event.offsetY);
+  if (snapping) { point = snapPointToLayers(point); }
   return point;
 }
 
 canvas.addEventListener('mousedown', event => {
   if (layerManager.highlightedLayers.length > 0) {
-    layerManager.draggingLayer = layerManager.highlightedLayers[0];
+    layerManager.dragging.layer = layerManager.highlightedLayers[0];
+    const point = new Point(event.offsetX, event.offsetY);
+    layerManager.dragging.offset = point.subtract(layerManager.dragging.layer.frame.tl);
   }
   else {
     layerManager.selection.active = true;
@@ -171,7 +177,7 @@ canvas.addEventListener('mousedown', event => {
 });
 
 document.addEventListener('mouseup', event => {
-  layerManager.draggingLayer = undefined;
+  layerManager.dragging.layer = undefined;
 
   if (event.srcElement === canvas) {
     if (layerManager.selection.active) {
@@ -197,15 +203,17 @@ canvas.addEventListener('mousemove', event => {
   if (!layerManager.selection.active) {
     const point = new Point(event.offsetX, event.offsetY);
     layerManager.layers.forEach(layer => {
-      layer.highlight = layer.frame.isPointOnLine(point, 1);
+      layer.highlight = layer.frame.isPointOnLine(point, 4);
     });
   }
 
   // dragging layer
-  if (layerManager.draggingLayer !== undefined) {
-    const point = getPointFromInput(event);
-    layerManager.draggingLayer.x = point.x;
-    layerManager.draggingLayer.y = point.y;
+  if (layerManager.dragging.layer !== undefined) {
+    const inputPoint = new Point(event.offsetX, event.offsetY);
+    let origin = inputPoint.subtract(layerManager.dragging.offset);
+    if (snapping) { origin = snapPointToLayers(origin); }
+    layerManager.dragging.layer.x = origin.x;
+    layerManager.dragging.layer.y = origin.y;
   }
 });
 
