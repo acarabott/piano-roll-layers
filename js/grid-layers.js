@@ -4,7 +4,6 @@
   TODO:
 
   - resize layers
-  - copy layer
   - text in each chunk? 1 2 3 4
 */
 
@@ -183,6 +182,12 @@ canvas.addEventListener('mousedown', event => {
     const point = getPointFromInput(event);
     layerManager.selection.rect.tl = point;
     layerManager.selection.rect.br = point;
+  }
+});
+
+document.addEventListener('mousedown', event => {
+  if (event.target !== canvas) {
+    layerManager.currentLayer = undefined;
   }
 });
 
