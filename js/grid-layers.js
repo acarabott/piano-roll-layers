@@ -3,10 +3,6 @@
 /*
   TODO:
 
-  - cursor
-    - copy
-    - layer
-    - notes
   - resize layers
   - put at top and overlay the vertical lines?
   - dont use linlin for midi note number, gets fucked up.
@@ -77,6 +73,9 @@ class ModeManager {
   set currentMode(mode) {
     this._currentMode = mode;
     this.changed = true;
+    document.body.style.cursor = mode === modes.notes  ? 'pointer'
+                               : mode === modes.layers ? 'crosshair'
+                               : 'default';
   }
 }
 
@@ -101,6 +100,7 @@ class ModeManagerRenderer {
 }
 
 const modeManager = new ModeManager();
+modeManager.currentMode = modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 
 const audio = new AudioContext();
@@ -149,7 +149,9 @@ class Note {
     const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, parentRect.height));
     const width = Math.max(2, parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples));
     ctx.fillStyle = style;
+    ctx.globalAlpha = 0.5;
     ctx.fillRect(x, y, width, noteHeight);
+    ctx.globalAlpha = 1.0;
   }
 
   get sampleEnd() {
@@ -414,7 +416,7 @@ canvas.addEventListener('mousemove', event => {
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
-  if (event.key === 'Alt') { layerManager.dragging.copy = true; }
+  if (event.key === 'Alt') { layerManager.copying = true; }
 
   if (document.activeElement !== subdivisionInput) {
     if (event.key === '1') { modeManager.currentMode = modes.layers; }
@@ -429,7 +431,7 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keyup', event => {
   if (event.key === 'Shift' && !snapping) { snapping = true; }
-  if (event.key === 'Alt') { layerManager.dragging.copy = false; }
+  if (event.key === 'Alt') { layerManager.copying = false; }
 });
 
 subdivisionInput.addEventListener('input',event => {

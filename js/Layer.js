@@ -8,7 +8,8 @@ class Layer {
     this.height = height;
     this.subdivision = 1;
     this.active = true;
-    this.highlight = false;
+    this._highlight = false;
+    this.prevCursor = 'default';
   }
 
   render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
@@ -59,5 +60,15 @@ class Layer {
     const clone = new Layer(this.x, this.y, this.width, this.height);
     clone.subdivision = this.subdivision;
     return clone;
+  }
+
+  get highlight() {
+    return this._highlight;
+  }
+
+  set highlight(highlight) {
+    if (highlight && !this._highlight) { this.prevCursor = document.body.style.cursor; }
+    document.body.style.cursor = highlight ? 'grab' : this.prevCursor;
+    this._highlight = highlight;
   }
 }
