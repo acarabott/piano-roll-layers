@@ -304,7 +304,7 @@ canvas.addEventListener('mousedown', event => {
 
 document.addEventListener('mousedown', event => {
   if (modeManager.currentMode === modes.layers) {
-    if (event.target !== canvas) {
+    if (event.target === document.body) {
       layerManager.currentLayer = undefined;
     }
   }
