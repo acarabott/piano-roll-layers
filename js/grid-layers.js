@@ -3,9 +3,9 @@
 /*
   TODO:
 
+  - refactor bullshit
   - resize layers
   - put at top and overlay the vertical lines?
-  - dont use linlin for midi note number, gets fucked up.
 */
 
 // Helper functions
@@ -293,6 +293,12 @@ function getPointFromInput(event) {
   return point;
 }
 
+function rectPointToMidiNote(rectangle, point, rootNote, numNotes) {
+  const noteHeight = rectangle.height / numNotes;
+  const noteIdx = numNotes - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
+  return rootNote + noteIdx;
+}
+
 canvas.addEventListener('mousedown', event => {
   if (modeManager.currentMode === modes.layers) {
     if (layerManager.highlightedLayers.length > 0) {
@@ -310,8 +316,7 @@ canvas.addEventListener('mousedown', event => {
   }
   else if (modeManager.currentMode === modes.notes) {
     const point = getPointFromInput(event);
-    const noteHeight = patternRect.height / NUM_KEYS;
-    const midiNote = Math.floor(linlin(point.y, 0, patternRect.height - noteHeight, 60 + NUM_KEYS, 60));
+    const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
     const freq = midiToFreq(midiNote);
     // TODO this is a hack, hardcoded length on the grid...
     const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
@@ -405,8 +410,7 @@ canvas.addEventListener('mousemove', event => {
   else if (modeManager.currentMode === modes.notes) {
     if (noteManager.currentNote !== undefined) {
       const point = getPointFromInput(event);
-      const noteHeight = patternRect.height / NUM_KEYS;
-      const midiNote = Math.floor(linlin(point.y, 0, patternRect.height - noteHeight, 60 + NUM_KEYS, 60));
+      const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
       const freq = midiToFreq(midiNote);
       noteManager.currentNote.freq = freq;
       noteManager.currentNote.sampleEnd = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
