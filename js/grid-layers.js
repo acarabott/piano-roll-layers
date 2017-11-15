@@ -3,9 +3,53 @@
 /*
   TODO:
 
+  - cursor
+    - copy
+    - layer
+    - notes
   - resize layers
   - note input!!!!
+  - put at top and overlay the vertical lines?
 */
+
+// Helper functions
+// -----------------------------------------------------------------------------
+
+function loop(n, func) {
+  for (let i = 0; i < n; i++) {
+    func(i, n);
+  }
+}
+
+function linlin(val, inMin, inMax, outMin, outMax, clamp='minmax') {
+  if (clamp === 'minmax') {
+    if (val <= inMin) { return outMin; }
+    if (val >= inMax) { return outMax; }
+  }
+  else if (clamp === 'min' && val <= inMin) { return outMin; }
+  else if (clamp === 'max' && val >= inMax) { return outMax; }
+  return outMin + (((val - inMin) / (inMax - inMin)) * (outMax - outMin));
+}
+
+function constrain(val, min=0, max=1.0) {
+  return Math.min(Math.min(val, max), min);
+}
+
+function rrand(min, max) {
+  return min + (Math.random() * (max - min));
+}
+
+function rrandint(min, max) {
+  return Math.floor(rrand(min, max));
+}
+
+function midiToFreq(midinote) {
+  return 440 * Math.pow(2, (midinote - 69) * 0.08333333333333333333333333);
+}
+
+function freqToMidi(freq) {
+  return Math.log2(freq * 0.002272727272727272727272727) * 12 + 69;
+}
 
 const color = {
   blue:   'rgb(43, 156, 212)',
@@ -119,46 +163,6 @@ function currentSubdivision() {
   const value = Math.max(parseInt(subdivisionInput.value, 10), 0);
   return isFinite(value) ? value : 1;
 }
-
-// Helper functions
-// -----------------------------------------------------------------------------
-
-function loop(n, func) {
-  for (let i = 0; i < n; i++) {
-    func(i, n);
-  }
-}
-
-function linlin(val, inMin, inMax, outMin, outMax, clamp='minmax') {
-  if (clamp === 'minmax') {
-    if (val <= inMin) { return outMin; }
-    if (val >= inMax) { return outMax; }
-  }
-  else if (clamp === 'min' && val <= inMin) { return outMin; }
-  else if (clamp === 'max' && val >= inMax) { return outMax; }
-  return outMin + (((val - inMin) / (inMax - inMin)) * (outMax - outMin));
-}
-
-function constrain(val, min=0, max=1.0) {
-  return Math.min(Math.min(val, max), min);
-}
-
-function rrand(min, max) {
-  return min + (Math.random() * (max - min));
-}
-
-function rrandint(min, max) {
-  return Math.floor(rrand(min, max));
-}
-
-function midiToFreq(midinote) {
-  return 440 * Math.pow(2, (midinote - 69) * 0.08333333333333333333333333);
-}
-
-function freqToMidi(freq) {
-  return Math.log2(freq * 0.002272727272727272727272727) * 12 + 69;
-}
-
 
 
 // Render functions
