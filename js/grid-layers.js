@@ -8,8 +8,8 @@
     - layer
     - notes
   - resize layers
-  - note input!!!!
   - put at top and overlay the vertical lines?
+  - dont use linlin for midi note number, gets fucked up.
 */
 
 // Helper functions
@@ -139,7 +139,7 @@ class Note {
   constructor(freq, sampleStart, sampleEnd) {
     this.freq = freq;
     this.sampleStart = sampleStart;
-    this.sampleEnd = sampleEnd;
+    this._sampleEnd = sampleEnd;
   }
 
   render(ctx, style, parentRect, parentNumSamples, parentNumNotes) {
@@ -147,9 +147,17 @@ class Note {
     const midiNote = freqToMidi(this.freq);
     const noteHeight = parentRect.height / parentNumNotes;
     const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, parentRect.height));
-    const width = parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples);
+    const width = Math.max(2, parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples));
     ctx.fillStyle = style;
     ctx.fillRect(x, y, width, noteHeight);
+  }
+
+  get sampleEnd() {
+    return this._sampleEnd;
+  }
+
+  set sampleEnd(sampleEnd) {
+    this._sampleEnd = Math.max(sampleEnd, this.sampleStart + 1);
   }
 }
 
@@ -161,10 +169,8 @@ class NoteManager {
 
   get notes() { return this._notes; }
 
-  addNote(freq, sampleStart, sampleEnd) {
-    const note = new Note(freq, sampleStart, sampleEnd);
+  addNote(note) {
     this._notes.push(note);
-    return note;
   }
 }
 
@@ -228,7 +234,9 @@ function render() {
   noteManager.notes.forEach((note, i, arr) => {
     note.render(ctx, color.blue, patternRect, 10 * audio.sampleRate, NUM_KEYS);
   });
-
+  if (noteManager.currentNote !== undefined) {
+    noteManager.currentNote.render(ctx, color.green, patternRect, 10 * audio.sampleRate, NUM_KEYS);
+  }
 
   ctx.restore();
 }
@@ -306,8 +314,7 @@ canvas.addEventListener('mousedown', event => {
     // TODO this is a hack, hardcoded length on the grid...
     const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
     const sampleEnd = sampleStart + 0.25 * audio.sampleRate;
-    // noteManager.currentNote = new Note(freq, sampleStart, sampleEnd);
-    noteManager.addNote(freq, sampleStart, sampleEnd);
+    noteManager.currentNote = new Note(freq, sampleStart, sampleEnd);
   }
 });
 
@@ -361,7 +368,10 @@ document.addEventListener('mouseup', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    // console.log('notes mouseup');
+    if (event.srcElement === canvas) {
+      noteManager.addNote(noteManager.currentNote);
+    }
+    noteManager.currentNote = undefined;
   }
 });
 
@@ -391,7 +401,14 @@ canvas.addEventListener('mousemove', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    // console.log('notes mousemove');
+    if (noteManager.currentNote !== undefined) {
+      const point = getPointFromInput(event);
+      const noteHeight = patternRect.height / NUM_KEYS;
+      const midiNote = Math.floor(linlin(point.y, 0, patternRect.height - noteHeight, 60 + NUM_KEYS, 60));
+      const freq = midiToFreq(midiNote);
+      noteManager.currentNote.freq = freq;
+      noteManager.currentNote.sampleEnd = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
+    }
   }
 });
 
