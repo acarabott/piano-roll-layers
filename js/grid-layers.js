@@ -141,11 +141,22 @@ class Note {
     this.sampleStart = sampleStart;
     this.sampleEnd = sampleEnd;
   }
+
+  render(ctx, style, parentRect, parentNumSamples, parentNumNotes) {
+    const x = parentRect.x + (this.sampleStart / parentNumSamples) * parentRect.width;
+    const midiNote = freqToMidi(this.freq);
+    const noteHeight = parentRect.height / parentNumNotes;
+    const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, parentRect.height));
+    const width = parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples);
+    ctx.fillStyle = style;
+    ctx.fillRect(x, y, width, noteHeight);
+  }
 }
 
 class NoteManager {
   constructor() {
     this._notes = [];
+    this.currentNote;
   }
 
   get notes() { return this._notes; }
@@ -215,16 +226,9 @@ function render() {
 
   // notes
   noteManager.notes.forEach((note, i, arr) => {
-    ctx.fillStyle = color.blue;
-    const x = patternRect.x + (note.sampleStart / (10 * audio.sampleRate)) * patternRect.width;
-    const midiNote = freqToMidi(note.freq);
-    const noteHeight = patternRect.height / NUM_KEYS;
-    const y = patternRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, patternRect.height));
-
-    const width = patternRect.width * ((note.sampleEnd - note.sampleStart) /
-                                       (10 * audio.sampleRate));
-    ctx.fillRect(x, y, width, noteHeight);
+    note.render(ctx, color.blue, patternRect, 10 * audio.sampleRate, NUM_KEYS);
   });
+
 
   ctx.restore();
 }
@@ -302,6 +306,7 @@ canvas.addEventListener('mousedown', event => {
     // TODO this is a hack, hardcoded length on the grid...
     const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
     const sampleEnd = sampleStart + 0.25 * audio.sampleRate;
+    // noteManager.currentNote = new Note(freq, sampleStart, sampleEnd);
     noteManager.addNote(freq, sampleStart, sampleEnd);
   }
 });
