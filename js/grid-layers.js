@@ -59,6 +59,7 @@ class ModeManagerRenderer {
 const modeManager = new ModeManager();
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 
+const audio = new AudioContext();
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
@@ -90,6 +91,30 @@ controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
 controls.appendChild(modeManagerRenderer.label);
 
+class Note {
+  constructor(freq, sampleStart, sampleEnd) {
+    this.freq = freq;
+    this.sampleStart = sampleStart;
+    this.sampleEnd = sampleEnd;
+  }
+}
+
+class NoteManager {
+  constructor() {
+    this._notes = [];
+  }
+
+  get notes() { return this._notes; }
+
+  addNote(freq, sampleStart, sampleEnd) {
+    const note = new Note(freq, sampleStart, sampleEnd);
+    this._notes.push(note);
+    return note;
+  }
+}
+
+const noteManager = new NoteManager();
+
 function currentSubdivision() {
   const value = subdivisionInput.valueAsNumber;
   return isFinite(value) ? value : 1;
@@ -104,6 +129,16 @@ function loop(n, func) {
   }
 }
 
+function linlin(val, inMin, inMax, outMin, outMax, clamp='minmax') {
+  if (clamp === 'minmax') {
+    if (val <= inMin) { return outMin; }
+    if (val >= inMax) { return outMax; }
+  }
+  else if (clamp === 'min' && val <= inMin) { return outMin; }
+  else if (clamp === 'max' && val >= inMax) { return outMax; }
+  return outMin + (((val - inMin) / (inMax - inMin)) * (outMax - outMin));
+}
+
 function constrain(val, min=0, max=1.0) {
   return Math.min(Math.min(val, max), min);
 }
@@ -115,6 +150,15 @@ function rrand(min, max) {
 function rrandint(min, max) {
   return Math.floor(rrand(min, max));
 }
+
+function midiToFreq(midinote) {
+  return 440 * Math.pow(2, (midinote - 69) * 0.08333333333333333333333333);
+}
+
+function freqToMidi(freq) {
+  return Math.log2(freq * 0.002272727272727272727272727) * 12 + 69;
+}
+
 
 
 // Render functions
@@ -140,9 +184,11 @@ function render() {
   ctx.fillStyle = 'rgb(255, 255, 255)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // piano / background
   renderPiano(ctx, keyRect, NUM_KEYS);
   renderPiano(ctx, patternRect, NUM_KEYS, 0.1);
 
+  // layers
   layerManager.layers.forEach(layer => {
     const isCurrent = layer === layerManager.currentLayer;
     layer.render(ctx, isCurrent ? color.blue : color.black,
@@ -162,6 +208,19 @@ function render() {
     ctx.strokeStyle = layerManager.dragging.copy ? color.green : color.black;
     layerManager.dragging.layer.rects.forEach(rect => ctx.strokeRect(...rect));
   }
+
+  // notes
+  noteManager.notes.forEach((note, i, arr) => {
+    ctx.fillStyle = color.blue;
+    const x = patternRect.x + (note.sampleStart / (10 * audio.sampleRate)) * patternRect.width;
+    const midiNote = freqToMidi(note.freq);
+    const noteHeight = patternRect.height / NUM_KEYS;
+    const y = patternRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, patternRect.height));
+
+    const width = patternRect.width * ((note.sampleEnd - note.sampleStart) /
+                                       (10 * audio.sampleRate));
+    ctx.fillRect(x, y, width, noteHeight);
+  });
 
   ctx.restore();
 }
@@ -232,7 +291,14 @@ canvas.addEventListener('mousedown', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    console.log('notes mousedown');
+    const point = getPointFromInput(event);
+    const noteHeight = patternRect.height / NUM_KEYS;
+    const midiNote = Math.floor(linlin(point.y, 0, patternRect.height - noteHeight, 60 + NUM_KEYS, 60));
+    const freq = midiToFreq(midiNote);
+    // TODO this is a hack, hardcoded length on the grid...
+    const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
+    const sampleEnd = sampleStart + 0.25 * audio.sampleRate;
+    noteManager.addNote(freq, sampleStart, sampleEnd);
   }
 });
 
@@ -243,7 +309,7 @@ document.addEventListener('mousedown', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    console.log('notes mousedown2');
+    // console.log('notes mousedown2');
   }
 });
 
@@ -284,7 +350,7 @@ document.addEventListener('mouseup', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    console.log('notes mouseup');
+    // console.log('notes mouseup');
   }
 });
 
@@ -314,7 +380,7 @@ canvas.addEventListener('mousemove', event => {
     }
   }
   else if (modeManager.currentMode === modes.notes) {
-    console.log('notes mousemove');
+    // console.log('notes mousemove');
   }
 });
 
