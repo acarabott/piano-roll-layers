@@ -81,7 +81,7 @@ controls.id = 'controls';
 document.body.appendChild(controls);
 const subdivisionInput = document.createElement('input');
 subdivisionInput.id = 'subdivision';
-subdivisionInput.type = 'number';
+subdivisionInput.type = 'text';
 subdivisionInput.value = 3;
 subdivisionInput.min = 1;
 const subdivisionLabel = document.createElement('label');
@@ -116,7 +116,7 @@ class NoteManager {
 const noteManager = new NoteManager();
 
 function currentSubdivision() {
-  const value = subdivisionInput.valueAsNumber;
+  const value = Math.max(parseInt(subdivisionInput.value, 10), 0);
   return isFinite(value) ? value : 1;
 }
 
@@ -323,6 +323,8 @@ document.addEventListener('mouseup', event => {
           const layer = layerManager.addLayer(...selRect, currentSubdivision());
           layerManager.currentLayer = layer;
           subdivisionInput.focus();
+          subdivisionInput.selectionStart = 0;
+          subdivisionInput.selectionEnd = subdivisionInput.value.length;
         }
       }
 
@@ -404,13 +406,9 @@ document.addEventListener('keyup', event => {
   if (event.key === 'Alt') { layerManager.dragging.copy = false; }
 });
 
-subdivisionInput.addEventListener('input', event => {
-  const value = isFinite(subdivisionInput.valueAsNumber)
-    ? subdivisionInput.valueAsNumber
-    : 1;
-
+subdivisionInput.addEventListener('input',event => {
   if (layerManager.currentLayer !== undefined) {
-    layerManager.currentLayer.subdivision = value;
+    layerManager.currentLayer.subdivision = currentSubdivision();
     layerManager.layersChanged = true;
   }
 });
