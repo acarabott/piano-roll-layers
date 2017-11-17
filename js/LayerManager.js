@@ -58,7 +58,6 @@ export class LayerManager {
         currentInput.checked = layer === this._currentLayer;
         currentInput.addEventListener('change', event => {
           this.currentLayer = layer;
-          // this.layersChanged = true;
         });
         li.appendChild(currentInput);
 
