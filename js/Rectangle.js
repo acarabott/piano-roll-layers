@@ -1,21 +1,6 @@
-class Point {
-  constructor(x=0, y=0) {
-    this.x = x;
-    this.y = y;
-  }
+import { Point } from './Point.js';
 
-  *[Symbol.iterator]() { yield this.x; yield this.y; }
-
-  add(point) {
-    return new Point(this.x + point.x, this.y + point.y);
-  }
-
-  subtract(point) {
-    return new Point(this.x - point.x, this.y - point.y);
-  }
-}
-
-class Rectangle {
+export class Rectangle {
   constructor(x=0, y=0, width=0, height=0) {
     this.x = x;
     this.y = y;

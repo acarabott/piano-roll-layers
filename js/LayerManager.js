@@ -1,6 +1,8 @@
-/* global Point, Rectangle, Layer */
+import { Point } from './Point.js';
+import { Layer } from './Layer.js';
+import { Rectangle } from './Rectangle.js';
 
-class LayerManager {
+export class LayerManager {
   constructor() {
     this._layers = [];
     this._currentLayer = undefined;

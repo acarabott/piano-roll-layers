@@ -1,5 +1,3 @@
-/* global Point, Rectangle, Layer, LayerManager, Cursor */
-
 /*
   TODO:
 
@@ -11,93 +9,22 @@
 // Helper functions
 // -----------------------------------------------------------------------------
 
-function loop(n, func) {
-  for (let i = 0; i < n; i++) {
-    func(i, n);
-  }
-}
-
-function linlin(val, inMin, inMax, outMin, outMax, clamp='minmax') {
-  if (clamp === 'minmax') {
-    if (val <= inMin) { return outMin; }
-    if (val >= inMax) { return outMax; }
-  }
-  else if (clamp === 'min' && val <= inMin) { return outMin; }
-  else if (clamp === 'max' && val >= inMax) { return outMax; }
-  return outMin + (((val - inMin) / (inMax - inMin)) * (outMax - outMin));
-}
-
-function constrain(val, min=0, max=1.0) {
-  return Math.min(Math.min(val, max), min);
-}
-
-function rrand(min, max) {
-  return min + (Math.random() * (max - min));
-}
-
-function rrandint(min, max) {
-  return Math.floor(rrand(min, max));
-}
-
-function midiToFreq(midinote) {
-  return 440 * Math.pow(2, (midinote - 69) * 0.08333333333333333333333333);
-}
-
-function freqToMidi(freq) {
-  return Math.log2(freq * 0.002272727272727272727272727) * 12 + 69;
-}
-
-const color = {
-  blue:   'rgb(43, 156, 212)',
-  red:    'rgb(212, 100, 100)',
-  orange: 'rgb(249, 182, 118)',
-  green:  'rgb(43, 212, 156)',
-  black:  'rgb(0, 0, 0)'
-};
+import { loop, rrandint, midiToFreq } from './utils.js';
+import * as color from './color.js';
+import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
+import { Note, NoteManager } from './Note.js';
+import { LayerManager } from './LayerManager.js';
+import { Rectangle } from './Rectangle.js';
+import { Cursor } from './Cursor.js';
 
 const modes = {
   layers: Symbol('layers'),
   notes: Symbol('notes')
 };
 
-class ModeManager {
-  constructor() {
-    this._currentMode = modes.layers;
-    this.changed = true;
-  }
-
-  get currentMode() {
-    return this._currentMode;
-  }
-
-  set currentMode(mode) {
-    this._currentMode = mode;
-    this.changed = true;
-  }
-}
-
-class ModeManagerRenderer {
-  constructor(modeManager) {
-    this.modeManager = modeManager;
-    this.label = document.createElement('div');
-  }
-
-  update() {
-    if (this.modeManager.changed) {
-      const currentModeEntry = Object.entries(modes).find(pair => {
-        return pair[1] === this.modeManager.currentMode;
-      });
-      const label = currentModeEntry === undefined
-        ? ''
-        : `${currentModeEntry[0][0].toUpperCase()}${currentModeEntry[0].slice(1)}`;
-      this.label.textContent = `Mode: ${label}`;
-      this.modeManager.changed = false;
-    }
-  }
-}
-
 const modeManager = new ModeManager();
-modeManager.currentMode = modes.layers;
+modeManager.addModes('layers', 'notes');
+modeManager.currentMode = 'layers';
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 
 const audio = new AudioContext();
@@ -138,47 +65,6 @@ subdivisionLabel.textContent = 'Subdivision: ';
 controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
 controls.appendChild(modeManagerRenderer.label);
-
-class Note {
-  constructor(freq, sampleStart, sampleEnd) {
-    this.freq = freq;
-    this.sampleStart = sampleStart;
-    this._sampleEnd = sampleEnd;
-  }
-
-  render(ctx, style, parentRect, parentNumSamples, parentNumNotes) {
-    const x = parentRect.x + (this.sampleStart / parentNumSamples) * parentRect.width;
-    const midiNote = freqToMidi(this.freq);
-    const noteHeight = parentRect.height / parentNumNotes;
-    const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + NUM_KEYS, 0, parentRect.height));
-    const width = Math.max(2, parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples));
-    ctx.fillStyle = style;
-    ctx.globalAlpha = 0.5;
-    ctx.fillRect(x, y, width, noteHeight);
-    ctx.globalAlpha = 1.0;
-  }
-
-  get sampleEnd() {
-    return this._sampleEnd;
-  }
-
-  set sampleEnd(sampleEnd) {
-    this._sampleEnd = Math.max(sampleEnd, this.sampleStart + 1);
-  }
-}
-
-class NoteManager {
-  constructor() {
-    this._notes = [];
-    this.currentNote;
-  }
-
-  get notes() { return this._notes; }
-
-  addNote(note) {
-    this._notes.push(note);
-  }
-}
 
 const noteManager = new NoteManager();
 

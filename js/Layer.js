@@ -1,6 +1,6 @@
-/* global Rectangle */
+import { Rectangle } from './Rectangle.js';
 
-class Layer {
+export class Layer {
   constructor(x, y, width, height) {
     this.x = x;
     this.y = y;

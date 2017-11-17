@@ -1,4 +1,4 @@
-class Cursor {
+export class Cursor {
   constructor() {
     this.cursorStates = [];
   }
