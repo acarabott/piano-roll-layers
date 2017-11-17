@@ -1,3 +1,5 @@
+import { toCapitalCase } from './utils.js';
+
 export class ModeManager {
   constructor() {
     this.modes = {};
@@ -10,15 +12,21 @@ export class ModeManager {
   }
 
   get currentMode() {
-    const found = Object.entries(this.modes).find(e => e[1] === this._currentMode);
-    return found !== undefined ? found[0] : undefined;
+    return this._currentMode;
   }
 
-  set currentMode(name) {
-    if (Object.keys(this.modes).includes(name)) {
-      this._currentMode = this.modes[name];
+  set currentMode(symbol) {
+    if (Object.values(this.modes).includes(symbol)) {
+      this._currentMode = symbol;
       this.changed = true;
     }
+    else {
+      throw new TypeError(`Invalid mode: ${symbol}`);
+    }
+  }
+
+  getNameForMode(symbol) {
+    return Object.entries(this.modes).find(e => e[1] === this._currentMode)[0];
   }
 }
 
@@ -30,12 +38,10 @@ export class ModeManagerRenderer {
 
   update() {
     if (this.manager.changed) {
-      const currentModeEntry = Object.entries(this.manager.modes).find(pair => {
-        return pair[1] === this.manager.currentMode;
-      });
-      const label = currentModeEntry === undefined
+      const label = this.manager.currentMode === undefined
         ? ''
-        : `${currentModeEntry[0][0].toUpperCase()}${currentModeEntry[0].slice(1)}`;
+        : toCapitalCase(this.manager.getNameForMode(this.manager.currentMode));
+
       this.label.textContent = `Mode: ${label}`;
       this.manager.changed = false;
     }

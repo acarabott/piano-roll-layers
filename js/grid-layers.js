@@ -16,23 +16,21 @@ import { Note, NoteManager } from './Note.js';
 import { LayerManager } from './LayerManager.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
-
-const modes = {
-  layers: Symbol('layers'),
-  notes: Symbol('notes')
-};
+import { Point } from './Point.js';
 
 const modeManager = new ModeManager();
 modeManager.addModes('layers', 'notes');
-modeManager.currentMode = 'layers';
+modeManager.currentMode = modeManager.modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 
 const audio = new AudioContext();
+
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
+
 const layerManager = new LayerManager();
 let snapping = true;
 const NUM_KEYS = 20;
@@ -44,11 +42,11 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   keyRect.height);
 
 const cursor = new Cursor();
-cursor.addCursorState(() => modeManager.currentMode === modes.layers, 'crosshair');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
 cursor.addCursorState(() => layerManager.highlightedLayers.length > 0, 'move');
 cursor.addCursorState(() => layerManager.dragging, 'move');
 cursor.addCursorState(() => layerManager.copying, 'copy');
-cursor.addCursorState(() => modeManager.currentMode === modes.notes, 'pointer');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
 
 
 const controls = document.createElement('div');
@@ -191,7 +189,7 @@ function rectPointToMidiNote(rectangle, point, rootNote, numNotes) {
 }
 
 canvas.addEventListener('mousedown', event => {
-  if (modeManager.currentMode === modes.layers) {
+  if (modeManager.currentMode === modeManager.modes.layers) {
     if (layerManager.highlightedLayers.length > 0) {
       const chosen = layerManager.highlightedLayers[0];
       layerManager.draggingLayer = chosen;
@@ -205,7 +203,7 @@ canvas.addEventListener('mousedown', event => {
       layerManager.selection.rect.br = point;
     }
   }
-  else if (modeManager.currentMode === modes.notes) {
+  else if (modeManager.currentMode === modeManager.modes.notes) {
     const point = getPointFromInput(event);
     const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
     const freq = midiToFreq(midiNote);
@@ -217,18 +215,18 @@ canvas.addEventListener('mousedown', event => {
 });
 
 document.addEventListener('mousedown', event => {
-  if (modeManager.currentMode === modes.layers) {
+  if (modeManager.currentMode === modeManager.modes.layers) {
     if (event.target === document.body) {
       layerManager.currentLayer = undefined;
     }
   }
-  else if (modeManager.currentMode === modes.notes) {
+  else if (modeManager.currentMode === modeManager.modes.notes) {
     // console.log('notes mousedown2');
   }
 });
 
 document.addEventListener('mouseup', event => {
-  if (modeManager.currentMode === modes.layers) {
+  if (modeManager.currentMode === modeManager.modes.layers) {
     if (event.srcElement === canvas) {
       if (layerManager.selection.active) {
         layerManager.selection.active = false;
@@ -265,7 +263,7 @@ document.addEventListener('mouseup', event => {
       }
     }
   }
-  else if (modeManager.currentMode === modes.notes) {
+  else if (modeManager.currentMode === modeManager.modes.notes) {
     if (event.srcElement === canvas) {
       noteManager.addNote(noteManager.currentNote);
     }
@@ -276,7 +274,7 @@ document.addEventListener('mouseup', event => {
 });
 
 canvas.addEventListener('mousemove', event => {
-  if (modeManager.currentMode === modes.layers) {
+  if (modeManager.currentMode === modeManager.modes.layers) {
     // selection
     if (layerManager.selection.active) {
       const point = getPointFromInput(event);
@@ -300,7 +298,7 @@ canvas.addEventListener('mousemove', event => {
       layerManager.dragging.layer.y = origin.y;
     }
   }
-  else if (modeManager.currentMode === modes.notes) {
+  else if (modeManager.currentMode === modeManager.modes.notes) {
     if (noteManager.currentNote !== undefined) {
       const point = getPointFromInput(event);
       const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
@@ -316,8 +314,8 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Alt') { layerManager.copying = true; }
 
   if (document.activeElement !== subdivisionInput) {
-    if (event.key === '1') { modeManager.currentMode = modes.layers; }
-    if (event.key === '2') { modeManager.currentMode = modes.notes; }
+    if (event.key === '1') { modeManager.currentMode = modeManager.modes.layers; }
+    if (event.key === '2') { modeManager.currentMode = modeManager.modes.notes; }
   }
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
@@ -359,3 +357,5 @@ function test() {
 
 // test();
 document.addEventListener('DOMContentLoaded', mainLoop);
+
+window.modeManager = modeManager;

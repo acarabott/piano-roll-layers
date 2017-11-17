@@ -33,3 +33,7 @@ export function midiToFreq(midinote) {
 export function freqToMidi(freq) {
   return Math.log2(freq * 0.002272727272727272727272727) * 12 + 69;
 }
+
+export function toCapitalCase(string) {
+  return `${string[0].toUpperCase()}${string.slice(1)}`;
+}
