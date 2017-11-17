@@ -14,7 +14,7 @@ export class LayerManager {
       copy: false,
       origin: new Point(0, 0),
       clear: () => {
-        this.draggingLayer = undefined;
+        this.setDraggingLayer(undefined);
       }
     };
     this.selection = {
@@ -85,10 +85,15 @@ export class LayerManager {
     return this._layers.filter(layer => layer.highlight);
   }
 
-  set draggingLayer(layer) {
+  setDraggingLayer(layer, grabPoint) {
     this._dragging.sourceLayer = layer;
-    this._dragging.layer = layer === undefined ? undefined : layer.clone();
+    this._dragging.layer =  layer === undefined ? undefined : layer.clone();
     this._dragging.origin = layer === undefined ? undefined : layer.frame.tl;
+    this._dragging.offset = layer === undefined ? undefined : grabPoint.subtract(layer.frame.tl);
+  }
+
+  get draggingLayer() {
+    return this._dragging.layer;
   }
 
   get copying() {
@@ -109,5 +114,22 @@ export class LayerManager {
 
   set currentLayer(currentLayer) {
     this._currentLayer = currentLayer;
+  }
+
+  get dragOffset() {
+    return this._dragging.offset;
+  }
+
+  dragTo(point) {
+    if (this.dragging) { this._dragging.layer.origin = point; }
+  }
+
+  moveDraggedLayer() {
+    this._dragging.sourceLayer.origin = this._dragging.layer.frame.tl;
+    this.currentLayer = this._dragging.sourceLayer;
+  }
+
+  stopDragging() {
+    this._dragging.clear();
   }
 }

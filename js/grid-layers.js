@@ -113,11 +113,11 @@ function render() {
     ctx.strokeRect(...layerManager.selection.rect);
   }
 
-  if (layerManager.dragging.layer !== undefined) {
+  if (layerManager.dragging) {
     ctx.lineWidth = 2;
     ctx.setLineDash([20, 10]);
     ctx.strokeStyle = layerManager.dragging.copy ? color.green : color.black;
-    layerManager.dragging.layer.rects.forEach(rect => ctx.strokeRect(...rect));
+    layerManager.draggingLayer.rects.forEach(rect => ctx.strokeRect(...rect));
   }
 
   // notes
@@ -192,9 +192,8 @@ canvas.addEventListener('mousedown', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
     if (layerManager.highlightedLayers.length > 0) {
       const chosen = layerManager.highlightedLayers[0];
-      layerManager.draggingLayer = chosen;
       const point = new Point(event.offsetX, event.offsetY);
-      layerManager.dragging.offset = point.subtract(chosen.frame.tl);
+      layerManager.setDraggingLayer(chosen, point);
     }
     else {
       layerManager.selection.active = true;
@@ -240,26 +239,23 @@ document.addEventListener('mouseup', event => {
         }
       }
 
-      if (layerManager.dragging.layer !== undefined) {
+      if (layerManager.dragging) {
         if (layerManager.dragging.copy) {
           // copy the layer
-          const layer = layerManager.addLayer(...layerManager.dragging.layer.frame,
-                                              layerManager.dragging.layer.subdivision);
+          const layer = layerManager.addLayer(...layerManager.draggingLayer.frame,
+                                              layerManager.draggingLayer.subdivision);
 
           // reset the original
-          layerManager.dragging.layer.x = layerManager.dragging.origin.x;
-          layerManager.dragging.layer.y = layerManager.dragging.origin.y;
+          layerManager.draggingLayer.x = layerManager.dragging.origin.x;
+          layerManager.draggingLayer.y = layerManager.dragging.origin.y;
           layerManager.currentLayer = layer;
         }
         else {
           // move the original
-          layerManager.dragging.sourceLayer.x = layerManager.dragging.layer.x;
-          layerManager.dragging.sourceLayer.y = layerManager.dragging.layer.y;
-
-          layerManager.currentLayer = layerManager.dragging.sourceLayer;
+          layerManager.moveDraggedLayer();
         }
         subdivisionInput.focus();
-        layerManager.dragging.clear();
+        layerManager.stopDragging();
       }
     }
   }
@@ -270,7 +266,7 @@ document.addEventListener('mouseup', event => {
     noteManager.currentNote = undefined;
   }
 
-  layerManager.draggingLayer = undefined;
+  layerManager.setDraggingLayer(undefined);
 });
 
 canvas.addEventListener('mousemove', event => {
@@ -290,12 +286,11 @@ canvas.addEventListener('mousemove', event => {
     }
 
     // dragging layer
-    if (layerManager.dragging.layer !== undefined) {
+    if (layerManager.dragging) {
       const inputPoint = new Point(event.offsetX, event.offsetY);
-      let origin = inputPoint.subtract(layerManager.dragging.offset);
+      let origin = inputPoint.subtract(layerManager.dragOffset);
       if (snapping) { origin = snapPointToLayers(origin); }
-      layerManager.dragging.layer.x = origin.x;
-      layerManager.dragging.layer.y = origin.y;
+      layerManager.dragTo(origin);
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {

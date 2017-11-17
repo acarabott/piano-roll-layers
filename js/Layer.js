@@ -60,4 +60,9 @@ export class Layer {
     clone.subdivision = this.subdivision;
     return clone;
   }
+
+  set origin (point) {
+    this.x = point.x;
+    this.y = point.y;
+  }
 }
