@@ -109,7 +109,7 @@ function render() {
   if (layerManager.selection.active) {
     ctx.strokeStyle = color.green;
     ctx.setLineDash([20, 10]);
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 2;
     ctx.strokeRect(...layerManager.selection.rect);
   }
 

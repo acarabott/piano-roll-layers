@@ -36,7 +36,7 @@ export class Layer {
 
     // border
     // ctx.setLineDash([20, 10]);
-    ctx.lineWidth = width * widthMultiplier * 4;
+    ctx.lineWidth = width * widthMultiplier * 2;
     // ctx.strokeStyle = 'rgb(255, 0, 0)';
     ctx.strokeRect(this.x, this.y, this.width, this.height);
 
