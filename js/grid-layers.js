@@ -309,8 +309,8 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Alt') { layerManager.copying = true; }
 
   if (document.activeElement !== subdivisionInput) {
-    if (event.key === '1') { modeManager.currentMode = modeManager.modes.layers; }
-    if (event.key === '2') { modeManager.currentMode = modeManager.modes.notes; }
+    if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
+    if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
   }
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
