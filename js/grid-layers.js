@@ -1,4 +1,4 @@
-/* global Point, Rectangle, Layer, LayerManager */
+/* global Point, Rectangle, Layer, LayerManager, Cursor */
 
 /*
   TODO:
@@ -73,9 +73,6 @@ class ModeManager {
   set currentMode(mode) {
     this._currentMode = mode;
     this.changed = true;
-    document.body.style.cursor = mode === modes.notes  ? 'pointer'
-                               : mode === modes.layers ? 'crosshair'
-                               : 'default';
   }
 }
 
@@ -118,6 +115,13 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   keyRect.y,
                                   canvas.width - keyRect.width,
                                   keyRect.height);
+
+const cursor = new Cursor();
+cursor.addCursorState(() => modeManager.currentMode === modes.layers, 'crosshair');
+cursor.addCursorState(() => layerManager.highlightedLayers.length > 0, 'move');
+cursor.addCursorState(() => layerManager.dragging, 'move');
+cursor.addCursorState(() => layerManager.copying, 'copy');
+cursor.addCursorState(() => modeManager.currentMode === modes.notes, 'pointer');
 
 
 const controls = document.createElement('div');
@@ -254,6 +258,7 @@ function update() {
   }
 
   modeManagerRenderer.update();
+  cursor.update();
 }
 
 // User Input
@@ -380,6 +385,8 @@ document.addEventListener('mouseup', event => {
     }
     noteManager.currentNote = undefined;
   }
+
+  layerManager.draggingLayer = undefined;
 });
 
 canvas.addEventListener('mousemove', event => {

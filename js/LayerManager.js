@@ -5,7 +5,7 @@ class LayerManager {
     this._layers = [];
     this._currentLayer = undefined;
     this.prevCursor = 'default';
-    this.dragging = {
+    this._dragging = {
       sourceLayer: undefined,
       layer: undefined,
       offset: new Point(0, 0),
@@ -85,21 +85,21 @@ class LayerManager {
   }
 
   set draggingLayer(layer) {
-    this.dragging.sourceLayer = layer;
-    this.dragging.layer = layer === undefined ? undefined : layer.clone();
-    this.dragging.origin = layer === undefined ? undefined : layer.frame.tl;
-    if (layer !== undefined) { this.prevCursor = document.body.style.cursor; }
-    document.body.style.cursor = layer !== undefined ? 'move' : this.prevCursor;
+    this._dragging.sourceLayer = layer;
+    this._dragging.layer = layer === undefined ? undefined : layer.clone();
+    this._dragging.origin = layer === undefined ? undefined : layer.frame.tl;
   }
 
   get copying() {
-    return this.dragging.copy;
+    return this._dragging.copy;
   }
 
   set copying(isCopying) {
-    if (isCopying) { this.dragging.prevCursor = document.body.style.cursor; }
-    document.body.style.cursor = isCopying ? 'copy' : this.prevCursor;
-    this.dragging.copy = isCopying;
+    this._dragging.copy = isCopying;
+  }
+
+  get dragging() {
+    return this._dragging.layer !== undefined;
   }
 
   get currentLayer() {
