@@ -8,6 +8,10 @@ export class Rectangle {
     this.height = height;
   }
 
+  static fromPoints(tl, br) {
+    return new Rectangle(...tl, br.x - tl.x, br.y - tl.y);
+  }
+
   get tl() {
     return new Point(this.x, this.y);
   }

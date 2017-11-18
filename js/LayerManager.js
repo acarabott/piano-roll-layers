@@ -181,8 +181,16 @@ export class LayerManager {
   updateMouseUp(inputPoint) {
     if (this.creation.active) {
       this.creation.active = false;
-      if (this.creation.rect.width > 0 && this.creation.rect.height > 0) {
-        this.currentLayer = this.addLayer(...this.creation.rect, this.subdivision);
+      if (Math.abs(this.creation.rect.width) > 0 && Math.abs(this.creation.rect.height) > 0) {
+        const rect = this.creation.rect.tl.lessThan(this.creation.rect.br)
+          ? this.creation.rect
+          : (() => {
+            const normal = this.creation.rect.tl.lessThan(this.creation.rect.br);
+            const tl = normal ? this.creation.rect.tl : this.creation.rect.br;
+            const br = normal ? this.creation.rect.br : this.creation.rect.tl;
+            return Rectangle.fromPoints(tl, br);
+          })();
+        this.currentLayer = this.addLayer(...rect, this.subdivision);
       }
     }
 

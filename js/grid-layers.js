@@ -291,7 +291,7 @@ canvas.addEventListener('mousemove', event => {
   }
 });
 
-canvas.addEventListener('keydown', event => {
+document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
   if (event.key === 'Alt')               { layerManager.copying = true; }
   if (event.key === 'Shift')             { layerManager.adjustingSubdivision = true; }
@@ -300,7 +300,7 @@ canvas.addEventListener('keydown', event => {
   if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
   if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
 
-  if (isFinite(parseInt(event.key, 10))) {
+  if (event.target === canvas && isFinite(parseInt(event.key, 10))) {
     layerManager.subdivisionInput(event.key);
   }
 

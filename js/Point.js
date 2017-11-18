@@ -14,12 +14,19 @@ export class Point {
     return new Point(this.x - point.x, this.y - point.y);
   }
 
-  // less than or equal to
   lessOrEqualTo(point) {
     return this.x <= point.x && this.y <= point.y;
   }
 
   greaterOrEqualTo(point) {
     return this.x >= point.x && this.y >= point.y;
+  }
+
+  lessThan(point) {
+    return this.x < point.x && this.y < point.y;
+  }
+
+  greaterThan(point) {
+    return this.x > point.x && this.y > point.y;
   }
 }
