@@ -296,7 +296,8 @@ canvas.addEventListener('mousemove', event => {
     if (!layerManager.creation.active) {
       const point = new Point(event.offsetX, event.offsetY);
       layerManager.layers.forEach(layer => {
-        layer.highlight = layer.frame.isPointOnLine(point, 4);
+        layer.highlight = layer === layerManager.currentLayer &&
+                          layer.frame.isPointOnLine(point, 4);
       });
 
       const targets = layerManager.layers.filter(layer => layer.frame.containsPoint(point));

@@ -15,16 +15,11 @@ export class Layer {
   render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
     if (!this.active) { return; }
 
-    const widthMultiplier = this.highlight ? 2 : 1;
     ctx.save();
     ctx.strokeStyle = style;
 
-    // border
-    // ctx.lineWidth = width ;
-    // ctx.strokeRect(this.x, this.y, this.width, this.height);
-
     // subdivisions
-    ctx.lineWidth = width * widthMultiplier;
+    ctx.lineWidth = width;
     this.rects.forEach((rect, i) => {
       ctx.strokeRect(...rect);
       ctx.fillStyle = style;
@@ -34,13 +29,9 @@ export class Layer {
       ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.5);
     });
 
-
     // border
-    // ctx.setLineDash([20, 10]);
-    ctx.lineWidth = width * widthMultiplier * 2;
-    // ctx.strokeStyle = 'rgb(255, 0, 0)';
+    ctx.lineWidth = width * 2;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
-
 
     ctx.restore();
   }
