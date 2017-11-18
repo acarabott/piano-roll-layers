@@ -1,7 +1,6 @@
 /*
   TODO:
-
-  - copy is broken
+  - note playback
   - resize layers
   - put at top and overlay the vertical lines?
 */
