@@ -141,7 +141,7 @@ export class LayerManager {
     this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(inputPoint, 4));
 
     const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
-    this._currentLayer = this._layers.find((layer, i) => {
+    this.currentLayer = this._layers.find((layer, i) => {
       const containsPoint = layer.frame.containsPoint(inputPoint);
       const containsRects = targets.some(target => {
         return target !== layer && layer.frame.containsPartialRect(target.frame);
