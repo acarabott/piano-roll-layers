@@ -1,7 +1,7 @@
 /*
   TODO:
 
-  - refactor bullshit
+  - copy is broken
   - resize layers
   - put at top and overlay the vertical lines?
 */
@@ -29,6 +29,7 @@ const audio = new AudioContext();
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
+canvas.setAttribute('tabindex', 1);
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
@@ -137,6 +138,9 @@ function render() {
 
 // Update loop
 // -----------------------------------------------------------------------------
+
+let timeout = undefined;
+
 function update() {
   if (layerManager.layersChanged) {
     const layerList = layerManager.list;
@@ -151,6 +155,13 @@ function update() {
     }
     if (layerManager.currentLayer.subdivisionChanged) {
       subdivisionInput.value = layerManager.currentLayer.subdivision;
+
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        subdivisionInput.selectionStart = 0;
+        subdivisionInput.selectionEnd = subdivisionInput.value.length;
+      }, 500);
+
       layerManager.currentLayer.subdivisionChanged = false;
     }
   }
@@ -315,7 +326,14 @@ canvas.addEventListener('mousemove', event => {
   }
 });
 
-document.addEventListener('keydown', event => {
+function setSubdivision(subdivision) {
+  if (layerManager.currentLayer !== undefined) {
+    layerManager.currentLayer.subdivision = subdivision;
+    layerManager.layersChanged = true;
+  }
+}
+
+canvas.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
   if (event.key === 'Alt')               { layerManager.copying = true; }
   if (event.key === 'Shift')             { layerManager.adjustingSubdivision = true; }
@@ -323,9 +341,8 @@ document.addEventListener('keydown', event => {
 
   if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
   if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
-  if (document.activeElement === subdivisionInput && ['KeyQ', 'KeyW'].includes(event.code)) {
-    event.preventDefault();
-  }
+
+  if (isFinite(parseInt(event.key, 10))) { setSubdivision(parseInt(event.key, 10)); }
 
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
@@ -340,11 +357,18 @@ document.addEventListener('keyup', event => {
   if (event.key === 'Shift')              { layerManager.adjustingSubdivision = false; }
 });
 
+subdivisionInput.addEventListener('keydown', event => {
+  const whitelist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowUp',
+    'Control', 'Alt', 'Meta', 'Shift', 'Tab', 'Backspace', 'Delete', 'Enter'];
+  if (!whitelist.includes(event.key)) { event.preventDefault(); }
+
+  if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
+  if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+});
+
 subdivisionInput.addEventListener('input', event => {
-  if (layerManager.currentLayer !== undefined) {
-    layerManager.currentLayer.subdivision = currentSubdivision();
-    layerManager.layersChanged = true;
-  }
+  setSubdivision(currentSubdivision());
 });
 
 
