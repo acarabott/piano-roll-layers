@@ -179,6 +179,13 @@ export class LayerManager {
   }
 
   updateMouseUp(inputPoint) {
+    if (this.creation.active) {
+      this.creation.active = false;
+      if (this.creation.rect.width > 0 && this.creation.rect.height > 0) {
+        this.currentLayer = this.addLayer(...this.creation.rect, this.subdivision);
+      }
+    }
+
     if (this.dragging) {
       if (this.copying) {
         // copy the layer

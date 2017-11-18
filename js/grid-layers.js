@@ -246,15 +246,6 @@ document.addEventListener('mousedown', event => {
 document.addEventListener('mouseup', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
     if (event.srcElement === canvas) {
-      if (layerManager.creation.active) {
-        layerManager.creation.active = false;
-        const selRect = layerManager.creation.rect;
-        if (selRect.width > 0 && selRect.height > 0) {
-          const layer = layerManager.addLayer(...selRect, layerManager.subdivision);
-          layerManager.currentLayer = layer;
-        }
-      }
-
       layerManager.updateMouseUp();
     }
   }
