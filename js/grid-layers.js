@@ -330,13 +330,16 @@ canvas.addEventListener('mousemove', event => {
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
-  if (event.key === 'Alt') { layerManager.copying = true; }
-  if (event.key === 'Shift') { layerManager.adjustingSubdivision = true; }
+  if (event.key === 'Alt')               { layerManager.copying = true; }
+  if (event.key === 'Shift')             { layerManager.adjustingSubdivision = true; }
+  if (event.key === 'Escape')            { document.activeElement.blur(); }
 
-  if (document.activeElement !== subdivisionInput) {
-    if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
-    if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+  if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
+  if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+  if (document.activeElement === subdivisionInput && !event.code.includes('Digit')) {
+    event.preventDefault();
   }
+
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
   // key='Alt'        code='AltLeft'
@@ -346,8 +349,8 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keyup', event => {
   if (event.key === 'Shift' && !snapping) { snapping = true; }
-  if (event.key === 'Alt') { layerManager.copying = false; }
-  if (event.key === 'Shift') { layerManager.adjustingSubdivision = false; }
+  if (event.key === 'Alt')                { layerManager.copying = false; }
+  if (event.key === 'Shift')              { layerManager.adjustingSubdivision = false; }
 });
 
 subdivisionInput.addEventListener('input', event => {
