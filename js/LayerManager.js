@@ -29,7 +29,7 @@ export class LayerManager {
     this._subdivision = 3;
     this.subdivisionString = '';
     this.subdivisionTimeout = undefined;
-    this.subdivisionTimeoutDur = 350;
+    this.subdivisionTimeoutDur = 450;
   }
 
   subdivisionInput(char) {
@@ -37,6 +37,7 @@ export class LayerManager {
 
     clearTimeout(this.subdivisionTimeout);
     this.subdivisionString += char;
+    this.currentLayer.subdivision = parseInt(this.subdivisionString, 10);
     this.subdivisionTimeout = setTimeout(() => {
       this._subdivision = parseInt(this.subdivisionString, 10);
       this.subdivisionString = '';
