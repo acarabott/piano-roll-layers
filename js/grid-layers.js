@@ -17,6 +17,7 @@ import { LayerManager } from './LayerManager.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
+import { Scroll } from './Scroll.js';
 
 const modeManager = new ModeManager();
 modeManager.addModes('layers', 'notes');
@@ -48,6 +49,9 @@ cursor.addCursorState(() => layerManager.dragging, 'move');
 cursor.addCursorState(() => layerManager.copying, 'copy');
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
 
+const scroll = new Scroll();
+scroll.range = 0.25;
+scroll.min = 1;
 
 const controls = document.createElement('div');
 controls.id = 'controls';
@@ -106,11 +110,11 @@ function render() {
                  isCurrent ? 2 : 1);
   });
 
-  if (layerManager.selection.active) {
+  if (layerManager.creation.active) {
     ctx.strokeStyle = color.green;
     ctx.setLineDash([20, 10]);
     ctx.lineWidth = 2;
-    ctx.strokeRect(...layerManager.selection.rect);
+    ctx.strokeRect(...layerManager.creation.rect);
   }
 
   if (layerManager.dragging) {
@@ -139,6 +143,17 @@ function update() {
     const layerList = layerManager.list;
     controls.appendChild(layerList);
     layerManager.layersChanged = false;
+  }
+  if (layerManager.currentLayer !== undefined) {
+    if (layerManager.currentChanged) {
+      subdivisionInput.value = layerManager.currentLayer.subdivision;
+      scroll.valueAsFloat = layerManager.currentLayer.subdivision;
+      layerManager.currentChanged = false;
+    }
+    if (layerManager.currentLayer.subdivisionChanged) {
+      subdivisionInput.value = layerManager.currentLayer.subdivision;
+      layerManager.currentLayer.subdivisionChanged = false;
+    }
   }
 
   modeManagerRenderer.update();
@@ -196,10 +211,10 @@ canvas.addEventListener('mousedown', event => {
       layerManager.setDraggingLayer(chosen, point);
     }
     else {
-      layerManager.selection.active = true;
+      layerManager.creation.active = true;
       const point = getPointFromInput(event);
-      layerManager.selection.rect.tl = point;
-      layerManager.selection.rect.br = point;
+      layerManager.creation.rect.tl = point;
+      layerManager.creation.rect.br = point;
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
@@ -227,9 +242,9 @@ document.addEventListener('mousedown', event => {
 document.addEventListener('mouseup', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
     if (event.srcElement === canvas) {
-      if (layerManager.selection.active) {
-        layerManager.selection.active = false;
-        const selRect = layerManager.selection.rect;
+      if (layerManager.creation.active) {
+        layerManager.creation.active = false;
+        const selRect = layerManager.creation.rect;
         if (selRect.width > 0 && selRect.height > 0) {
           const layer = layerManager.addLayer(...selRect, currentSubdivision());
           layerManager.currentLayer = layer;
@@ -271,17 +286,26 @@ document.addEventListener('mouseup', event => {
 
 canvas.addEventListener('mousemove', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
-    // selection
-    if (layerManager.selection.active) {
+    // creation
+    if (layerManager.creation.active) {
       const point = getPointFromInput(event);
-      layerManager.selection.rect.br = point;
+      layerManager.creation.rect.br = point;
     }
 
     // highlight on hover
-    if (!layerManager.selection.active) {
+    if (!layerManager.creation.active) {
       const point = new Point(event.offsetX, event.offsetY);
       layerManager.layers.forEach(layer => {
         layer.highlight = layer.frame.isPointOnLine(point, 4);
+      });
+
+      const targets = layerManager.layers.filter(layer => layer.frame.containsPoint(point));
+      layerManager.currentLayer = layerManager.layers.find((layer, i) => {
+        const containsPoint = layer.frame.containsPoint(point);
+        const containsRects = targets.some(target => {
+          return target !== layer && layer.frame.containsPartialRect(target.frame);
+        });
+        return containsPoint && !containsRects;
       });
     }
 
@@ -307,6 +331,7 @@ canvas.addEventListener('mousemove', event => {
 document.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
   if (event.key === 'Alt') { layerManager.copying = true; }
+  if (event.key === 'Shift') { layerManager.adjustingSubdivision = true; }
 
   if (document.activeElement !== subdivisionInput) {
     if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
@@ -322,12 +347,41 @@ document.addEventListener('keydown', event => {
 document.addEventListener('keyup', event => {
   if (event.key === 'Shift' && !snapping) { snapping = true; }
   if (event.key === 'Alt') { layerManager.copying = false; }
+  if (event.key === 'Shift') { layerManager.adjustingSubdivision = false; }
 });
 
-subdivisionInput.addEventListener('input',event => {
+subdivisionInput.addEventListener('input', event => {
   if (layerManager.currentLayer !== undefined) {
     layerManager.currentLayer.subdivision = currentSubdivision();
     layerManager.layersChanged = true;
+  }
+});
+
+
+const scrollSensitivityInput = document.createElement('input');
+scrollSensitivityInput.type = 'number';
+scrollSensitivityInput.id = 'scrollSensitivity';
+scrollSensitivityInput.min = 0;
+scrollSensitivityInput.max = 1.0;
+scrollSensitivityInput.value = 0.3;
+scrollSensitivityInput.step = 0.01;
+scrollSensitivityInput.addEventListener('input', event => {
+  scroll.sensitivity = scrollSensitivityInput.valueAsNumber;
+});
+const scrollSensitivityLabel = document.createElement('label');
+scrollSensitivityLabel.htmlFor = 'scrollSensitivity';
+scrollSensitivityLabel.textContent = 'Scroll Sensitivity: ';
+controls.appendChild(scrollSensitivityLabel);
+
+
+controls.appendChild(scrollSensitivityInput);
+canvas.addEventListener('wheel', event => {
+  if (layerManager.adjustingSubdivision) {
+    event.preventDefault();
+    if (layerManager.currentLayer !== undefined) {
+      scroll.update(event);
+      layerManager.currentLayer.subdivision = scroll.valueAsInt;
+    }
   }
 });
 
@@ -354,3 +408,4 @@ function test() {
 document.addEventListener('DOMContentLoaded', mainLoop);
 
 window.modeManager = modeManager;
+window.layerManager = layerManager;

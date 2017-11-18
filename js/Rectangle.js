@@ -35,9 +35,17 @@ export class Rectangle {
 
   get drawRect() { return [...this.tl, this.width, this.height]; }
 
-  // contains(point) {
-  //   return point.gte(this.tl) && point.lte(this.br);
-  // }
+  containsPoint(point) {
+    return point.greaterOrEqualTo(this.tl) && point.lessOrEqualTo(this.br);
+  }
+
+  containsRect(rect) {
+    return this.containsPoint(rect.tl) && this.containsPoint(rect.br);
+  }
+
+  containsPartialRect(rect) {
+    return this.containsPoint(rect.tl) || this.containsPoint(rect.br);
+  }
 
   isPointOnLine(point, threshold = 1) {
     const inX = point.x >= this.x && point.x <= this.br.x;

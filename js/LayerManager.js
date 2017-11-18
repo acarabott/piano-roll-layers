@@ -17,12 +17,14 @@ export class LayerManager {
         this.setDraggingLayer(undefined);
       }
     };
-    this.selection = {
+    this.creation = {
       active: false,
       rect: new Rectangle()
     };
     this.layersChanged = true;
     this._list = document.createElement('ol');
+    this.adjustingSubdivision = false;
+    this.currentChanged = true;
   }
 
   addLayer(x, y, width, height, subdivision) {
@@ -113,6 +115,7 @@ export class LayerManager {
   }
 
   set currentLayer(currentLayer) {
+    this.currentChanged = this._currentLayer !== currentLayer;
     this._currentLayer = currentLayer;
   }
 

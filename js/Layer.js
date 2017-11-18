@@ -6,9 +6,10 @@ export class Layer {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.subdivision = 1;
+    this._subdivision = 1;
     this.active = true;
     this.highlight = false;
+    this.subdivisionChanged = true;
   }
 
   render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
@@ -64,5 +65,14 @@ export class Layer {
   set origin (point) {
     this.x = point.x;
     this.y = point.y;
+  }
+
+  get subdivision() {
+    return this._subdivision;
+  }
+
+  set subdivision(subdivision) {
+    this.subdivisionChanged = true;
+    this._subdivision = Math.max(1, subdivision);
   }
 }
