@@ -44,7 +44,7 @@ const patternRect = new Rectangle(keyRect.br.x,
 
 const cursor = new Cursor();
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
-cursor.addCursorState(() => layerManager.highlightedLayers.length > 0, 'move');
+cursor.addCursorState(() => layerManager.grabbableLayers.length > 0, 'move');
 cursor.addCursorState(() => layerManager.dragging, 'move');
 cursor.addCursorState(() => layerManager.copying, 'copy');
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
@@ -60,7 +60,6 @@ const subdivisionInput = document.createElement('input');
 subdivisionInput.id = 'subdivision';
 subdivisionInput.type = 'text';
 subdivisionInput.value = 3;
-subdivisionInput.min = 1;
 const subdivisionLabel = document.createElement('label');
 subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
@@ -205,8 +204,8 @@ function rectPointToMidiNote(rectangle, point, rootNote, numNotes) {
 
 canvas.addEventListener('mousedown', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
-    if (layerManager.highlightedLayers.length > 0) {
-      const chosen = layerManager.highlightedLayers[0];
+    if (layerManager.grabbableLayers.length > 0) {
+      const chosen = layerManager.grabbableLayers[0];
       const point = new Point(event.offsetX, event.offsetY);
       layerManager.setDraggingLayer(chosen, point);
     }
@@ -292,22 +291,9 @@ canvas.addEventListener('mousemove', event => {
       layerManager.creation.rect.br = point;
     }
 
-    // highlight on hover
+    // update
     if (!layerManager.creation.active) {
-      const point = new Point(event.offsetX, event.offsetY);
-      layerManager.layers.forEach(layer => {
-        layer.highlight = layer === layerManager.currentLayer &&
-                          layer.frame.isPointOnLine(point, 4);
-      });
-
-      const targets = layerManager.layers.filter(layer => layer.frame.containsPoint(point));
-      layerManager.currentLayer = layerManager.layers.find((layer, i) => {
-        const containsPoint = layer.frame.containsPoint(point);
-        const containsRects = targets.some(target => {
-          return target !== layer && layer.frame.containsPartialRect(target.frame);
-        });
-        return containsPoint && !containsRects;
-      });
+      layerManager.updateMove(new Point(event.offsetX, event.offsetY));
     }
 
     // dragging layer

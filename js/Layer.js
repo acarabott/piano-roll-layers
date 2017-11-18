@@ -8,8 +8,9 @@ export class Layer {
     this.height = height;
     this._subdivision = 1;
     this.active = true;
-    this.highlight = false;
+    this.grabbable = false;
     this.subdivisionChanged = true;
+    this.focused = false;
   }
 
   render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {

@@ -83,8 +83,8 @@ export class LayerManager {
     return this._list;
   }
 
-  get highlightedLayers() {
-    return this._layers.filter(layer => layer.highlight);
+  get grabbableLayers() {
+    return this._layers.filter(layer => layer.grabbable);
   }
 
   setDraggingLayer(layer, grabPoint) {
@@ -115,6 +115,7 @@ export class LayerManager {
   }
 
   set currentLayer(currentLayer) {
+    this.layers.forEach(layer => layer.focused = layer === currentLayer);
     this.currentChanged = this._currentLayer !== currentLayer;
     this._currentLayer = currentLayer;
   }
@@ -134,5 +135,18 @@ export class LayerManager {
 
   stopDragging() {
     this._dragging.clear();
+  }
+
+  updateMove(inputPoint) {
+    this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(inputPoint, 4));
+
+    const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
+    this._currentLayer = this._layers.find((layer, i) => {
+      const containsPoint = layer.frame.containsPoint(inputPoint);
+      const containsRects = targets.some(target => {
+        return target !== layer && layer.frame.containsPartialRect(target.frame);
+      });
+      return containsPoint && !containsRects;
+    });
   }
 }
