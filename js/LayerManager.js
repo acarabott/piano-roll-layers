@@ -165,17 +165,25 @@ export class LayerManager {
     this._dragging.clear();
   }
 
-  updateMove(inputPoint) {
-    this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(inputPoint, 4));
+  updateMove(inputPoint, snappedPoint) {
+    // creating layers
+    if (this.creation.active) {
+      this.creation.rect.br = snappedPoint;
+    }
+    else {
+      // layers as grabbable
+      this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(inputPoint, 4));
 
-    const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
-    this.currentLayer = this._layers.find((layer, i) => {
-      const containsPoint = layer.frame.containsPoint(inputPoint);
-      const containsRects = targets.some(target => {
-        return target !== layer && layer.frame.containsPartialRect(target.frame);
+      // setting current layer
+      const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
+      this.currentLayer = this._layers.find((layer, i) => {
+        const containsPoint = layer.frame.containsPoint(inputPoint);
+        const containsRects = targets.some(target => {
+          return target !== layer && layer.frame.containsPartialRect(target.frame);
+        });
+        return containsPoint && !containsRects;
       });
-      return containsPoint && !containsRects;
-    });
+    }
   }
 
   updateMouseUp(inputPoint) {

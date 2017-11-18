@@ -3,6 +3,7 @@
   - note playback
   - resize layers
   - put at top and overlay the vertical lines?
+  - snap any line?
 */
 
 // Helper functions
@@ -259,17 +260,10 @@ document.addEventListener('mouseup', event => {
 });
 
 canvas.addEventListener('mousemove', event => {
+  const point = new Point(event.offsetX, event.offsetY);
+  const snappedPoint = getPointFromInput(event);
   if (modeManager.currentMode === modeManager.modes.layers) {
-    // creation
-    if (layerManager.creation.active) {
-      const point = getPointFromInput(event);
-      layerManager.creation.rect.br = point;
-    }
-
-    // update
-    if (!layerManager.creation.active) {
-      layerManager.updateMove(new Point(event.offsetX, event.offsetY));
-    }
+    layerManager.updateMove(point, snappedPoint);
 
     // dragging layer
     if (layerManager.dragging) {
