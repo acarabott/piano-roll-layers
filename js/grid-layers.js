@@ -60,7 +60,7 @@ document.body.appendChild(controls);
 const subdivisionInput = document.createElement('input');
 subdivisionInput.id = 'subdivision';
 subdivisionInput.type = 'text';
-subdivisionInput.value = 3;
+subdivisionInput.value = layerManager.subdivision;
 const subdivisionLabel = document.createElement('label');
 subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
@@ -69,12 +69,6 @@ controls.appendChild(subdivisionInput);
 controls.appendChild(modeManagerRenderer.label);
 
 const noteManager = new NoteManager();
-
-function currentSubdivision() {
-  const value = Math.max(parseInt(subdivisionInput.value, 10), 0);
-  return isFinite(value) ? value : 1;
-}
-
 
 // Render functions
 // -----------------------------------------------------------------------------
@@ -139,7 +133,7 @@ function render() {
 // Update loop
 // -----------------------------------------------------------------------------
 
-let timeout = undefined;
+// let timeout = undefined;
 
 function update() {
   if (layerManager.layersChanged) {
@@ -154,16 +148,16 @@ function update() {
       layerManager.currentChanged = false;
     }
     if (layerManager.currentLayer.subdivisionChanged) {
-      subdivisionInput.value = layerManager.currentLayer.subdivision;
-
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        subdivisionInput.selectionStart = 0;
-        subdivisionInput.selectionEnd = subdivisionInput.value.length;
-      }, 500);
-
+      subdivisionInput.value = layerManager.subdivision;
+      subdivisionInput.selectionStart = 0;
+      subdivisionInput.selectionEnd = subdivisionInput.value.length;
       layerManager.currentLayer.subdivisionChanged = false;
     }
+  }
+  if (layerManager.subdivisionString !== '' &&
+      layerManager.subdivisionString !== subdivisionInput.value)
+  {
+    subdivisionInput.value = layerManager.subdivisionString;
   }
 
   modeManagerRenderer.update();
@@ -256,11 +250,8 @@ document.addEventListener('mouseup', event => {
         layerManager.creation.active = false;
         const selRect = layerManager.creation.rect;
         if (selRect.width > 0 && selRect.height > 0) {
-          const layer = layerManager.addLayer(...selRect, currentSubdivision());
+          const layer = layerManager.addLayer(...selRect, layerManager.subdivision);
           layerManager.currentLayer = layer;
-          subdivisionInput.focus();
-          subdivisionInput.selectionStart = 0;
-          subdivisionInput.selectionEnd = subdivisionInput.value.length;
         }
       }
 
@@ -279,7 +270,6 @@ document.addEventListener('mouseup', event => {
           // move the original
           layerManager.moveDraggedLayer();
         }
-        subdivisionInput.focus();
         layerManager.stopDragging();
       }
     }
@@ -326,13 +316,6 @@ canvas.addEventListener('mousemove', event => {
   }
 });
 
-function setSubdivision(subdivision) {
-  if (layerManager.currentLayer !== undefined) {
-    layerManager.currentLayer.subdivision = subdivision;
-    layerManager.layersChanged = true;
-  }
-}
-
 canvas.addEventListener('keydown', event => {
   if (event.key === 'Shift' && snapping) { snapping = false; }
   if (event.key === 'Alt')               { layerManager.copying = true; }
@@ -342,7 +325,9 @@ canvas.addEventListener('keydown', event => {
   if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
   if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
 
-  if (isFinite(parseInt(event.key, 10))) { setSubdivision(parseInt(event.key, 10)); }
+  if (isFinite(parseInt(event.key, 10))) {
+    layerManager.subdivisionInput(event.key);
+  }
 
   // key='Shift'      code='ShiftLeft'
   // key='Control'    code='ControlLeft'
@@ -368,7 +353,7 @@ subdivisionInput.addEventListener('keydown', event => {
 });
 
 subdivisionInput.addEventListener('input', event => {
-  setSubdivision(currentSubdivision());
+  layerManager.subdivisionInput(event.data);
 });
 
 
@@ -423,3 +408,5 @@ document.addEventListener('DOMContentLoaded', mainLoop);
 
 window.modeManager = modeManager;
 window.layerManager = layerManager;
+window.noteManager = noteManager;
+window.subdivisionInput = subdivisionInput;

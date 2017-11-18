@@ -25,6 +25,34 @@ export class LayerManager {
     this._list = document.createElement('ol');
     this.adjustingSubdivision = false;
     this.currentChanged = true;
+
+    this._subdivision = 3;
+    this.subdivisionString = '';
+    this.subdivisionTimeout = undefined;
+    this.subdivisionTimeoutDur = 350;
+  }
+
+  subdivisionInput(char) {
+    if (!Number.isInteger(parseInt(char, 10))) { return; }
+
+    clearTimeout(this.subdivisionTimeout);
+    this.subdivisionString += char;
+    this.subdivisionTimeout = setTimeout(() => {
+      this._subdivision = parseInt(this.subdivisionString, 10);
+      this.subdivisionString = '';
+
+      if (this.currentLayer !== undefined) {
+        this.currentLayer.subdivision = this._subdivision;
+      }
+    }, this.subdivisionTimeoutDur);
+  }
+
+  get subdivision() {
+    return this._subdivision;
+  }
+
+  set subdivision(subdivision) {
+    this._subdivision = Math.max(subdivision, 1);
   }
 
   addLayer(x, y, width, height, subdivision) {
