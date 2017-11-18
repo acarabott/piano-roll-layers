@@ -1,5 +1,6 @@
 /*
   TODO:
+  - moving notes
   - note playback
   - resize layers
   - put at top and overlay the vertical lines?
@@ -227,7 +228,7 @@ canvas.addEventListener('mousedown', event => {
     const freq = midiToFreq(midiNote);
     // TODO this is a hack, hardcoded length on the grid...
     const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
-    const sampleEnd = sampleStart + 0.25 * audio.sampleRate;
+    const sampleEnd = sampleStart + 0.5 * audio.sampleRate;
     noteManager.currentNote = new Note(freq, sampleStart, sampleEnd);
   }
 });
@@ -279,7 +280,9 @@ canvas.addEventListener('mousemove', event => {
       const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
       const freq = midiToFreq(midiNote);
       noteManager.currentNote.freq = freq;
-      noteManager.currentNote.sampleEnd = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
+      let end = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
+      end = Math.max(end, noteManager.currentNote.sampleStart + audio.sampleRate * 0.01);
+      noteManager.currentNote.sampleEnd = end;
     }
   }
 });
