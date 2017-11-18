@@ -120,7 +120,7 @@ function render() {
 
   // notes
   noteManager.notes.forEach((note, i, arr) => {
-    note.render(ctx, color.blue, patternRect, 10 * audio.sampleRate, NUM_KEYS);
+    note.render(ctx, color.orange, patternRect, 10 * audio.sampleRate, NUM_KEYS);
   });
   if (noteManager.currentNote !== undefined) {
     noteManager.currentNote.render(ctx, color.green, patternRect, 10 * audio.sampleRate, NUM_KEYS);
