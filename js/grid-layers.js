@@ -105,7 +105,7 @@ function render() {
   });
 
   if (layerManager.creation.active) {
-    ctx.strokeStyle = color.green;
+    ctx.strokeStyle = color.blue;
     ctx.setLineDash([20, 10]);
     ctx.lineWidth = 2;
     ctx.strokeRect(...layerManager.creation.rect);
@@ -114,7 +114,7 @@ function render() {
   if (layerManager.dragging) {
     ctx.lineWidth = 2;
     ctx.setLineDash([20, 10]);
-    ctx.strokeStyle = layerManager.dragging.copy ? color.green : color.black;
+    ctx.strokeStyle = layerManager.copying ? color.green : color.black;
     layerManager.draggingLayer.rects.forEach(rect => ctx.strokeRect(...rect));
   }
 
@@ -255,23 +255,7 @@ document.addEventListener('mouseup', event => {
         }
       }
 
-      if (layerManager.dragging) {
-        if (layerManager.dragging.copy) {
-          // copy the layer
-          const layer = layerManager.addLayer(...layerManager.draggingLayer.frame,
-                                              layerManager.draggingLayer.subdivision);
-
-          // reset the original
-          layerManager.draggingLayer.x = layerManager.dragging.origin.x;
-          layerManager.draggingLayer.y = layerManager.dragging.origin.y;
-          layerManager.currentLayer = layer;
-        }
-        else {
-          // move the original
-          layerManager.moveDraggedLayer();
-        }
-        layerManager.stopDragging();
-      }
+      layerManager.updateMouseUp();
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {

@@ -177,4 +177,24 @@ export class LayerManager {
       return containsPoint && !containsRects;
     });
   }
+
+  updateMouseUp(inputPoint) {
+    if (this.dragging) {
+      if (this.copying) {
+        // copy the layer
+        const layer = this.addLayer(...this.draggingLayer.frame,
+                                    this.draggingLayer.subdivision);
+
+        // reset the original
+        this._dragging.layer.x = this._dragging.origin.x;
+        this._dragging.layer.y = this._dragging.origin.y;
+        this.currentLayer = layer;
+      }
+      else {
+        // move the original
+        this.moveDraggedLayer();
+      }
+      this.stopDragging();
+    }
+  }
 }
