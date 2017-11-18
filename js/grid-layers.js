@@ -323,7 +323,7 @@ document.addEventListener('keydown', event => {
 
   if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
   if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
-  if (document.activeElement === subdivisionInput && !event.code.includes('Digit')) {
+  if (document.activeElement === subdivisionInput && ['KeyQ', 'KeyW'].includes(event.code)) {
     event.preventDefault();
   }
 
