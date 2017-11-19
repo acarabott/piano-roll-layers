@@ -1,7 +1,10 @@
 /*
   TODO:
-  - moving notes
+  - note glitching
   - note playback
+  - play note on draw
+  - note minimum length is too long
+  - moving notes
   - resize layers
   - put at top and overlay the vertical lines?
   - snap any line?
@@ -37,6 +40,7 @@ const ctx = canvas.getContext('2d');
 const layerManager = new LayerManager();
 let snapping = true;
 const NUM_KEYS = 20;
+const DURATION = 10;
 
 const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
 const patternRect = new Rectangle(keyRect.br.x,
@@ -70,6 +74,35 @@ controls.appendChild(subdivisionInput);
 controls.appendChild(modeManagerRenderer.label);
 
 const noteManager = new NoteManager();
+
+class AudioPlayback {
+  constructor(audioContext) {
+    this.audio = audioContext;
+  }
+
+  playFrom(notes) {
+    const audioStart = this.audio.currentTime;
+    notes.forEach(note => {
+      const osc = this.audio.createOscillator();
+      osc.frequency.value = note.freq;
+
+      const gain = this.audio.createGain();
+      gain.gain.setValueAtTime(0.0, audioStart + 0.01);
+      const attack = 0.1;
+      gain.gain.setTargetAtTime(0.1, audioStart + attack, 0.05);
+      const release = Math.min(0.1, (note.timeStop - note.timeStart) * 0.1);
+      gain.gain.setTargetAtTime(0.0, audioStart + (note.timeStop - release), 0.01);
+
+      osc.connect(gain);
+      gain.connect(this.audio.destination);
+
+      osc.start(audioStart + note.timeStart);
+      osc.stop(audioStart + note.timeStop);
+    });
+  }
+}
+
+const audioPlayback = new AudioPlayback(audio);
 
 // Render functions
 // -----------------------------------------------------------------------------
@@ -121,10 +154,10 @@ function render() {
 
   // notes
   noteManager.notes.forEach((note, i, arr) => {
-    note.render(ctx, color.orange, patternRect, 10 * audio.sampleRate, NUM_KEYS);
+    note.render(ctx, color.orange, patternRect, DURATION, NUM_KEYS);
   });
   if (noteManager.currentNote !== undefined) {
-    noteManager.currentNote.render(ctx, color.green, patternRect, 10 * audio.sampleRate, NUM_KEYS);
+    noteManager.currentNote.render(ctx, color.green, patternRect, DURATION, NUM_KEYS);
   }
 
   ctx.restore();
@@ -226,10 +259,9 @@ canvas.addEventListener('mousedown', event => {
     const point = getPointFromInput(event);
     const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
     const freq = midiToFreq(midiNote);
-    // TODO this is a hack, hardcoded length on the grid...
-    const sampleStart = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
-    const sampleEnd = sampleStart + 0.5 * audio.sampleRate;
-    noteManager.currentNote = new Note(freq, sampleStart, sampleEnd);
+    const timeStart = ((point.x - patternRect.x) / patternRect.width) * DURATION;
+    const timeStop = timeStart + 0.1;
+    noteManager.currentNote = new Note(freq, timeStart, timeStop);
   }
 });
 
@@ -280,9 +312,9 @@ canvas.addEventListener('mousemove', event => {
       const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
       const freq = midiToFreq(midiNote);
       noteManager.currentNote.freq = freq;
-      let end = ((point.x - patternRect.x) / patternRect.width) * 10 * audio.sampleRate;
-      end = Math.max(end, noteManager.currentNote.sampleStart + audio.sampleRate * 0.01);
-      noteManager.currentNote.sampleEnd = end;
+      let end = ((point.x - patternRect.x) / patternRect.width) * DURATION;
+      end = Math.max(end, noteManager.currentNote.timeStart + 0.001);
+      noteManager.currentNote.timeStop = end;
     }
   }
 });
@@ -364,20 +396,30 @@ function mainLoop() {
 }
 
 function test() {
-  loop(4, (i, n) => {
-    const x = rrandint(patternRect.x, patternRect.width * 0.75);
-    const y = rrandint(patternRect.y, patternRect.height * 0.75);
-    const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
-    const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
-    const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
-    if (i === n - 1) { layerManager.currentLayer = layer; }
+  // loop(4, (i, n) => {
+  //   const x = rrandint(patternRect.x, patternRect.width * 0.75);
+  //   const y = rrandint(patternRect.y, patternRect.height * 0.75);
+  //   const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
+  //   const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
+  //   const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
+  //   if (i === n - 1) { layerManager.currentLayer = layer; }
+  // });
+
+  loop(10, (i, n) => {
+    const midiNote = Math.floor(Math.random() * NUM_KEYS) + 60;
+    const freq = midiToFreq(midiNote);
+    const timeStart = DURATION * 0.75 * Math.random();
+    const timeStop = timeStart + Math.random() + 0.2;
+    const note = new Note(freq, timeStart, timeStop);
+    noteManager.addNote(note);
   });
 }
 
-// test();
+test();
 document.addEventListener('DOMContentLoaded', mainLoop);
 
 window.modeManager = modeManager;
 window.layerManager = layerManager;
 window.noteManager = noteManager;
-window.subdivisionInput = subdivisionInput;
+window.audio = audio;
+window.audioPlayback = audioPlayback;

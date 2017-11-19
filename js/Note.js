@@ -1,30 +1,30 @@
 import { linlin, freqToMidi } from './utils.js';
 
 export class Note {
-  constructor(freq, sampleStart, sampleEnd) {
+  constructor(freq, timeStart, timeStop) {
     this.freq = freq;
-    this.sampleStart = sampleStart;
-    this._sampleEnd = sampleEnd;
+    this.timeStart = timeStart;
+    this._timeStop = timeStop;
   }
 
-  render(ctx, style, parentRect, parentNumSamples, parentNumNotes) {
-    const x = parentRect.x + (this.sampleStart / parentNumSamples) * parentRect.width;
+  render(ctx, style, parentRect, parentNumSeconds, parentNumNotes) {
+    const x = parentRect.x + (this.timeStart / parentNumSeconds) * parentRect.width;
     const midiNote = freqToMidi(this.freq);
     const noteHeight = parentRect.height / parentNumNotes;
     const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + parentNumNotes, 0, parentRect.height));
-    const width = Math.max(2, parentRect.width * ((this.sampleEnd - this.sampleStart) / parentNumSamples));
+    const width = Math.max(2, parentRect.width * ((this.timeStop - this.timeStart) / parentNumSeconds));
     ctx.fillStyle = style;
     ctx.globalAlpha = 0.5;
     ctx.fillRect(x, y, width, noteHeight);
     ctx.globalAlpha = 1.0;
   }
 
-  get sampleEnd() {
-    return this._sampleEnd;
+  get timeStop() {
+    return this._timeStop;
   }
 
-  set sampleEnd(sampleEnd) {
-    this._sampleEnd = Math.max(sampleEnd, this.sampleStart + 1);
+  set timeStop(timeStop) {
+    this._timeStop = Math.max(timeStop, this.timeStart + 1);
   }
 }
 
