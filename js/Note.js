@@ -26,6 +26,10 @@ export class Note {
   set timeStop(timeStop) {
     this._timeStop = Math.max(timeStop, this.timeStart + 1);
   }
+
+  clone() {
+    return new Note(this.freq, this.timeStart, this.timeStop);
+  }
 }
 
 export class NoteManager {

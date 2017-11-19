@@ -78,26 +78,57 @@ const noteManager = new NoteManager();
 class AudioPlayback {
   constructor(audioContext) {
     this.audio = audioContext;
+    this.lookahead = 0.5;
+    this.audioStart = 0;
+    this.notes = [];
+    this.marker = Symbol('played');
   }
 
   playFrom(notes) {
-    const audioStart = this.audio.currentTime;
-    notes.forEach(note => {
+    this.audioStart = this.audio.currentTime;
+    this.notes = notes.map(note => note.clone());
+  }
+
+  playNote(note) {
+    const gain = this.audio.createGain();
+    const oscs = [-5, 0, 5].map(detune => {
       const osc = this.audio.createOscillator();
       osc.frequency.value = note.freq;
-
-      const gain = this.audio.createGain();
-      gain.gain.setValueAtTime(0.0, audioStart + 0.01);
-      const attack = 0.1;
-      gain.gain.setTargetAtTime(0.1, audioStart + attack, 0.05);
-      const release = Math.min(0.1, (note.timeStop - note.timeStart) * 0.1);
-      gain.gain.setTargetAtTime(0.0, audioStart + (note.timeStop - release), 0.01);
-
+      osc.detune.value = detune;
+      osc.type = 'sine';
       osc.connect(gain);
-      gain.connect(this.audio.destination);
+      return osc;
+    });
 
-      osc.start(audioStart + note.timeStart);
-      osc.stop(audioStart + note.timeStop);
+    const volume = 0.1;
+    gain.gain.setValueAtTime(0.0, this.audio.currentTime);
+    gain.gain.setTargetAtTime(volume, this.audioStart + note.timeStart, 0.001);
+
+    const releaseTime = this.audioStart + note.timeStop - 0.1;
+    gain.gain.setValueAtTime(volume, releaseTime);
+    gain.gain.setTargetAtTime(0.0, releaseTime, 0.3);
+
+
+    gain.connect(this.audio.destination);
+
+    oscs.forEach(osc => {
+      osc.start(this.audioStart + note.timeStart);
+      osc.stop(this.audioStart + note.timeStop + 1);
+    });
+  }
+
+  update() {
+    const toPlay = this.notes.filter(note => {
+      const noteStartTime = this.audioStart + note.timeStart;
+      return noteStartTime >= this.audio.currentTime &&
+             noteStartTime <= this.audio.currentTime + this.lookahead;
+    });
+
+    toPlay.forEach(note => {
+      if (!note[this.marker]) {
+        this.playNote(note);
+        note[this.marker] = true;
+      }
     });
   }
 }
@@ -192,6 +223,7 @@ function update() {
     subdivisionInput.value = layerManager.subdivisionString;
   }
 
+  audioPlayback.update();
   modeManagerRenderer.update();
   cursor.update();
 }
@@ -394,14 +426,14 @@ function mainLoop() {
 }
 
 function test() {
-  // loop(4, (i, n) => {
-  //   const x = rrandint(patternRect.x, patternRect.width * 0.75);
-  //   const y = rrandint(patternRect.y, patternRect.height * 0.75);
-  //   const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
-  //   const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
-  //   const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
-  //   if (i === n - 1) { layerManager.currentLayer = layer; }
-  // });
+  loop(4, (i, n) => {
+    const x = rrandint(patternRect.x, patternRect.width * 0.75);
+    const y = rrandint(patternRect.y, patternRect.height * 0.75);
+    const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
+    const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
+    const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
+    if (i === n - 1) { layerManager.currentLayer = layer; }
+  });
 
   loop(10, (i, n) => {
     const midiNote = Math.floor(Math.random() * NUM_KEYS) + 60;
@@ -413,7 +445,7 @@ function test() {
   });
 }
 
-test();
+// test();
 document.addEventListener('DOMContentLoaded', mainLoop);
 
 window.modeManager = modeManager;
