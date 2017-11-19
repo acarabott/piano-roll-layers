@@ -1,7 +1,8 @@
 /*
   TODO:
-  - play note on draw
   - moving notes
+  - delete note
+  - play note on draw
   - resize layers
   - put at top and overlay the vertical lines?
   - snap any line?
@@ -13,7 +14,7 @@
 import { loop, rrandint, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
-import { Note, NoteManager } from './Note.js';
+import { Note, NoteManager, NoteRenderer } from './Note.js';
 import { LayerManager } from './LayerManager.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
@@ -38,6 +39,7 @@ const layerManager = new LayerManager();
 let snapping = true;
 const NUM_KEYS = 20;
 const DURATION = 10;
+const ROOT_NOTE = 60;
 
 const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
 const patternRect = new Rectangle(keyRect.br.x,
@@ -71,6 +73,12 @@ controls.appendChild(subdivisionInput);
 controls.appendChild(modeManagerRenderer.label);
 
 const noteManager = new NoteManager();
+const noteRenderer = new NoteRenderer();
+noteRenderer.parentRect = patternRect;
+noteRenderer.duration = DURATION;
+noteRenderer.numKeys = NUM_KEYS;
+noteRenderer.rootNote = ROOT_NOTE;
+
 
 class AudioPlayback {
   constructor(audioContext) {
@@ -181,12 +189,7 @@ function render() {
   }
 
   // notes
-  noteManager.notes.forEach((note, i, arr) => {
-    note.render(ctx, color.orange, patternRect, DURATION, NUM_KEYS);
-  });
-  if (noteManager.currentNote !== undefined) {
-    noteManager.currentNote.render(ctx, color.green, patternRect, DURATION, NUM_KEYS);
-  }
+  noteRenderer.render(ctx, noteManager);
 
   ctx.restore();
 }
@@ -284,10 +287,10 @@ canvas.addEventListener('mousedown', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const point = getPointFromInput(event);
-    const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
+    const midiNote = rectPointToMidiNote(patternRect, point, ROOT_NOTE, NUM_KEYS);
     const freq = midiToFreq(midiNote);
     const timeStart = ((point.x - patternRect.x) / patternRect.width) * DURATION;
-    const timeStop = timeStart + Note.MIN_LENGTH;
+    const timeStop = timeStart + Note.MIN_LENGTHgg;
     noteManager.currentNote = new Note(freq, timeStart, timeStop);
   }
 });
@@ -310,10 +313,8 @@ document.addEventListener('mouseup', event => {
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    if (event.srcElement === canvas) {
-      noteManager.addNote(noteManager.currentNote);
-    }
-    noteManager.currentNote = undefined;
+    const point = new Point(event.offsetX, event.offsetY);
+    noteManager.updateMouseUp(point, event.srcElement === canvas);
   }
 
   layerManager.setDraggingLayer(undefined);
@@ -336,7 +337,7 @@ canvas.addEventListener('mousemove', event => {
   else if (modeManager.currentMode === modeManager.modes.notes) {
     if (noteManager.currentNote !== undefined) {
       const point = getPointFromInput(event);
-      const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
+      const midiNote = rectPointToMidiNote(patternRect, point, ROOT_NOTE, NUM_KEYS);
       const freq = midiToFreq(midiNote);
       noteManager.currentNote.freq = freq;
       const end = ((point.x - patternRect.x) / patternRect.width) * DURATION;
@@ -432,7 +433,7 @@ function test() {
   });
 
   loop(10, (i, n) => {
-    const midiNote = Math.floor(Math.random() * NUM_KEYS) + 60;
+    const midiNote = Math.floor(Math.random() * NUM_KEYS) + ROOT_NOTE;
     const freq = midiToFreq(midiNote);
     const timeStart = DURATION * 0.75 * Math.random();
     const timeStop = timeStart + Math.random() + 0.2;
@@ -449,3 +450,4 @@ window.layerManager = layerManager;
 window.noteManager = noteManager;
 window.audio = audio;
 window.audioPlayback = audioPlayback;
+window.noteRenderer = noteRenderer;

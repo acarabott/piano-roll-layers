@@ -1,26 +1,16 @@
-import { linlin, freqToMidi } from './utils.js';
+import { freqToMidi } from './utils.js';
+import { Rectangle } from './Rectangle.js';
+import * as color from './color.js';
 
 export class Note {
   constructor(freq, timeStart, timeStop) {
     this.freq = freq;
     this.timeStart = timeStart;
     this._timeStop = timeStop;
+    this.selected = false;
   }
 
   static get MIN_LENGTH() { return 0.001; }
-
-  render(ctx, style, parentRect, parentNumSeconds, parentNumNotes) {
-    const x = parentRect.x + (this.timeStart / parentNumSeconds) * parentRect.width;
-    const midiNote = freqToMidi(this.freq);
-    const noteHeight = parentRect.height / parentNumNotes;
-    const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + parentNumNotes, 0, parentRect.height));
-    const width = Math.max(2, parentRect.width * ((this.timeStop - this.timeStart) / parentNumSeconds));
-
-    ctx.fillStyle = style;
-    ctx.globalAlpha = 0.5;
-    ctx.fillRect(x, y, width, noteHeight);
-    ctx.globalAlpha = 1.0;
-  }
 
   get timeStop() {
     return this._timeStop;
@@ -35,15 +25,68 @@ export class Note {
   }
 }
 
+export class NoteRenderer {
+  constructor() {
+    this.parentRect = undefined;
+    this.duration = undefined;
+    this.numKeys = undefined;
+    this.rootNote = undefined;
+  }
+
+  getNoteRect(note) {
+    const x = this.parentRect.x + (note.timeStart / this.duration) * this.parentRect.width;
+    const midiNote = freqToMidi(note.freq);
+    const noteHeight = this.parentRect.height / this.numKeys;
+    const y = ((this.numKeys - 1) - (midiNote - this.rootNote)) * noteHeight;
+    const width = Math.max(2, this.parentRect.width * ((note.timeStop - note.timeStart) / this.duration));
+
+    return new Rectangle(x, y, width, noteHeight);
+  }
+
+  renderNote(ctx, note, style) {
+    ctx.save();
+    ctx.fillStyle = style;
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(...this.getNoteRect(note));
+    ctx.globalAlpha = 1.0;
+    ctx.restore();
+  }
+
+  render(ctx, noteManager) {
+    noteManager.notes.forEach(note => {
+      this.renderNote(ctx, note, color.orange);
+    });
+    if (noteManager.currentNote !== undefined) {
+      this.renderNote(ctx, noteManager.currentNote, color.green);
+    }
+  }
+}
+
+
 export class NoteManager {
   constructor() {
-    this._notes = [];
+    this.notes = [];
+    this.noteMetadata = new Map();
     this.currentNote;
   }
 
-  get notes() { return this._notes; }
-
   addNote(note) {
-    this._notes.push(note);
+    this.notes.push(note);
+    this.noteMetadata.set(note, {
+      hover: false
+    });
+  }
+
+  deleteNote(note) {
+    if (this.notes.includes(note)) {
+      this.notes.splice(this.notes.indexOf(note), 1);
+    }
+  }
+
+  updateMouseUp(point, onCanvas) {
+    if (onCanvas) {
+      this.addNote(this.currentNote);
+    }
+    this.currentNote = undefined;
   }
 }
