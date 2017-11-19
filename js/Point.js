@@ -14,6 +14,11 @@ export class Point {
     return new Point(this.x - point.x, this.y - point.y);
   }
 
+  equalTo(point, thresh = 0) {
+    return Math.abs(this.x - point.x) <= thresh  &&
+           Math.abs(this.y - point.y) <= thresh;
+  }
+
   lessOrEqualTo(point) {
     return this.x <= point.x && this.y <= point.y;
   }

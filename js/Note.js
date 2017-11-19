@@ -85,13 +85,16 @@ export class NoteController {
     this._metadataTemplate = {
       hover: false,
       grabbed: false,
+      grabbedOffset: new Point(0, 0)
     };
   }
 
   updateMouseDown(point, snappedPoint) {
     this.manager.notes.forEach(note => {
-      const grabbed = this.renderer.getRectFromNote(note).containsPoint(point);
+      const noteRect = this.renderer.getRectFromNote(note);
+      const grabbed = noteRect.containsPoint(point);
       this.setMetadata(note, 'grabbed', grabbed);
+      this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
     });
 
     const anyGrabbed = this.manager.notes.some(note => this.metadata.get(note).grabbed);
@@ -120,7 +123,11 @@ export class NoteController {
 
       const rect = this.renderer.parentRect;
       const duration = note.timeStop - note.timeStart;
-      note.timeStart = ((snappedPoint.x - rect.x) / rect.width) * this.renderer.duration;
+      const newTopLeft = point.equalTo(snappedPoint)
+        ? snappedPoint.subtract(this.metadata.get(note).grabbedOffset)
+        : snappedPoint;
+
+      note.timeStart = ((newTopLeft.x - rect.x) / rect.width) * this.renderer.duration;
       note.timeStop = note.timeStart + duration;
     });
 
