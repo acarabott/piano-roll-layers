@@ -1,5 +1,6 @@
 import { freqToMidi, midiToFreq } from './utils.js';
 import { Rectangle } from './Rectangle.js';
+import { Point } from './Point.js';
 import * as color from './color.js';
 
 export class Note {
@@ -43,7 +44,7 @@ export class NoteRenderer {
     return new Rectangle(x, y, width, noteHeight);
   }
 
-  getNoteFromPoint(point) {
+  getKeyFromPoint(point) {
     const noteHeight = this.parentRect.height / this.numKeys;
     const noteIdx = this.numKeys - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
     return this.rootNote + noteIdx;
@@ -55,7 +56,16 @@ export class NoteRenderer {
     ctx.strokeStyle = style;
     ctx.globalAlpha = metadata.hover ? 0.8 : 0.5;
     const rect = this.getRectFromNote(note);
-    metadata.grabbed ? ctx.strokeRect(...rect) : ctx.fillRect(...rect);
+    metadata.grabbed
+      ? (() => {
+          const lineWidth = 5;
+          ctx.lineWidth = lineWidth;
+          const inset = new Point(lineWidth / 2, lineWidth / 2);
+          const strokeRect = Rectangle.fromPoints(rect.tl.add(inset),
+                                                  rect.br.subtract(inset));
+          ctx.strokeRect(...strokeRect);
+        })()
+      : ctx.fillRect(...rect);
     ctx.globalAlpha = 1.0;
     ctx.restore();
   }
@@ -86,7 +96,7 @@ export class NoteController {
 
     const anyGrabbed = this.manager.notes.some(note => this.metadata.get(note).grabbed);
     if (!anyGrabbed) {
-      const midiNote = this.renderer.getNoteFromPoint(snappedPoint);
+      const midiNote = this.renderer.getKeyFromPoint(snappedPoint);
       const freq = midiToFreq(midiNote);
       const rect = this.renderer.parentRect;
       const timeStart = ((snappedPoint.x - rect.x) / rect.width) * this.renderer.duration;
@@ -95,10 +105,28 @@ export class NoteController {
     }
   }
 
-  updateMouseMove(point) {
+  updateMouseMove(point, snappedPoint) {
+    if (this.manager.currentNote !== undefined) {
+      const midiNote = this.renderer.getKeyFromPoint(point);
+      this.manager.currentNote.freq = midiToFreq(midiNote);
+      const rect = this.renderer.parentRect;
+      this.manager.currentNote.timeStop = ((snappedPoint.x - rect.x) / rect.width) * this.renderer.duration;
+    }
+
+    const grabbed = this.manager.notes.filter(note => this.metadata.get(note).grabbed);
+    grabbed.forEach(note => {
+      const midiNote = this.renderer.getKeyFromPoint(snappedPoint);
+      note.freq = midiToFreq(midiNote);
+
+      const rect = this.renderer.parentRect;
+      const duration = note.timeStop - note.timeStart;
+      note.timeStart = ((snappedPoint.x - rect.x) / rect.width) * this.renderer.duration;
+      note.timeStop = note.timeStart + duration;
+    });
+
     this.manager.notesWithCurrent.forEach(note => {
       const hover = this.renderer.getRectFromNote(note).containsPoint(point);
-      this.setMetadata(note, 'hover', hover);
+      this.setMetadata(note, 'hover', hover && grabbed.length === 0);
     });
   }
 

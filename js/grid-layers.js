@@ -1,6 +1,6 @@
 /*
   TODO:
-  - moving notes
+  - moving notes from grabbed offset
   - delete note
   - play note on draw
   - resize layers
@@ -91,7 +91,7 @@ class AudioPlayback {
   }
 
   playFrom(notes) {
-    this.audioStart = this.audio.currentTime;
+    this.audioStart = this.audio.currentTime + this.lookahead;
     this.notes = notes.map(note => note.clone());
   }
 
@@ -324,13 +324,7 @@ canvas.addEventListener('mousemove', event => {
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    if (noteManager.currentNote !== undefined) {
-      const midiNote = noteRenderer.getNoteFromPoint(point);
-      noteManager.currentNote.freq = midiToFreq(midiNote);
-      noteManager.currentNote.timeStop = ((snappedPoint.x - patternRect.x) / patternRect.width) * DURATION;
-    }
-
-    noteController.updateMouseMove(point);
+    noteController.updateMouseMove(point, snappedPoint);
   }
 });
 
