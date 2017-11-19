@@ -32,6 +32,15 @@ export class LayerManager {
     this.subdivisionTimeoutDur = 450;
   }
 
+  _finaliseSubdivision() {
+    const int = parseInt(this.subdivisionString, 10);
+    this._subdivision = isFinite(int) ? int : this._subdivision;
+    this.subdivisionString = '';
+    if (this.currentLayer !== undefined) {
+      this.currentLayer.subdivision = this._subdivision;
+    }
+  }
+
   subdivisionInput(char) {
     if (!Number.isInteger(parseInt(char, 10))) { return; }
 
@@ -39,12 +48,7 @@ export class LayerManager {
     this.subdivisionString += char;
     this.currentLayer.subdivision = parseInt(this.subdivisionString, 10);
     this.subdivisionTimeout = setTimeout(() => {
-      this._subdivision = parseInt(this.subdivisionString, 10);
-      this.subdivisionString = '';
-
-      if (this.currentLayer !== undefined) {
-        this.currentLayer.subdivision = this._subdivision;
-      }
+      this._finaliseSubdivision();
     }, this.subdivisionTimeoutDur);
   }
 
@@ -144,6 +148,10 @@ export class LayerManager {
   }
 
   set currentLayer(currentLayer) {
+    if (currentLayer === this._currentLayer) { return; }
+    clearTimeout(this.subdivisionTimeout);
+    if (currentLayer !== undefined) { this._finaliseSubdivision(); }
+
     this.layers.forEach(layer => layer.focused = layer === currentLayer);
     this.currentChanged = this._currentLayer !== currentLayer;
     this._currentLayer = currentLayer;

@@ -167,8 +167,6 @@ function render() {
 // Update loop
 // -----------------------------------------------------------------------------
 
-// let timeout = undefined;
-
 function update() {
   if (layerManager.layersChanged) {
     const layerList = layerManager.list;
