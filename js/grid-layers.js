@@ -1,7 +1,5 @@
 /*
   TODO:
-  - note glitching
-  - note playback
   - play note on draw
   - note minimum length is too long
   - moving notes
