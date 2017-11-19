@@ -1,4 +1,4 @@
-import { freqToMidi } from './utils.js';
+import { freqToMidi, midiToFreq } from './utils.js';
 import { Rectangle } from './Rectangle.js';
 import * as color from './color.js';
 
@@ -52,8 +52,10 @@ export class NoteRenderer {
   renderNote(ctx, note, style, metadata = {}) {
     ctx.save();
     ctx.fillStyle = style;
+    ctx.strokeStyle = style;
     ctx.globalAlpha = metadata.hover ? 0.8 : 0.5;
-    ctx.fillRect(...this.getRectFromNote(note));
+    const rect = this.getRectFromNote(note);
+    metadata.grabbed ? ctx.strokeRect(...rect) : ctx.fillRect(...rect);
     ctx.globalAlpha = 1.0;
     ctx.restore();
   }
@@ -71,28 +73,47 @@ export class NoteController {
     this.renderer = noteRenderer;
     this.metadata = new Map();
     this._metadataTemplate = {
-      hover: false
+      hover: false,
+      grabbed: false,
     };
   }
 
-  updateMouseMove(point) {
+  updateMouseDown(point, snappedPoint) {
     this.manager.notes.forEach(note => {
+      const grabbed = this.renderer.getRectFromNote(note).containsPoint(point);
+      this.setMetadata(note, 'grabbed', grabbed);
+    });
+
+    const anyGrabbed = this.manager.notes.some(note => this.metadata.get(note).grabbed);
+    if (!anyGrabbed) {
+      const midiNote = this.renderer.getNoteFromPoint(snappedPoint);
+      const freq = midiToFreq(midiNote);
+      const rect = this.renderer.parentRect;
+      const timeStart = ((snappedPoint.x - rect.x) / rect.width) * this.renderer.duration;
+      const timeStop = timeStart + Note.MIN_LENGTH;
+      this.manager.currentNote = new Note(freq, timeStart, timeStop);
+    }
+  }
+
+  updateMouseMove(point) {
+    this.manager.notesWithCurrent.forEach(note => {
       const hover = this.renderer.getRectFromNote(note).containsPoint(point);
       this.setMetadata(note, 'hover', hover);
     });
   }
 
   updateMouseUp(point, onCanvas) {
-    if (onCanvas) {
+    if (onCanvas && this.manager.currentNote !== undefined) {
       this.manager.addNote(this.manager.currentNote);
     }
     this.manager.currentNote = undefined;
+    this.manager.notesWithCurrent.forEach(note => this.setMetadata(note, 'grabbed', false));
   }
 
   render(ctx) {
     this.renderer.renderNotes(ctx, this.manager.notes, this.metadata);
     if (this.manager.currentNote !== undefined) {
-      this.renderer.renderNote(ctx, this.manager.currentNote, color.green);
+      this.renderer.renderNote(ctx, this.manager.currentNote, color.green, this.metadata);
     }
   }
 
@@ -120,5 +141,11 @@ export class NoteManager {
     if (this.notes.includes(note)) {
       this.notes.splice(this.notes.indexOf(note), 1);
     }
+  }
+
+  get notesWithCurrent() {
+    const notes = this.notes.slice();
+    if (this.currentNote !== undefined) { notes.push(this.currentNote); }
+    return notes;
   }
 }

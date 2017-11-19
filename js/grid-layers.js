@@ -281,12 +281,9 @@ canvas.addEventListener('mousedown', event => {
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    const point = getPointFromInput(event);
-    const midiNote = noteRenderer.getNoteFromPoint(point);
-    const freq = midiToFreq(midiNote);
-    const timeStart = ((point.x - patternRect.x) / patternRect.width) * DURATION;
-    const timeStop = timeStart + Note.MIN_LENGTHgg;
-    noteManager.currentNote = new Note(freq, timeStart, timeStop);
+    const point = new Point(event.offsetX, event.offsetY);
+    const snappedPoint = getPointFromInput(event);
+    noteController.updateMouseDown(point, snappedPoint);
   }
 });
 
@@ -295,9 +292,6 @@ document.addEventListener('mousedown', event => {
     if (event.target === document.body) {
       layerManager.currentLayer = undefined;
     }
-  }
-  else if (modeManager.currentMode === modeManager.modes.notes) {
-    // console.log('notes mousedown2');
   }
 });
 
