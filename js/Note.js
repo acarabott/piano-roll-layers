@@ -7,12 +7,15 @@ export class Note {
     this._timeStop = timeStop;
   }
 
+  static get MIN_LENGTH() { return 0.001; }
+
   render(ctx, style, parentRect, parentNumSeconds, parentNumNotes) {
     const x = parentRect.x + (this.timeStart / parentNumSeconds) * parentRect.width;
     const midiNote = freqToMidi(this.freq);
     const noteHeight = parentRect.height / parentNumNotes;
     const y = parentRect.height - noteHeight - Math.floor(linlin(midiNote, 60, 60 + parentNumNotes, 0, parentRect.height));
     const width = Math.max(2, parentRect.width * ((this.timeStop - this.timeStart) / parentNumSeconds));
+
     ctx.fillStyle = style;
     ctx.globalAlpha = 0.5;
     ctx.fillRect(x, y, width, noteHeight);
@@ -24,7 +27,7 @@ export class Note {
   }
 
   set timeStop(timeStop) {
-    this._timeStop = Math.max(timeStop, this.timeStart + 1);
+    this._timeStop = Math.max(timeStop, this.timeStart + Note.MIN_LENGTH);
   }
 
   clone() {

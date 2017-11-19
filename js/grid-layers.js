@@ -1,7 +1,6 @@
 /*
   TODO:
   - play note on draw
-  - note minimum length is too long
   - moving notes
   - resize layers
   - put at top and overlay the vertical lines?
@@ -288,7 +287,7 @@ canvas.addEventListener('mousedown', event => {
     const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
     const freq = midiToFreq(midiNote);
     const timeStart = ((point.x - patternRect.x) / patternRect.width) * DURATION;
-    const timeStop = timeStart + 0.1;
+    const timeStop = timeStart + Note.MIN_LENGTH;
     noteManager.currentNote = new Note(freq, timeStart, timeStop);
   }
 });
@@ -340,8 +339,7 @@ canvas.addEventListener('mousemove', event => {
       const midiNote = rectPointToMidiNote(patternRect, point, 60, NUM_KEYS);
       const freq = midiToFreq(midiNote);
       noteManager.currentNote.freq = freq;
-      let end = ((point.x - patternRect.x) / patternRect.width) * DURATION;
-      end = Math.max(end, noteManager.currentNote.timeStart + 0.001);
+      const end = ((point.x - patternRect.x) / patternRect.width) * DURATION;
       noteManager.currentNote.timeStop = end;
     }
   }
