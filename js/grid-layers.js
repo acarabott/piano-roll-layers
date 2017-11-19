@@ -14,7 +14,7 @@
 import { loop, rrandint, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
-import { Note, NoteManager, NoteRenderer } from './Note.js';
+import { Note, NoteManager, NoteController, NoteRenderer } from './Note.js';
 import { LayerManager } from './LayerManager.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
@@ -78,6 +78,7 @@ noteRenderer.parentRect = patternRect;
 noteRenderer.duration = DURATION;
 noteRenderer.numKeys = NUM_KEYS;
 noteRenderer.rootNote = ROOT_NOTE;
+const noteController = new NoteController(noteManager, noteRenderer);
 
 
 class AudioPlayback {
@@ -189,7 +190,7 @@ function render() {
   }
 
   // notes
-  noteRenderer.render(ctx, noteManager);
+  noteController.render(ctx);
 
   ctx.restore();
 }
@@ -265,12 +266,6 @@ function getPointFromInput(event) {
   return point;
 }
 
-function rectPointToMidiNote(rectangle, point, rootNote, numNotes) {
-  const noteHeight = rectangle.height / numNotes;
-  const noteIdx = numNotes - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
-  return rootNote + noteIdx;
-}
-
 canvas.addEventListener('mousedown', event => {
   if (modeManager.currentMode === modeManager.modes.layers) {
     if (layerManager.grabbableLayers.length > 0) {
@@ -287,7 +282,7 @@ canvas.addEventListener('mousedown', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const point = getPointFromInput(event);
-    const midiNote = rectPointToMidiNote(patternRect, point, ROOT_NOTE, NUM_KEYS);
+    const midiNote = noteRenderer.getNoteFromPoint(point);
     const freq = midiToFreq(midiNote);
     const timeStart = ((point.x - patternRect.x) / patternRect.width) * DURATION;
     const timeStop = timeStart + Note.MIN_LENGTHgg;
@@ -314,7 +309,7 @@ document.addEventListener('mouseup', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const point = new Point(event.offsetX, event.offsetY);
-    noteManager.updateMouseUp(point, event.srcElement === canvas);
+    noteController.updateMouseUp(point, event.srcElement === canvas);
   }
 
   layerManager.setDraggingLayer(undefined);
@@ -336,13 +331,12 @@ canvas.addEventListener('mousemove', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     if (noteManager.currentNote !== undefined) {
-      const point = getPointFromInput(event);
-      const midiNote = rectPointToMidiNote(patternRect, point, ROOT_NOTE, NUM_KEYS);
-      const freq = midiToFreq(midiNote);
-      noteManager.currentNote.freq = freq;
-      const end = ((point.x - patternRect.x) / patternRect.width) * DURATION;
-      noteManager.currentNote.timeStop = end;
+      const midiNote = noteRenderer.getNoteFromPoint(point);
+      noteManager.currentNote.freq = midiToFreq(midiNote);
+      noteManager.currentNote.timeStop = ((snappedPoint.x - patternRect.x) / patternRect.width) * DURATION;
     }
+
+    noteController.updateMouseMove(point);
   }
 });
 
