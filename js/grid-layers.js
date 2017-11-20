@@ -115,7 +115,7 @@ class AudioPlayback {
 
     const releaseTime = audioStart + note.timeStop - 0.1;
     gain.gain.setValueAtTime(volume, releaseTime);
-    gain.gain.setTargetAtTime(0.0, releaseTime, 0.3);
+    gain.gain.setTargetAtTime(0.0, releaseTime, 0.001);
 
 
     gain.connect(this.audio.destination);
