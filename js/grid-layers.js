@@ -58,6 +58,8 @@ const noteController = new NoteController(noteManager, noteRenderer);
 // audio
 const audio = new AudioContext();
 const audioPlayback = new AudioPlayback(audio);
+audioPlayback.duration = DURATION;
+
 function startPlayback() {
   audioPlayback.playFrom(noteManager.notes);
 }

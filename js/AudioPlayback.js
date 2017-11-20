@@ -11,6 +11,8 @@ export class AudioPlayback {
     this._currentNodes = undefined;
     this._nodes = new Map();
     this.isPlaying = false;
+    this.loop = true;
+    this.duration = 0;
   }
 
   playFrom(notes) {
@@ -86,6 +88,9 @@ export class AudioPlayback {
       }
     });
 
+    if (this.loop && this.currentTime >= this.duration) {
+      this.playFrom(this.notes);
+    }
   }
 
   set previewNote(note) {
@@ -111,5 +116,9 @@ export class AudioPlayback {
     if (this._previewNote !== undefined) {
       this._currentNodes = this.playNote(this._previewNote, this.audio.currentTime + 0.05);
     }
+  }
+
+  get currentTime() {
+    return this.audio.currentTime - this.audioStart;
   }
 }
