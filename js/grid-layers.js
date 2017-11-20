@@ -10,7 +10,7 @@
 // Helper functions
 // -----------------------------------------------------------------------------
 
-import { loop, rrandint, midiToFreq } from './utils.js';
+import { loop, rrandint, midiToFreq, toCapitalCase } from './utils.js';
 import * as color from './color.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note, NoteManager, NoteController, NoteRenderer } from './Note.js';
@@ -25,6 +25,10 @@ import { Scroll } from './Scroll.js';
 const NUM_KEYS = 20;
 const DURATION = 10;
 const ROOT_NOTE = 60;
+
+// info
+const info = document.createElement('div');
+document.body.appendChild(info);
 
 // canvas
 const canvas = document.createElement('canvas');
@@ -45,6 +49,7 @@ const modeManager = new ModeManager();
 modeManager.addModes('layers', 'notes');
 modeManager.currentMode = modeManager.modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
+info.appendChild(modeManagerRenderer.label);
 const layerManager = new LayerManager();
 
 const noteManager = new NoteManager();
@@ -74,11 +79,14 @@ function stopPlayback() {
 // ui
 const controls = document.createElement('div');
 controls.id = 'controls';
+
 document.body.appendChild(controls);
 
 const playButton = document.createElement('button');
 playButton.textContent = 'Play';
 playButton.style.display = 'block';
+playButton.style.width = `${canvas.width}px`;
+window.playButton = playButton;
 function updatePlayButton() {
   playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
 }
@@ -98,7 +106,36 @@ subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
 controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
-controls.appendChild(modeManagerRenderer.label);
+controls.appendChild(document.createElement('br'));
+
+const scroll = new Scroll();
+scroll.sensitivity = 0.125;
+scroll.range = 1;
+scroll.min = 1;
+
+const scrollLabel = document.createElement('div');
+scrollLabel.textContent = 'Input';
+scrollLabel.style.fontWeight = 'bold';
+controls.appendChild(scrollLabel);
+
+['trackpad', 'mouse'].forEach((name, i) => {
+  const input = document.createElement('input');
+  input.id = `scroll${name}`;
+  input.type = 'radio';
+  input.name = 'scroll';
+  input.checked = i === 0 ? 'checked' : '';
+  input.addEventListener('change', event => {
+    scroll.trackpad = name === 'trackpad';
+  });
+  const label = document.createElement('label');
+  label.htmlFor = input.id;
+  label.textContent = `${toCapitalCase(name)}: `;
+  label.style.marginLeft = '10px';
+  controls.appendChild(label);
+  controls.appendChild(input);
+  controls.appendChild(document.createElement('br'));
+});
+
 
 // user input
 let snapping = true;
@@ -112,9 +149,6 @@ cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes,
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isGrabbing, 'move');
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isHovering, 'move');
 
-const scroll = new Scroll();
-scroll.range = 0.25;
-scroll.min = 1;
 
 // Render functions
 // -----------------------------------------------------------------------------
@@ -338,13 +372,16 @@ canvas.addEventListener('mousemove', event => {
 });
 
 document.addEventListener('keydown', event => {
-  if      (event.key === 'Shift')   { snapping = false; }
-  else if (event.key === 'Alt')     { layerManager.copying = true; }
-  else if (event.key === 'Shift')   { layerManager.adjustingSubdivision = true; }
+  if      (event.key === 'Alt')     { layerManager.copying = true; }
   else if (event.key === 'Escape')  { document.activeElement.blur(); }
   else if (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
   else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
   else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
+  else if (event.key === 'Shift')   {
+    snapping = false;
+    layerManager.adjustingSubdivision = true;
+  }
+
 
   if (event.target === canvas) {
     if (isFinite(parseInt(event.key, 10))) {
@@ -383,24 +420,6 @@ subdivisionInput.addEventListener('input', event => {
   layerManager.subdivisionInput(event.data);
 });
 
-
-const scrollSensitivityInput = document.createElement('input');
-scrollSensitivityInput.type = 'number';
-scrollSensitivityInput.id = 'scrollSensitivity';
-scrollSensitivityInput.min = 0;
-scrollSensitivityInput.max = 1.0;
-scrollSensitivityInput.value = 0.3;
-scrollSensitivityInput.step = 0.01;
-scrollSensitivityInput.addEventListener('input', event => {
-  scroll.sensitivity = scrollSensitivityInput.valueAsNumber;
-});
-const scrollSensitivityLabel = document.createElement('label');
-scrollSensitivityLabel.htmlFor = 'scrollSensitivity';
-scrollSensitivityLabel.textContent = 'Scroll Sensitivity: ';
-controls.appendChild(scrollSensitivityLabel);
-
-
-controls.appendChild(scrollSensitivityInput);
 canvas.addEventListener('wheel', event => {
   if (layerManager.adjustingSubdivision) {
     event.preventDefault();

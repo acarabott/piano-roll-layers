@@ -6,10 +6,11 @@ export class Scroll {
     this.range = 1;
     this.min = 0;
     this.max = Infinity;
+    this.trackpad = true;
   }
 
   update(event) {
-    const step = this.range * this.sensitivity;
+    const step = this.trackpad ? this.range * this.sensitivity : this.range;
     this.valueAsFloat += event.wheelDelta > 0 ? -step : step;
     this.valueAsInt = Math.floor(this.valueAsFloat);
   }
