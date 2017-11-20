@@ -1,6 +1,5 @@
 /*
   TODO:
-  - delete note
   - play note on draw
   - resize layers
   - put at top and overlay the vertical lines?
@@ -74,8 +73,8 @@ cursor.addCursorState(() => layerManager.grabbableLayers.length > 0, 'move');
 cursor.addCursorState(() => layerManager.dragging, 'move');
 cursor.addCursorState(() => layerManager.copying, 'copy');
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.grabbing, 'move');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.hovering, 'move');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isGrabbing, 'move');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isHovering, 'move');
 
 
 
@@ -351,15 +350,21 @@ document.addEventListener('keydown', event => {
   if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
   if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
 
-  if (event.target === canvas && isFinite(parseInt(event.key, 10))) {
-    layerManager.subdivisionInput(event.key);
+  if (event.target === canvas) {
+    if (isFinite(parseInt(event.key, 10))) {
+      layerManager.subdivisionInput(event.key);
+    }
+    if (event.key === 'Backspace') {
+      if (modeManager.currentMode === modeManager.modes.layers) {
+        if (layerManager.currentLayer !== undefined) {
+          layerManager.removeLayer(layerManager.currentLayer);
+        }
+      }
+      else if (modeManager.currentMode === modeManager.modes.notes) {
+        noteController.hovering.forEach(note => noteManager.deleteNote(note));
+      }
+    }
   }
-
-  // key='Shift'      code='ShiftLeft'
-  // key='Control'    code='ControlLeft'
-  // key='Alt'        code='AltLeft'
-  // key='Meta'       code='MetaLeft'
-  // key='Meta'       code='MetaLeft'
 });
 
 document.addEventListener('keyup', event => {

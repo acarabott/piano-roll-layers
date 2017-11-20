@@ -112,7 +112,7 @@ export class NoteController {
       this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
     });
 
-    if (!this.grabbing) {
+    if (!this.isGrabbing) {
       const midiNote = this.renderer.getKeyFromPoint(point);
       const freq = midiToFreq(midiNote);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
@@ -120,12 +120,16 @@ export class NoteController {
     }
   }
 
-  get grabbing() {
+  get isGrabbing() {
     return this.manager.notes.some(note => this.getMetadata(note).grabbed);
   }
 
-  get hovering() {
+  get isHovering() {
     return this.manager.notes.some(note => this.getMetadata(note).hover);
+  }
+
+  get hovering() {
+    return this.manager.notes.filter(note => this.getMetadata(note).hover);
   }
 
   updateMouseMove(point, snappedPoint, targetRect) {

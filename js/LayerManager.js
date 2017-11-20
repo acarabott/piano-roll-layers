@@ -73,6 +73,11 @@ export class LayerManager {
     return layer;
   }
 
+  removeLayer(layer) {
+    this._layers.splice(this._layers.indexOf(layer), 1);
+    this.layersChanged = true;
+  }
+
   get layers() {
     return this._layers.slice();
   }
@@ -117,8 +122,7 @@ export class LayerManager {
         removeButton.type = 'button';
         removeButton.value = 'remove';
         removeButton.addEventListener('click', event => {
-          this._layers.splice(this._layers.indexOf(layer), 1);
-          this.layersChanged = true;
+          this.removeLayer(layer);
         });
         li.appendChild(removeButton);
 
