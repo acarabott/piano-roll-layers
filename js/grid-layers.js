@@ -46,17 +46,6 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   canvas.width - keyRect.width,
                                   keyRect.height);
 
-const cursor = new Cursor();
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
-cursor.addCursorState(() => layerManager.grabbableLayers.length > 0, 'move');
-cursor.addCursorState(() => layerManager.dragging, 'move');
-cursor.addCursorState(() => layerManager.copying, 'copy');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
-
-const scroll = new Scroll();
-scroll.range = 0.25;
-scroll.min = 1;
-
 const controls = document.createElement('div');
 controls.id = 'controls';
 document.body.appendChild(controls);
@@ -78,6 +67,21 @@ noteRenderer.duration = DURATION;
 noteRenderer.numKeys = NUM_KEYS;
 noteRenderer.rootNote = ROOT_NOTE;
 const noteController = new NoteController(noteManager, noteRenderer);
+
+const cursor = new Cursor();
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
+cursor.addCursorState(() => layerManager.grabbableLayers.length > 0, 'move');
+cursor.addCursorState(() => layerManager.dragging, 'move');
+cursor.addCursorState(() => layerManager.copying, 'copy');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.grabbing, 'move');
+cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.hovering, 'move');
+
+
+
+const scroll = new Scroll();
+scroll.range = 0.25;
+scroll.min = 1;
 
 
 class AudioPlayback {
