@@ -125,6 +125,10 @@ export class NoteController {
     return this.manager.notes.some(note => this.getMetadata(note).grabbed);
   }
 
+  get grabbed() {
+    return this.manager.notes.filter(note => this.getMetadata(note).grabbed);
+  }
+
   get isHovering() {
     return this.manager.notes.some(note => this.getMetadata(note).hover);
   }

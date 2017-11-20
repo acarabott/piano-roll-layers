@@ -89,7 +89,7 @@ class AudioPlayback {
     this.audioStart = 0;
     this.notes = [];
     this.marker = Symbol('played');
-    this._previewFreq = undefined;
+    this._previewNote = undefined;
     this._currentNodes = undefined;
   }
 
@@ -143,7 +143,12 @@ class AudioPlayback {
     });
   }
 
-  set previewFreq(freq) {
+  set previewNote(note) {
+    const sameFreq = this._previewNote !== undefined &&
+                     note !== undefined &&
+                     Math.abs(this._previewNote.freq - note.freq) < Number.EPSILON;
+    if (sameFreq) { return; }
+
     if (this._currentNodes !== undefined) {
       const gainNode = this._currentNodes.gain;
       gainNode.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
@@ -156,12 +161,11 @@ class AudioPlayback {
       this._currentNodes = undefined;
     }
 
+    this._previewNote = note === undefined ? undefined : new Note(note.freq, 0, 60);
     // play new note
-    if (freq !== undefined) {
-      const note = new Note(freq, 0, 60);
-      this._currentNodes = this.playNote(note, this.audio.currentTime + 0.05);
+    if (this._previewNote !== undefined) {
+      this._currentNodes = this.playNote(this._previewNote, this.audio.currentTime + 0.05);
     }
-    this._previewFreq = freq;
   }
 }
 
@@ -311,9 +315,9 @@ canvas.addEventListener('mousedown', event => {
       : layerManager.currentRect;
     noteController.updateMouseDown(point, snappedPoint, targetRect);
 
-    audioPlayback.previewFreq = noteManager.currentNote === undefined
-      ? undefined
-      : noteManager.currentNote.freq;
+    audioPlayback.previewNote = noteController.isGrabbing
+      ? noteController.grabbed[0]
+      : noteManager.currentNote;
   }
 });
 
@@ -337,7 +341,7 @@ document.addEventListener('mouseup', event => {
   }
 
   layerManager.setDraggingLayer(undefined);
-  audioPlayback.previewFreq = undefined;
+  audioPlayback.previewNote = undefined;
 });
 
 canvas.addEventListener('mousemove', event => {
@@ -368,10 +372,9 @@ canvas.addEventListener('mousemove', event => {
 
     noteController.updateMouseMove(point, focusedSnappedPoint, targetRect);
 
-    if (noteController.currentNoteChangedFreq) {
-      audioPlayback.previewFreq = noteManager.currentNote.freq;
-      noteController.currentNoteChangedFreq = false;
-    }
+    audioPlayback.previewNote = noteController.isGrabbing
+      ? noteController.grabbed[0]
+      : noteManager.currentNote;
   }
 });
 
