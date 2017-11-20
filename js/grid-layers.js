@@ -1,6 +1,5 @@
 /*
   TODO:
-  - moving notes from grabbed offset
   - delete note
   - play note on draw
   - resize layers
@@ -328,7 +327,14 @@ canvas.addEventListener('mousemove', event => {
     const targetRect = layerManager.currentRect === undefined
       ? patternRect
       : layerManager.currentRect;
-    noteController.updateMouseMove(point, snappedPoint, targetRect);
+
+    const focusedSnappedPoint = layerManager.currentLayer === undefined
+      ? snappedPoint
+      : snapping
+        ? new Point(targetRect.x, snappedPoint.y)
+        : point;
+
+    noteController.updateMouseMove(point, focusedSnappedPoint, targetRect);
   }
 });
 
