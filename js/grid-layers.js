@@ -78,10 +78,12 @@ document.body.appendChild(controls);
 const playButton = document.createElement('button');
 playButton.textContent = 'Play';
 playButton.style.display = 'block';
+function updatePlayButton() {
+  playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
+}
 playButton.addEventListener('click', event => {
-  const play = playButton.textContent === 'Play';
-  play ? startPlayback() : stopPlayback();
-  playButton.textContent = play ? 'Stop' : 'Play';
+  audioPlayback.isPlaying ? stopPlayback() : startPlayback();
+  updatePlayButton();
 });
 controls.appendChild(playButton);
 
@@ -207,6 +209,7 @@ function update() {
   audioPlayback.update();
   modeManagerRenderer.update();
   cursor.update();
+  updatePlayButton();
 }
 
 // User Input
@@ -321,13 +324,13 @@ canvas.addEventListener('mousemove', event => {
 });
 
 document.addEventListener('keydown', event => {
-  if (event.key === 'Shift' && snapping) { snapping = false; }
-  if (event.key === 'Alt')               { layerManager.copying = true; }
-  if (event.key === 'Shift')             { layerManager.adjustingSubdivision = true; }
-  if (event.key === 'Escape')            { document.activeElement.blur(); }
-
-  if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
-  if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+  if      (event.key === 'Shift')   { snapping = false; }
+  else if (event.key === 'Alt')     { layerManager.copying = true; }
+  else if (event.key === 'Shift')   { layerManager.adjustingSubdivision = true; }
+  else if (event.key === 'Escape')  { document.activeElement.blur(); }
+  else if (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
+  else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
+  else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
 
   if (event.target === canvas) {
     if (isFinite(parseInt(event.key, 10))) {
@@ -347,9 +350,9 @@ document.addEventListener('keydown', event => {
 });
 
 document.addEventListener('keyup', event => {
-  if (event.key === 'Shift' && !snapping) { snapping = true; }
-  if (event.key === 'Alt')                { layerManager.copying = false; }
-  if (event.key === 'Shift')              { layerManager.adjustingSubdivision = false; }
+  if      (event.key === 'Shift') { snapping = true; }
+  else if (event.key === 'Alt')   { layerManager.copying = false; }
+  else if (event.key === 'Shift') { layerManager.adjustingSubdivision = false; }
 });
 
 subdivisionInput.addEventListener('keydown', event => {

@@ -10,13 +10,13 @@ export class AudioPlayback {
     this._previewNote = undefined;
     this._currentNodes = undefined;
     this._nodes = new Map();
-    this.playing = false;
+    this.isPlaying = false;
   }
 
   playFrom(notes) {
     this.audioStart = this.audio.currentTime + this.lookahead;
     this.notes = notes.map(note => note.clone());
-    this.playing = true;
+    this.isPlaying = true;
   }
 
   stopNode(nodeObj) {
@@ -36,7 +36,7 @@ export class AudioPlayback {
     });
     this._nodes.clear();
     this.notes = [];
-    this.playing = false;
+    this.isPlaying = false;
   }
 
   playNote(note, audioStart) {
@@ -70,7 +70,7 @@ export class AudioPlayback {
   }
 
   update() {
-    if (!this.playing) { return; }
+    if (!this.isPlaying) { return; }
 
     const toPlay = this.notes.filter(note => {
       const noteStartTime = this.audioStart + note.timeStart;
