@@ -1,6 +1,5 @@
 /*
   TODO:
-  - moving playhead
   - play from time
   - style
   - note release
@@ -172,6 +171,19 @@ function render() {
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = color.blue;
     ctx.fillRect(...layerManager.currentRect);
+  }
+
+  // playhead
+  {
+    ctx.fillStyle = color.red;
+    ctx.globalAlpha = 0.8;
+    const curTime = audioPlayback.isPlaying
+      ? (audio.currentTime - audioPlayback.audioStart)
+      : 0;
+    const normTime = curTime / DURATION;
+    const x = patternRect.x + Math.max(0, patternRect.width * normTime);
+    ctx.fillRect(x, 0, 3, canvas.height);
+    ctx.globalAlpha = 1.0;
   }
 
   ctx.restore();

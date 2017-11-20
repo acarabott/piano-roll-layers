@@ -3,7 +3,7 @@ import { Note } from './Note.js';
 export class AudioPlayback {
   constructor(audioContext) {
     this.audio = audioContext;
-    this.lookahead = 0.5;
+    this.lookahead = 0.05;
     this.audioStart = 0;
     this.notes = [];
     this.marker = Symbol('played');
