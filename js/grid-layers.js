@@ -96,7 +96,7 @@ class AudioPlayback {
     this.notes = notes.map(note => note.clone());
   }
 
-  playNote(note) {
+  playNote(note, audioStart) {
     const gain = this.audio.createGain();
     const oscs = [-5, 0, 5].map(detune => {
       const osc = this.audio.createOscillator();
@@ -108,10 +108,10 @@ class AudioPlayback {
     });
 
     const volume = 0.1;
-    gain.gain.setValueAtTime(0.0, this.audio.currentTime);
-    gain.gain.setTargetAtTime(volume, this.audioStart + note.timeStart, 0.001);
+    gain.gain.setValueAtTime(0.0, this.audio.currentTime + 0.01);
+    gain.gain.setTargetAtTime(volume, audioStart + note.timeStart, 0.001);
 
-    const releaseTime = this.audioStart + note.timeStop - 0.1;
+    const releaseTime = audioStart + note.timeStop - 0.1;
     gain.gain.setValueAtTime(volume, releaseTime);
     gain.gain.setTargetAtTime(0.0, releaseTime, 0.3);
 
@@ -119,8 +119,8 @@ class AudioPlayback {
     gain.connect(this.audio.destination);
 
     oscs.forEach(osc => {
-      osc.start(this.audioStart + note.timeStart);
-      osc.stop(this.audioStart + note.timeStop + 1);
+      osc.start(audioStart + note.timeStart);
+      osc.stop(audioStart + note.timeStop + 1);
     });
   }
 
@@ -133,7 +133,7 @@ class AudioPlayback {
 
     toPlay.forEach(note => {
       if (!note[this.marker]) {
-        this.playNote(note);
+        this.playNote(note, this.audioStart);
         note[this.marker] = true;
       }
     });
