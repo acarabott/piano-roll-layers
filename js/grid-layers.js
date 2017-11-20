@@ -192,6 +192,14 @@ function render() {
   // notes
   noteController.render(ctx);
 
+  if (modeManager.currentMode === modeManager.modes.notes &&
+      layerManager.currentRect !== undefined)
+  {
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = color.blue;
+    ctx.fillRect(...layerManager.currentRect);
+  }
+
   ctx.restore();
 }
 
@@ -253,11 +261,9 @@ function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
   return new Point(x, y);
 }
 
-function snapPointToLayers(point) {
-  const rects = layerManager.layers.map(l => l.rects).reduce((cur, prev) => {
-    return prev.concat(cur);
-  }, [patternRect]);
-  return getSnappedPoint(point, patternRect, NUM_KEYS, rects);
+function snapPointToLayers(point, thresh = 20) {
+  const rects = [patternRect, ...layerManager.rects];
+  return getSnappedPoint(point, patternRect, NUM_KEYS, rects, thresh);
 }
 
 function getPointFromInput(event) {
@@ -267,23 +273,17 @@ function getPointFromInput(event) {
 }
 
 canvas.addEventListener('mousedown', event => {
+  const point = new Point(event.offsetX, event.offsetY);
+  const snappedPoint = getPointFromInput(event);
+
   if (modeManager.currentMode === modeManager.modes.layers) {
-    if (layerManager.grabbableLayers.length > 0) {
-      const chosen = layerManager.grabbableLayers[0];
-      const point = new Point(event.offsetX, event.offsetY);
-      layerManager.setDraggingLayer(chosen, point);
-    }
-    else {
-      layerManager.creation.active = true;
-      const point = getPointFromInput(event);
-      layerManager.creation.rect.tl = point;
-      layerManager.creation.rect.br = point;
-    }
+    layerManager.updateMouseDown(point, snappedPoint);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    const point = new Point(event.offsetX, event.offsetY);
-    const snappedPoint = getPointFromInput(event);
-    noteController.updateMouseDown(point, snappedPoint);
+    const targetRect = layerManager.currentRect === undefined
+      ? patternRect
+      : layerManager.currentRect;
+    noteController.updateMouseDown(point, snappedPoint, targetRect);
   }
 });
 
@@ -312,9 +312,10 @@ document.addEventListener('mouseup', event => {
 canvas.addEventListener('mousemove', event => {
   const point = new Point(event.offsetX, event.offsetY);
   const snappedPoint = getPointFromInput(event);
-  if (modeManager.currentMode === modeManager.modes.layers) {
-    layerManager.updateMove(point, snappedPoint);
 
+  layerManager.updateMove(point, snappedPoint);
+
+  if (modeManager.currentMode === modeManager.modes.layers) {
     // dragging layer
     if (layerManager.dragging) {
       const inputPoint = new Point(event.offsetX, event.offsetY);
@@ -324,7 +325,10 @@ canvas.addEventListener('mousemove', event => {
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    noteController.updateMouseMove(point, snappedPoint);
+    const targetRect = layerManager.currentRect === undefined
+      ? patternRect
+      : layerManager.currentRect;
+    noteController.updateMouseMove(point, snappedPoint, targetRect);
   }
 });
 
@@ -433,3 +437,4 @@ window.noteManager = noteManager;
 window.audio = audio;
 window.audioPlayback = audioPlayback;
 window.noteRenderer = noteRenderer;
+window.noteController = noteController;

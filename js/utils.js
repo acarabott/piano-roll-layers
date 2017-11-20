@@ -15,7 +15,7 @@ export function linlin(val, inMin, inMax, outMin, outMax, clamp='minmax') {
 }
 
 export function constrain(val, min=0, max=1.0) {
-  return Math.min(Math.min(val, max), min);
+  return Math.max(Math.min(val, max), min);
 }
 
 export function rrand(min, max) {

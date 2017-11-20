@@ -6,6 +6,7 @@ export class LayerManager {
   constructor() {
     this._layers = [];
     this._currentLayer = undefined;
+    this.currentRect = undefined;
     this.prevCursor = 'default';
     this._dragging = {
       sourceLayer: undefined,
@@ -74,6 +75,13 @@ export class LayerManager {
 
   get layers() {
     return this._layers.slice();
+  }
+
+  // returns all rectangles of all layers as a single array
+  get rects() {
+    return this._layers.map(l => l.rects).reduce((cur, prev) => {
+      return prev.concat(cur);
+    }, []);
   }
 
   get list() {
@@ -177,6 +185,21 @@ export class LayerManager {
     this._dragging.clear();
   }
 
+  updateMouseDown(point, snappedPoint) {
+    if (this.grabbableLayers.length > 0) {
+      const chosen = this.grabbableLayers[0];
+      this.setDraggingLayer(chosen, point);
+    }
+    else {
+      if (!this.copying) {
+        this.creation.active = true;
+        this.creation.rect.tl = snappedPoint;
+        this.creation.rect.br = snappedPoint;
+      }
+    }
+
+  }
+
   updateMove(inputPoint, snappedPoint) {
     // creating layers
     if (this.creation.active) {
@@ -188,6 +211,7 @@ export class LayerManager {
 
       // setting current layer
       const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
+      // TODO this is stupid, use targets instead of this._layers
       this.currentLayer = this._layers.find((layer, i) => {
         const containsPoint = layer.frame.containsPoint(inputPoint);
         const containsRects = targets.some(target => {
@@ -195,6 +219,10 @@ export class LayerManager {
         });
         return containsPoint && !containsRects;
       });
+
+      this.currentRect = this.currentLayer === undefined
+        ? undefined
+        : this.currentLayer.rects.find(rect => rect.containsPoint(inputPoint));
     }
   }
 
