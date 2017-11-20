@@ -1,9 +1,8 @@
 /*
   TODO:
   - play note on draw
-  - resize layers
+  - instructions
   - put at top and overlay the vertical lines?
-  - snap any line?
 */
 
 // Helper functions
