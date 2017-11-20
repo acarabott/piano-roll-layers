@@ -91,6 +91,7 @@ export class NoteController {
       grabbed: false,
       grabbedOffset: new Point(0, 0)
     };
+    this.currentNoteChangedFreq = false;
   }
 
   getInputNoteTimes(point, snappedPoint, targetRect) {
@@ -135,7 +136,10 @@ export class NoteController {
   updateMouseMove(point, snappedPoint, targetRect) {
     if (this.manager.currentNote !== undefined) {
       const midiNote = this.renderer.getKeyFromPoint(point);
+      const prevMidiNote = Math.floor(freqToMidi(this.manager.currentNote.freq));
       this.manager.currentNote.freq = midiToFreq(midiNote);
+      this.currentNoteChangedFreq = midiNote !== prevMidiNote;
+
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.manager.currentNote.timeStop = times[1];
     }

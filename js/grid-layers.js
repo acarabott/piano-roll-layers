@@ -89,6 +89,8 @@ class AudioPlayback {
     this.audioStart = 0;
     this.notes = [];
     this.marker = Symbol('played');
+    this._previewFreq = undefined;
+    this._currentNodes = undefined;
   }
 
   playFrom(notes) {
@@ -122,6 +124,8 @@ class AudioPlayback {
       osc.start(audioStart + note.timeStart);
       osc.stop(audioStart + note.timeStop + 1);
     });
+
+    return { note, oscs, gain };
   }
 
   update() {
@@ -137,6 +141,27 @@ class AudioPlayback {
         note[this.marker] = true;
       }
     });
+  }
+
+  set previewFreq(freq) {
+    if (this._currentNodes !== undefined) {
+      const gainNode = this._currentNodes.gain;
+      gainNode.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
+      gainNode.gain.cancelScheduledValues(this.audio.currentTime + 0.2);
+      const oscNodes = this._currentNodes.oscs;
+      setTimeout(() => {
+        oscNodes.forEach(osc => osc.disconnect());
+        gainNode.disconnect();
+      }, 500);
+      this._currentNodes = undefined;
+    }
+
+    // play new note
+    if (freq !== undefined) {
+      const note = new Note(freq, 0, 60);
+      this._currentNodes = this.playNote(note, this.audio.currentTime + 0.05);
+    }
+    this._previewFreq = freq;
   }
 }
 
@@ -285,6 +310,10 @@ canvas.addEventListener('mousedown', event => {
       ? patternRect
       : layerManager.currentRect;
     noteController.updateMouseDown(point, snappedPoint, targetRect);
+
+    audioPlayback.previewFreq = noteManager.currentNote === undefined
+      ? undefined
+      : noteManager.currentNote.freq;
   }
 });
 
@@ -308,6 +337,7 @@ document.addEventListener('mouseup', event => {
   }
 
   layerManager.setDraggingLayer(undefined);
+  audioPlayback.previewFreq = undefined;
 });
 
 canvas.addEventListener('mousemove', event => {
@@ -337,6 +367,11 @@ canvas.addEventListener('mousemove', event => {
         : point;
 
     noteController.updateMouseMove(point, focusedSnappedPoint, targetRect);
+
+    if (noteController.currentNoteChangedFreq) {
+      audioPlayback.previewFreq = noteManager.currentNote.freq;
+      noteController.currentNoteChangedFreq = false;
+    }
   }
 });
 
