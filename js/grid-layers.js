@@ -1,6 +1,8 @@
 /*
   TODO:
   - mode dropdown
+  - nicer looking layer list
+  - example button
   - play from time
   - style
   - note release
@@ -22,7 +24,7 @@ import { Point } from './Point.js';
 import { Scroll } from './Scroll.js';
 
 // constants
-const NUM_KEYS = 20;
+const NUM_KEYS = 25;
 const DURATION = 10;
 const ROOT_NOTE = 60;
 
@@ -87,6 +89,10 @@ const playButton = document.createElement('button');
 playButton.textContent = 'Play';
 playButton.style.display = 'block';
 playButton.style.width = `${canvas.width}px`;
+playButton.style.fontSize = '20px';
+playButton.style.background = 'white';
+playButton.style.marginBottom = '20px';
+
 window.playButton = playButton;
 function updatePlayButton() {
   playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
@@ -101,6 +107,7 @@ const subdivisionInput = document.createElement('input');
 subdivisionInput.id = 'subdivision';
 subdivisionInput.type = 'text';
 subdivisionInput.value = layerManager.subdivision;
+subdivisionInput.style.width = '40px';
 
 const subdivisionLabel = document.createElement('label');
 subdivisionLabel.htmlFor = 'subdivision';
