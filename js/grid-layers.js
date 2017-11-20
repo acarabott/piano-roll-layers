@@ -1,9 +1,9 @@
 /*
   TODO:
+  - mode dropdown
   - play from time
   - style
   - note release
-  - instructions
   - put at top and overlay the vertical lines?
 */
 
@@ -26,16 +26,17 @@ const NUM_KEYS = 20;
 const DURATION = 10;
 const ROOT_NOTE = 60;
 
+const container = document.getElementById('container');
 // info
 const info = document.createElement('div');
-document.body.appendChild(info);
+container.appendChild(info);
 
 // canvas
 const canvas = document.createElement('canvas');
 canvas.width = 800;
 canvas.height = 400;
 canvas.setAttribute('tabindex', 1);
-document.body.appendChild(canvas);
+container.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
 const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
@@ -80,7 +81,7 @@ function stopPlayback() {
 const controls = document.createElement('div');
 controls.id = 'controls';
 
-document.body.appendChild(controls);
+container.appendChild(controls);
 
 const playButton = document.createElement('button');
 playButton.textContent = 'Play';

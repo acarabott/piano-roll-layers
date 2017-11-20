@@ -6,6 +6,80 @@
 </head>
 <body>
   <h1>Musical Grid Layers</h1>
+
+  <div id="container"></div>
+  <div id="instructions">
+    <h2>Controls</h2>
+    <ul id="controls">
+      <li>
+        <span class="key-wrap">
+          <span class="key">Q</span>
+        </span> Grid mode
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">W</span>
+        </span> Note mode
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">0</span> - <span class="key">9</span>
+        </span>
+         Set grid subdivision</li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">&#x21E7; Shift</span>
+        </span>
+        Hold to disable snapping (on by default)
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">Space</span>
+        </span>
+        Play / Pause Playback
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">&#x2325; Alt</span>
+        </span>
+        Hold to copy grid
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">&#x232B; Backspace</span>
+        </span>
+        Delete selected note / grid
+      </li>
+      <li>
+        <span class="key-wrap">
+          <span class="key">&#x21E7; Shift</span> + Scroll
+        </span>
+        Adjust grid subdivision
+      </li>
+    </ul>
+
+    <h2>What?</h2>
+    <p>
+      An alternative to having a fixed time grid on a piano roll. Instead you
+      can lay down multiple grids with different subdivisions. New grids and new
+      notes can be snapped to existing grids.
+    </p>
+
+    <h2>Why?</h2>
+    <p>
+      Having a single fixed grid (usually 16th notes) makes the default very
+      inviting and alternatives less accessible. Without a global default, you
+      can explore other rhythms.
+    </p>
+    <p>
+      It also makes it easier to do things that a global grid makes difficult,
+      like nested tuplets or starting a tuplet on the off-beat.
+    </p>
+    <p>
+      New tools make for new approaches!
+    </p>
+
+  </div>
 </body>
 <script src="js/grid-layers.js" type="module"></script>
 </html>
