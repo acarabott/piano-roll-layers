@@ -112,6 +112,10 @@ subdivisionInput.id = 'subdivision';
 subdivisionInput.type = 'text';
 subdivisionInput.value = layerManager.subdivision;
 subdivisionInput.style.width = '40px';
+layerManager.bind('currentChanged', layer => {
+  if (layer !== undefined) subdivisionInput.value = layer.subdivision;
+});
+
 
 const subdivisionLabel = document.createElement('label');
 subdivisionLabel.htmlFor = 'subdivision';
@@ -124,6 +128,10 @@ const scroll = new Scroll();
 scroll.sensitivity = 0.125;
 scroll.range = 1;
 scroll.min = 1;
+layerManager.bind('currentChanged', layer => {
+  if (layer !== undefined) scroll.valueAsFloat = layer.subdivision;
+});
+
 
 const scrollLabel = document.createElement('div');
 scrollLabel.textContent = 'Input';
@@ -147,6 +155,8 @@ controls.appendChild(scrollLabel);
   controls.appendChild(input);
   controls.appendChild(document.createElement('br'));
 });
+
+controls.appendChild(layerManager.list);
 
 
 // user input
@@ -240,19 +250,8 @@ function render() {
 
 // Update loop
 // -----------------------------------------------------------------------------
-
 function update() {
-  if (layerManager.layersChanged) {
-    const layerList = layerManager.list;
-    controls.appendChild(layerList);
-    layerManager.layersChanged = false;
-  }
   if (layerManager.currentLayer !== undefined) {
-    if (layerManager.currentChanged) {
-      subdivisionInput.value = layerManager.currentLayer.subdivision;
-      scroll.valueAsFloat = layerManager.currentLayer.subdivision;
-      layerManager.currentChanged = false;
-    }
     if (layerManager.currentLayer.subdivisionChanged) {
       subdivisionInput.value = layerManager.subdivision;
       subdivisionInput.selectionStart = 0;

@@ -1,9 +1,11 @@
 import { Point } from './Point.js';
 import { Layer } from './Layer.js';
 import { Rectangle } from './Rectangle.js';
+import { MicroEvent } from './MicroEvent.js';
 
-export class LayerManager {
+export class LayerManager extends MicroEvent {
   constructor() {
+    super();
     this.parentRect = undefined;
     this.numKeys = undefined;
     this._layers = [];
@@ -24,15 +26,15 @@ export class LayerManager {
       active: false,
       rect: new Rectangle()
     };
-    this.layersChanged = true;
-    this._list = document.createElement('ol');
+    this.list = document.createElement('ol');
     this.adjustingSubdivision = false;
-    this.currentChanged = true;
 
     this._subdivision = 3;
     this.subdivisionString = '';
     this.subdivisionTimeout = undefined;
     this.subdivisionTimeoutDur = 450;
+
+    this.bind('layersChanged', layers => this.updateList());
   }
 
   get noteHeight() {
@@ -96,16 +98,16 @@ export class LayerManager {
   }
 
   addLayer(rect, subdivision) {
-    this.layersChanged = true;
     const layer = new Layer(...rect);
     layer.subdivision = subdivision;
     this._layers.push(layer);
+    this.trigger('layersChanged', this._layers);
     return layer;
   }
 
   removeLayer(layer) {
     this._layers.splice(this._layers.indexOf(layer), 1);
-    this.layersChanged = true;
+    this.trigger('layersChanged', this._layers);
   }
 
   get layers() {
@@ -119,47 +121,44 @@ export class LayerManager {
     }, []);
   }
 
-  get list() {
-    if (this.layersChanged) {
-      Array.from(this._list.children).forEach(item => this._list.removeChild(item));
+  updateList() {
+    Array.from(this.list.children).forEach(item => this.list.removeChild(item));
 
-      this._layers.forEach((layer, i) => {
-        const li = document.createElement('li');
+    this._layers.forEach((layer, i) => {
+      const li = document.createElement('li');
 
-        const enabledInput = document.createElement('input');
-        enabledInput.type = 'checkbox';
-        enabledInput.checked = layer.active;
-        enabledInput.addEventListener('change', event => {
-          layer.active = enabledInput.checked;
-        });
-        li.appendChild(enabledInput);
-
-        const currentInput = document.createElement('input');
-        currentInput.type = 'radio';
-        currentInput.name = 'current';
-        currentInput.checked = layer === this._currentLayer;
-        currentInput.addEventListener('change', event => {
-          this.currentLayer = layer;
-        });
-        li.appendChild(currentInput);
-
-
-        const label = document.createElement('span');
-        label.textContent = `Layer ${i + 1} - ${layer.subdivision}`;
-        li.appendChild(label);
-
-        const removeButton = document.createElement('input');
-        removeButton.type = 'button';
-        removeButton.value = 'remove';
-        removeButton.addEventListener('click', event => {
-          this.removeLayer(layer);
-        });
-        li.appendChild(removeButton);
-
-        this._list.appendChild(li);
+      const enabledInput = document.createElement('input');
+      enabledInput.type = 'checkbox';
+      enabledInput.checked = layer.active;
+      enabledInput.addEventListener('change', event => {
+        layer.active = enabledInput.checked;
       });
-    }
-    return this._list;
+      li.appendChild(enabledInput);
+
+      const currentInput = document.createElement('input');
+      currentInput.type = 'radio';
+      currentInput.name = 'current';
+      currentInput.checked = layer === this._currentLayer;
+      currentInput.addEventListener('change', event => {
+        this.currentLayer = layer;
+      });
+      li.appendChild(currentInput);
+
+
+      const label = document.createElement('span');
+      label.textContent = `Layer ${i + 1} - ${layer.subdivision}`;
+      li.appendChild(label);
+
+      const removeButton = document.createElement('input');
+      removeButton.type = 'button';
+      removeButton.value = 'remove';
+      removeButton.addEventListener('click', event => {
+        this.removeLayer(layer);
+      });
+      li.appendChild(removeButton);
+
+      this.list.appendChild(li);
+    });
   }
 
   get grabbableLayers() {
@@ -197,9 +196,11 @@ export class LayerManager {
     clearTimeout(this.subdivisionTimeout);
     this._finaliseSubdivision();
 
+    if (this._currentLayer === currentLayer) return;
+
     this.layers.forEach(layer => layer.focused = layer === currentLayer);
-    this.currentChanged = this._currentLayer !== currentLayer;
     this._currentLayer = currentLayer;
+    this.trigger('currentChanged', currentLayer);
   }
 
   get dragOffset() {
