@@ -35,6 +35,22 @@ export class Point {
     return this.x > point.x && this.y > point.y;
   }
 
+  eitherLessThan(point) {
+    return this.x < point.x || this.y < point.y;
+  }
+
+  eitherGreaterThan(point) {
+    return this.x > point.x || this.y > point.y;
+  }
+
+  eitherLessThanOrEqualTo(point) {
+    return this.x <= point.x || this.y <= point.y;
+  }
+
+  eitherGreaterThanOrEqualTo(point) {
+    return this.x >= point.x || this.y >= point.y;
+  }
+
   manhattanDistanceTo(point) {
     return Math.abs(this.x - point.x) + Math.abs(this.y + point.y);
   }
