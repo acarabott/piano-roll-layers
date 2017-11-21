@@ -54,6 +54,8 @@ modeManager.currentMode = modeManager.modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 info.appendChild(modeManagerRenderer.label);
 const layerManager = new LayerManager();
+layerManager.parentRect = patternRect;
+layerManager.numKeys = NUM_KEYS;
 
 const noteManager = new NoteManager();
 const noteRenderer = new NoteRenderer();
@@ -271,35 +273,9 @@ function update() {
 // User Input
 // -----------------------------------------------------------------------------
 
-function getSnappedPoint(point, containerRect, vertDivision, horzRects) {
-  let x = point.x;
-  let minDistance = Infinity;
-  horzRects.forEach(rect => {
-    [rect.tl.x, rect.br.x].forEach(cx => {
-      const dist = Math.abs(cx - point.x);
-      if (dist < minDistance) {
-        minDistance = dist;
-        x = cx;
-      }
-    });
-  });
-
-  const vertStep = containerRect.height / vertDivision;
-  const distanceToStepAbove = point.y % vertStep;
-  const y = point.y - distanceToStepAbove + (distanceToStepAbove > (vertStep / 2)
-                                              ? vertStep
-                                              : 0);
-  return new Point(x, y);
-}
-
-function snapPointToLayers(point, thresh = 20) {
-  const rects = [patternRect, ...layerManager.rects];
-  return getSnappedPoint(point, patternRect, NUM_KEYS, rects, thresh);
-}
-
 function getPointFromInput(event) {
   let point = new Point(event.offsetX, event.offsetY);
-  if (snapping) { point = snapPointToLayers(point); }
+  if (snapping) { point = layerManager.snapPointToLayers(point); }
   return point;
 }
 
@@ -360,7 +336,7 @@ canvas.addEventListener('mousemove', event => {
     if (layerManager.dragging) {
       const inputPoint = new Point(event.offsetX, event.offsetY);
       let origin = inputPoint.subtract(layerManager.dragOffset);
-      if (snapping) { origin = snapPointToLayers(origin); }
+      if (snapping) { origin = layerManager.snapPointToLayers(origin); }
       layerManager.dragTo(origin);
     }
   }

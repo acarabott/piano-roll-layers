@@ -4,6 +4,8 @@ import { Rectangle } from './Rectangle.js';
 
 export class LayerManager {
   constructor() {
+    this.parentRect = undefined;
+    this.numKeys = undefined
     this._layers = [];
     this._currentLayer = undefined;
     this.currentRect = undefined;
@@ -31,6 +33,27 @@ export class LayerManager {
     this.subdivisionString = '';
     this.subdivisionTimeout = undefined;
     this.subdivisionTimeoutDur = 450;
+  }
+
+  snapPointToLayers(point, thresh = 20) {
+    let x = point.x;
+    let minDistance = Infinity;
+    [this.parentRect, ...this.rects].forEach(rect => {
+      [rect.tl.x, rect.br.x].forEach(cx => {
+        const dist = Math.abs(cx - point.x);
+        if (dist < minDistance) {
+          minDistance = dist;
+          x = cx;
+        }
+      });
+    });
+
+    const vertStep = this.parentRect.height / this.numKeys;
+    const distanceToStepAbove = point.y % vertStep;
+    const y = point.y - distanceToStepAbove + (distanceToStepAbove > (vertStep / 2)
+                                                ? vertStep
+                                                : 0);
+    return new Point(x, y);
   }
 
   _finaliseSubdivision() {
