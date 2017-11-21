@@ -1,4 +1,5 @@
 import { Rectangle } from './Rectangle.js';
+import { linlin } from './utils.js';
 
 export class Layer {
   constructor(x, y, width, height) {
@@ -24,10 +25,10 @@ export class Layer {
     this.rects.forEach((rect, i) => {
       ctx.strokeRect(...rect);
       ctx.fillStyle = style;
-      const fontsize = 20;
+      const fontsize = linlin(this.width / this._subdivision, 10, 800, 12, 20);
       ctx.font = `${fontsize}px Monaco`;
       ctx.textAlign = 'center';
-      ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.5);
+      ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.25);
     });
 
     // border
