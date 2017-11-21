@@ -281,17 +281,13 @@ function getPointFromInput(event) {
 
 canvas.addEventListener('mousedown', event => {
   const point = new Point(event.offsetX, event.offsetY);
-  const snappedPoint = getPointFromInput(event);
-  const targetRect = layerManager.currentRect === undefined
-    ? patternRect
-    : layerManager.currentRect;
-
 
   if (modeManager.currentMode === modeManager.modes.layers) {
-    layerManager.updateMouseDown(point, snappedPoint, targetRect, patternRect.height / NUM_KEYS);
+    layerManager.updateMouseDown(point, snapping);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    noteController.updateMouseDown(point, snappedPoint, targetRect);
+    const snappedPoint = getPointFromInput(event);
+    noteController.updateMouseDown(point, snappedPoint, layerManager.targetRect);
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]
@@ -324,30 +320,18 @@ document.addEventListener('mouseup', event => {
 
 canvas.addEventListener('mousemove', event => {
   const point = new Point(event.offsetX, event.offsetY);
-  const snappedPoint = getPointFromInput(event);
-  const targetRect = layerManager.currentRect === undefined
-    ? patternRect
-    : layerManager.currentRect;
 
-  layerManager.updateMove(point, snappedPoint, targetRect, patternRect.height / NUM_KEYS);
+  layerManager.updateMove(point, snapping);
 
-  if (modeManager.currentMode === modeManager.modes.layers) {
-    // dragging layer
-    if (layerManager.dragging) {
-      const inputPoint = new Point(event.offsetX, event.offsetY);
-      let origin = inputPoint.subtract(layerManager.dragOffset);
-      if (snapping) { origin = layerManager.snapPointToLayers(origin); }
-      layerManager.dragTo(origin);
-    }
-  }
-  else if (modeManager.currentMode === modeManager.modes.notes) {
+  if (modeManager.currentMode === modeManager.modes.notes) {
+    const snappedPoint = getPointFromInput(event);
     const focusedSnappedPoint = layerManager.currentLayer === undefined
       ? snappedPoint
       : snapping
-        ? new Point(targetRect.x, snappedPoint.y)
+        ? new Point(layerManager.targetRect.x, snappedPoint.y)
         : point;
 
-    noteController.updateMouseMove(point, focusedSnappedPoint, targetRect);
+    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.targetRect);
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]

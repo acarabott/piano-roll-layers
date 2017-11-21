@@ -5,7 +5,7 @@ import { Rectangle } from './Rectangle.js';
 export class LayerManager {
   constructor() {
     this.parentRect = undefined;
-    this.numKeys = undefined
+    this.numKeys = undefined;
     this._layers = [];
     this._currentLayer = undefined;
     this.currentRect = undefined;
@@ -35,6 +35,14 @@ export class LayerManager {
     this.subdivisionTimeoutDur = 450;
   }
 
+  get noteHeight() {
+    return this.parentRect.height / this.numKeys;
+  }
+
+  get targetRect() {
+    return this.currentRect === undefined ? this.parentRect : this.currentRect;
+  }
+
   snapPointToLayers(point, thresh = 20) {
     let x = point.x;
     let minDistance = Infinity;
@@ -48,11 +56,10 @@ export class LayerManager {
       });
     });
 
-    const vertStep = this.parentRect.height / this.numKeys;
-    const distanceToStepAbove = point.y % vertStep;
-    const y = point.y - distanceToStepAbove + (distanceToStepAbove > (vertStep / 2)
-                                                ? vertStep
-                                                : 0);
+    const distanceToStepAbove = point.y % this.noteHeight;
+    const lessThanHalfWay = distanceToStepAbove > this.noteHeight / 2;
+    const additionalHeight = (lessThanHalfWay ? this.noteHeight : 0);
+    const y = point.y - distanceToStepAbove + additionalHeight;
     return new Point(x, y);
   }
 
@@ -212,7 +219,9 @@ export class LayerManager {
     this._dragging.clear();
   }
 
-  updateMouseDown(point, snappedPoint, targetRect, minHeight) {
+  updateMouseDown(point, snapping) {
+    const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+
     if (this.grabbableLayers.length > 0) {
       const chosen = this.grabbableLayers[0];
       this.setDraggingLayer(chosen, point);
@@ -220,29 +229,38 @@ export class LayerManager {
     else {
       if (!this.copying) {
         this.creation.active = true;
-        this.creation.rect.tl = new Point(targetRect.tl.x, snappedPoint.y);
-        const x = snappedPoint.x === targetRect.tl.x ? targetRect.br.x : snappedPoint.x;
-        this.creation.rect.br = new Point(x, snappedPoint.y + minHeight);
+        const tlX = snapping ? this.targetRect.tl.x : point.x;
+        const tlY = snapping ? snappedPoint.y : point.y;
+        this.creation.rect.tl = new Point(tlX, tlY);
+        const brX = snappedPoint.x === this.targetRect.tl.x ? this.targetRect.br.x : snappedPoint.x;
+        this.creation.rect.br = new Point(brX, snappedPoint.y + this.noteHeight);
       }
     }
   }
 
-  updateMove(inputPoint, snappedPoint, targetRect, minHeight) {
+  updateMove(point, snapping) {
+    const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+
     // creating layers
     if (this.creation.active) {
-      const x = snappedPoint.x === targetRect.tl.x ? targetRect.br.x : snappedPoint.x;
-      const y = snappedPoint.y + (snappedPoint.y === this.creation.rect.tl.y ? minHeight : 0);
+      const x = snappedPoint.x === this.targetRect.tl.x ? this.targetRect.br.x : snappedPoint.x;
+      const y = snappedPoint.y + (snappedPoint.y === this.creation.rect.tl.y ? this.noteHeight : 0);
       this.creation.rect.br = new Point(x, y);
+    }
+    else if (this.dragging) {
+      let origin = point.subtract(this.dragOffset);
+      if (snapping) { origin = this.snapPointToLayers(origin); }
+      this.dragTo(origin);
     }
     else {
       // layers as grabbable
-      this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(inputPoint, 4));
+      this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(point, 4));
 
       // setting current layer
-      const targets = this._layers.filter(layer => layer.frame.containsPoint(inputPoint));
+      const targets = this._layers.filter(layer => layer.frame.containsPoint(point));
       // TODO this is stupid, use targets instead of this._layers
       this.currentLayer = this._layers.find((layer, i) => {
-        const containsPoint = layer.frame.containsPoint(inputPoint);
+        const containsPoint = layer.frame.containsPoint(point);
         const containsRects = targets.some(target => {
           return target !== layer && layer.frame.containsPartialRect(target.frame);
         });
@@ -251,7 +269,7 @@ export class LayerManager {
 
       this.currentRect = this.currentLayer === undefined
         ? undefined
-        : this.currentLayer.rects.find(rect => rect.containsPoint(inputPoint));
+        : this.currentLayer.rects.find(rect => rect.containsPoint(point));
     }
   }
 
