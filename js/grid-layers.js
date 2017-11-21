@@ -306,14 +306,15 @@ function getPointFromInput(event) {
 canvas.addEventListener('mousedown', event => {
   const point = new Point(event.offsetX, event.offsetY);
   const snappedPoint = getPointFromInput(event);
+  const targetRect = layerManager.currentRect === undefined
+    ? patternRect
+    : layerManager.currentRect;
+
 
   if (modeManager.currentMode === modeManager.modes.layers) {
-    layerManager.updateMouseDown(point, snappedPoint);
+    layerManager.updateMouseDown(point, snappedPoint, targetRect, patternRect.height / NUM_KEYS);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    const targetRect = layerManager.currentRect === undefined
-      ? patternRect
-      : layerManager.currentRect;
     noteController.updateMouseDown(point, snappedPoint, targetRect);
 
     audioPlayback.previewNote = noteController.isGrabbing
@@ -348,8 +349,11 @@ document.addEventListener('mouseup', event => {
 canvas.addEventListener('mousemove', event => {
   const point = new Point(event.offsetX, event.offsetY);
   const snappedPoint = getPointFromInput(event);
+  const targetRect = layerManager.currentRect === undefined
+    ? patternRect
+    : layerManager.currentRect;
 
-  layerManager.updateMove(point, snappedPoint);
+  layerManager.updateMove(point, snappedPoint, targetRect, patternRect.height / NUM_KEYS);
 
   if (modeManager.currentMode === modeManager.modes.layers) {
     // dragging layer
@@ -361,10 +365,6 @@ canvas.addEventListener('mousemove', event => {
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    const targetRect = layerManager.currentRect === undefined
-      ? patternRect
-      : layerManager.currentRect;
-
     const focusedSnappedPoint = layerManager.currentLayer === undefined
       ? snappedPoint
       : snapping

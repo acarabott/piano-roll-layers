@@ -189,7 +189,7 @@ export class LayerManager {
     this._dragging.clear();
   }
 
-  updateMouseDown(point, snappedPoint) {
+  updateMouseDown(point, snappedPoint, targetRect, minHeight) {
     if (this.grabbableLayers.length > 0) {
       const chosen = this.grabbableLayers[0];
       this.setDraggingLayer(chosen, point);
@@ -197,17 +197,19 @@ export class LayerManager {
     else {
       if (!this.copying) {
         this.creation.active = true;
-        this.creation.rect.tl = snappedPoint;
-        this.creation.rect.br = snappedPoint;
+        this.creation.rect.tl = new Point(targetRect.tl.x, snappedPoint.y);
+        const x = snappedPoint.x === targetRect.tl.x ? targetRect.br.x : snappedPoint.x;
+        this.creation.rect.br = new Point(x, snappedPoint.y + minHeight);
       }
     }
-
   }
 
-  updateMove(inputPoint, snappedPoint) {
+  updateMove(inputPoint, snappedPoint, targetRect, minHeight) {
     // creating layers
     if (this.creation.active) {
-      this.creation.rect.br = snappedPoint;
+      const x = snappedPoint.x === targetRect.tl.x ? targetRect.br.x : snappedPoint.x;
+      const y = snappedPoint.y + (snappedPoint.y === this.creation.rect.tl.y ? minHeight : 0);
+      this.creation.rect.br = new Point(x, y);
     }
     else {
       // layers as grabbable
