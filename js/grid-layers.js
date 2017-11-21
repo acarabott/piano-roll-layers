@@ -321,7 +321,7 @@ document.addEventListener('mouseup', event => {
 canvas.addEventListener('mousemove', event => {
   const point = new Point(event.offsetX, event.offsetY);
 
-  layerManager.updateMove(point, snapping);
+  layerManager.updateMouseMove(point, snapping);
 
   if (modeManager.currentMode === modeManager.modes.notes) {
     const snappedPoint = getPointFromInput(event);
@@ -412,7 +412,8 @@ function test() {
     const y = rrandint(patternRect.y, patternRect.height * 0.75);
     const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
     const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
-    const layer = layerManager.addLayer(x, y, width, height, rrandint(1, 10));
+    const rect = new Rectangle(x, y , width, height);
+    const layer = layerManager.addLayer(rect, rrandint(1, 10));
     if (i === n - 1) { layerManager.currentLayer = layer; }
   });
 

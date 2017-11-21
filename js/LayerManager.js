@@ -95,9 +95,9 @@ export class LayerManager {
     this._subdivision = Math.max(subdivision, 1);
   }
 
-  addLayer(x, y, width, height, subdivision) {
+  addLayer(rect, subdivision) {
     this.layersChanged = true;
-    const layer = new Layer(x, y, width, height);
+    const layer = new Layer(...rect);
     layer.subdivision = subdivision;
     this._layers.push(layer);
     return layer;
@@ -238,7 +238,7 @@ export class LayerManager {
     }
   }
 
-  updateMove(point, snapping) {
+  updateMouseMove(point, snapping) {
     const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
 
     // creating layers
@@ -276,23 +276,20 @@ export class LayerManager {
   updateMouseUp(inputPoint) {
     if (this.creation.active) {
       this.creation.active = false;
-      if (Math.abs(this.creation.rect.width) > 0 && Math.abs(this.creation.rect.height) > 0) {
-        const rect = this.creation.rect.tl.lessThan(this.creation.rect.br)
-          ? this.creation.rect
-          : (() => {
-            const normal = this.creation.rect.tl.lessThan(this.creation.rect.br);
-            const tl = normal ? this.creation.rect.tl : this.creation.rect.br;
-            const br = normal ? this.creation.rect.br : this.creation.rect.tl;
-            return Rectangle.fromPoints(tl, br);
-          })();
-        this.currentLayer = this.addLayer(...rect, this.subdivision);
+      const absWidth = Math.abs(this.creation.rect.width);
+      const absHeight = Math.abs(this.creation.rect.height);
+      if (absWidth > 0 && absHeight > 0) {
+        const tl = this.creation.rect.tl;
+        const br = this.creation.rect.br;
+        const rect = new Rectangle(Math.min(tl.x, br.x), Math.min(tl.y, br.y), absWidth, absHeight);
+        this.currentLayer = this.addLayer(rect, this.subdivision);
       }
     }
 
     if (this.dragging) {
       if (this.copying) {
         // copy the layer
-        const layer = this.addLayer(...this.draggingLayer.frame,
+        const layer = this.addLayer(this.draggingLayer.frame,
                                     this.draggingLayer.subdivision);
 
         // reset the original
