@@ -267,7 +267,6 @@ function update() {
   }
 
   audioPlayback.update();
-  modeManagerRenderer.update();
   cursor.update();
   updatePlayButton();
 }

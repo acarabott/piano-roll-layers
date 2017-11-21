@@ -1,16 +1,15 @@
 import { toCapitalCase } from './utils.js';
+import { MicroEvent } from './MicroEvent.js';
 
 export class ModeManager {
   constructor() {
     this.modes = {};
     this._currentMode = undefined;
-    this.currentModeChanged = true;
-    this.modesChanged = true;
   }
 
   addModes(...names) {
     names.forEach(name => this.modes[name] = Symbol(name));
-    this.modesChanged = true;
+    this.trigger('modeListChanged', this.modes);
   }
 
   get currentMode() {
@@ -20,7 +19,7 @@ export class ModeManager {
   set currentMode(symbol) {
     if (Object.values(this.modes).includes(symbol)) {
       this._currentMode = symbol;
-      this.currentModeChanged = true;
+      this.trigger('currentModeChanged', this._currentMode);
     }
     else {
       throw new TypeError(`Invalid mode: ${symbol}`);
@@ -31,6 +30,8 @@ export class ModeManager {
     return Object.entries(this.modes).find(e => e[1] === this._currentMode)[0];
   }
 }
+
+MicroEvent.mixin(ModeManager);
 
 export class ModeManagerRenderer {
   constructor(modeManager) {
@@ -44,29 +45,24 @@ export class ModeManagerRenderer {
     this.label = document.createElement('label');
     this.label.htmlFor = this.select.id;
     this.label.textContent = 'Mode: ';
+
+    this.manager.bind('currentModeChanged', currentMode => {
+      this.select.value = this.manager.getNameForMode(currentMode);
+    });
+
+    this.manager.bind('modeListChanged', modes => this.updateOptions(modes));
+    this.updateOptions(this.manager.modes);
   }
 
-  updateOptions() {
+  updateOptions(modes) {
     Object.values(this.select.children).forEach(child => this.select.remove(child));
 
-    Object.entries(this.manager.modes).forEach(entry => {
+    Object.entries(modes).forEach(entry => {
       const label = entry[0];
       const option = document.createElement('option');
       option.value = label;
       option.textContent = toCapitalCase(label);
       this.select.appendChild(option);
     });
-  }
-
-  update() {
-    if (this.manager.currentModeChanged) {
-      this.select.value = this.manager.getNameForMode(this.manager.currentMode);
-      this.manager.currentModeChanged = false;
-    }
-
-    if (this.manager.modesChanged) {
-      this.updateOptions();
-      this.manager.modesChanged = false;
-    }
   }
 }
