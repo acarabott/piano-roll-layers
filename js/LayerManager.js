@@ -30,7 +30,7 @@ export class LayerManager extends MicroEvent {
     this.adjustingSubdivision = false;
 
     this._subdivision = 3;
-    this.subdivisionString = '';
+    this._subdivisionString = '';
     this.subdivisionTimeout = undefined;
     this.subdivisionTimeoutDur = 450;
 
@@ -69,10 +69,10 @@ export class LayerManager extends MicroEvent {
     if (this.subdivisionString === '') { return; }
 
     const int = parseInt(this.subdivisionString, 10);
-    this._subdivision = isFinite(int) ? int : this._subdivision;
+    this.subdivision = isFinite(int) ? int : this.subdivision;
     this.subdivisionString = '';
     if (this.currentLayer !== undefined) {
-      this.currentLayer.subdivision = this._subdivision;
+      this.currentLayer.subdivision = this.subdivision;
     }
   }
 
@@ -89,12 +89,22 @@ export class LayerManager extends MicroEvent {
     }, this.subdivisionTimeoutDur);
   }
 
+  get subdivisionString() {
+    return this._subdivisionString;
+  }
+
+  set subdivisionString(subdivisionString) {
+    this._subdivisionString = subdivisionString;
+    this.trigger('subdivisionStringChanged', this.subdivisionString);
+  }
+
   get subdivision() {
     return this._subdivision;
   }
 
   set subdivision(subdivision) {
     this._subdivision = Math.max(subdivision, 1);
+    this.trigger('subdivisionChanged', this.subdivision);
   }
 
   addLayer(rect, subdivision) {

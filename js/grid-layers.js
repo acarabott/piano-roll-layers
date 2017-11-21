@@ -115,6 +115,17 @@ subdivisionInput.style.width = '40px';
 layerManager.bind('currentChanged', layer => {
   if (layer !== undefined) subdivisionInput.value = layer.subdivision;
 });
+layerManager.bind('subdivisionChanged', subdivision => {
+  subdivisionInput.value = subdivision;
+  subdivisionInput.selectionStart = 0;
+  subdivisionInput.selectionEnd = subdivisionInput.value.length;
+});
+layerManager.bind('subdivisionStringChanged', subdivisionString => {
+  if (subdivisionString !== '') {
+    subdivisionInput.value = subdivisionString;
+  }
+});
+
 
 
 const subdivisionLabel = document.createElement('label');
@@ -251,20 +262,6 @@ function render() {
 // Update loop
 // -----------------------------------------------------------------------------
 function update() {
-  if (layerManager.currentLayer !== undefined) {
-    if (layerManager.currentLayer.subdivisionChanged) {
-      subdivisionInput.value = layerManager.subdivision;
-      subdivisionInput.selectionStart = 0;
-      subdivisionInput.selectionEnd = subdivisionInput.value.length;
-      layerManager.currentLayer.subdivisionChanged = false;
-    }
-  }
-  if (layerManager.subdivisionString !== '' &&
-      layerManager.subdivisionString !== subdivisionInput.value)
-  {
-    subdivisionInput.value = layerManager.subdivisionString;
-  }
-
   audioPlayback.update();
   cursor.update();
   updatePlayButton();

@@ -10,7 +10,6 @@ export class Layer {
     this._subdivision = 1;
     this.active = true;
     this.grabbable = false;
-    this.subdivisionChanged = true;
     this.focused = false;
   }
 
@@ -65,7 +64,6 @@ export class Layer {
   }
 
   set subdivision(subdivision) {
-    this.subdivisionChanged = true;
     this._subdivision = Math.max(1, subdivision);
   }
 }
