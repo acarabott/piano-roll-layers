@@ -1,6 +1,7 @@
 /*
   TODO:
-  - mode dropdown
+  - note input sucks when can't get focused rect...
+  - TODO try microevents for modemanager changed
   - nicer looking layer list
   - example button
   - play from time
@@ -53,6 +54,7 @@ modeManager.addModes('layers', 'notes');
 modeManager.currentMode = modeManager.modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 info.appendChild(modeManagerRenderer.label);
+info.appendChild(modeManagerRenderer.select);
 const layerManager = new LayerManager();
 layerManager.parentRect = patternRect;
 layerManager.numKeys = NUM_KEYS;
@@ -431,6 +433,7 @@ function test() {
 document.addEventListener('DOMContentLoaded', mainLoop);
 
 window.modeManager = modeManager;
+window.modeManagerRenderer = modeManagerRenderer;
 window.layerManager = layerManager;
 window.noteManager = noteManager;
 window.audio = audio;
