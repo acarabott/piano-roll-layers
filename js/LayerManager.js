@@ -6,7 +6,8 @@ import { MicroEvent } from './MicroEvent.js';
 export class LayerManager extends MicroEvent {
   constructor() {
     super();
-    this.parentRect = undefined;
+    this._parentRect = undefined;
+    this.parentLayer = undefined;
     this.numKeys = undefined;
     this._layers = [];
     this.prevCursor = 'default';
@@ -40,6 +41,15 @@ export class LayerManager extends MicroEvent {
     this.bind('layersChanged', layers => this.updateList());
   }
 
+  get parentRect() {
+    return this._parentRect;
+  }
+
+  set parentRect(parentRect) {
+    this.parentLayer = new Layer(...parentRect);
+    this._parentRect = parentRect;
+  }
+
   get noteHeight() {
     return this.parentRect.height / this.numKeys;
   }
@@ -53,7 +63,7 @@ export class LayerManager extends MicroEvent {
   snapPointToLayers(point, thresh = 20) {
     let x = point.x;
     let minDistance = Infinity;
-    [this.parentRect, ...this.rects].forEach(rect => {
+    this.rects.forEach(rect => {
       [rect.tl.x, rect.br.x].forEach(cx => {
         const dist = Math.abs(cx - point.x);
         if (dist < minDistance) {
@@ -129,12 +139,14 @@ export class LayerManager extends MicroEvent {
   }
 
   get layers() {
-    return this._layers.slice();
+    const layers = this._layers.slice();
+    layers.push(this.parentLayer);
+    return layers;
   }
 
   // returns all rectangles of all layers as a single array
   get rects() {
-    return this._layers.map(l => l.rects).reduce((cur, prev) => {
+    return this.layers.map(l => l.rects).reduce((cur, prev) => {
       return prev.concat(cur);
     }, []);
   }
@@ -261,7 +273,7 @@ export class LayerManager extends MicroEvent {
     }
     else {
       // update potential current layers
-      this._currentLayers = this._layers.filter(layer => layer.frame.containsPoint(point));
+      this._currentLayers = this.layers.filter(layer => layer.frame.containsPoint(point));
 
       // layers as grabbable
       this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(point, 4));

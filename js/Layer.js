@@ -1,5 +1,4 @@
 import { Rectangle } from './Rectangle.js';
-import { linlin } from './utils.js';
 
 export class Layer {
   constructor(x, y, width, height) {
@@ -11,30 +10,6 @@ export class Layer {
     this.active = true;
     this.grabbable = false;
     this.focused = false;
-  }
-
-  render(ctx, style = 'rgba(0, 0, 0, 1.0)', width = 1) {
-    if (!this.active) { return; }
-
-    ctx.save();
-    ctx.strokeStyle = style;
-
-    // subdivisions
-    ctx.lineWidth = width;
-    this.rects.forEach((rect, i) => {
-      ctx.strokeRect(...rect);
-      ctx.fillStyle = style;
-      const fontsize = linlin(this.width / this._subdivision, 10, 800, 12, 20);
-      ctx.font = `${fontsize}px Monaco`;
-      ctx.textAlign = 'center';
-      ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.25);
-    });
-
-    // border
-    ctx.lineWidth = width * 2;
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
-
-    ctx.restore();
   }
 
   get rects() {

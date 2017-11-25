@@ -1,6 +1,5 @@
 /*
   TODO:
-  - note input sucks when can't get focused rect...
   - nicer looking layer list
   - example button
   - adding note during playback
@@ -19,6 +18,7 @@ import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note, NoteManager, NoteController, NoteRenderer } from './Note.js';
 import { AudioPlayback } from './AudioPlayback.js';
 import { LayerManager } from './LayerManager.js';
+import { LayerRenderer } from './LayerRenderer.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
@@ -211,32 +211,12 @@ function render() {
   renderPiano(ctx, patternRect, NUM_KEYS, 0.1);
 
   // layers
-  layerManager.layers.forEach(layer => {
-    const isCurrent = layer === layerManager.currentLayer;
-    layer.render(ctx, isCurrent ? color.blue : color.black,
-                 isCurrent ? 2 : 1);
-  });
-
-  if (layerManager.creation.active) {
-    ctx.strokeStyle = color.blue;
-    ctx.setLineDash([20, 10]);
-    ctx.lineWidth = 2;
-    ctx.strokeRect(...layerManager.creation.rect);
-  }
-
-  if (layerManager.dragging) {
-    ctx.lineWidth = 2;
-    ctx.setLineDash([20, 10]);
-    ctx.strokeStyle = layerManager.copying ? color.green : color.black;
-    layerManager.draggingLayer.rects.forEach(rect => ctx.strokeRect(...rect));
-  }
+  LayerRenderer.render(ctx, layerManager);
 
   // notes
   noteController.render(ctx);
 
-  if (modeManager.currentMode === modeManager.modes.notes &&
-      layerManager.currentRect !== undefined)
-  {
+  if (layerManager.currentRect !== undefined) {
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = color.blue;
     ctx.fillRect(...layerManager.currentRect);
@@ -301,13 +281,14 @@ document.addEventListener('mousedown', event => {
 });
 
 document.addEventListener('mouseup', event => {
+  const point = new Point(event.offsetX, event.offsetY);
+
   if (modeManager.currentMode === modeManager.modes.layers) {
     if (event.srcElement === canvas) {
-      layerManager.updateMouseUp();
+      layerManager.updateMouseUp(point);
     }
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    const point = new Point(event.offsetX, event.offsetY);
     noteController.updateMouseUp(point, event.srcElement === canvas);
   }
 
