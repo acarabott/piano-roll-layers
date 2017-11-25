@@ -337,30 +337,30 @@ canvas.addEventListener('mousemove', event => {
 });
 
 document.addEventListener('keydown', event => {
-  if      (event.key === 'Alt')     { layerManager.copying = true; }
-  else if (event.key === 'Escape')  { document.activeElement.blur(); }
+  if      (event.key  === 'Alt')     { layerManager.copying = true; }
+  else if (event.key  === 'Escape')  { document.activeElement.blur(); }
   else if (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
   else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
+  else if (event.code === 'KeyA')   { layerManager.cycleCurrentLayerBackward(); }
+  else if (event.code === 'KeyS')   { layerManager.cycleCurrentLayerForward(); }
   else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
-  else if (event.key === 'Shift')   {
+  else if (event.key  === 'Shift')   {
     snapping = false;
     layerManager.adjustingSubdivision = true;
   }
+  else if (event.key === 'Backspace') {
+    if (modeManager.currentMode === modeManager.modes.layers) {
+      layerManager.removeLayer(layerManager.currentLayer);
+    }
+    else if (modeManager.currentMode === modeManager.modes.notes) {
+      noteController.hovering.forEach(note => noteManager.deleteNote(note));
+    }
+  }
 
-
+  // subdivision input
   if (event.target === canvas) {
     if (isFinite(parseInt(event.key, 10))) {
       layerManager.subdivisionInput(event.key);
-    }
-    if (event.key === 'Backspace') {
-      if (modeManager.currentMode === modeManager.modes.layers) {
-        if (layerManager.currentLayer !== undefined) {
-          layerManager.removeLayer(layerManager.currentLayer);
-        }
-      }
-      else if (modeManager.currentMode === modeManager.modes.notes) {
-        noteController.hovering.forEach(note => noteManager.deleteNote(note));
-      }
     }
   }
 });
@@ -410,8 +410,7 @@ function test() {
     const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
     const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
     const rect = new Rectangle(x, y , width, height);
-    const layer = layerManager.addLayer(rect, rrandint(1, 10));
-    if (i === n - 1) { layerManager.currentLayer = layer; }
+    layerManager.addLayer(rect, rrandint(1, 10));
   });
 
   loop(10, (i, n) => {
