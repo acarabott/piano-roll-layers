@@ -1,9 +1,9 @@
 /*
   TODO:
   - note input sucks when can't get focused rect...
-  - TODO try microevents for modemanager changed
   - nicer looking layer list
   - example button
+  - adding note during playback
   - play from time
   - style
   - note release
