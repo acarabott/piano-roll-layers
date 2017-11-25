@@ -339,10 +339,16 @@ canvas.addEventListener('mousemove', event => {
 document.addEventListener('keydown', event => {
   if      (event.key  === 'Alt')     { layerManager.copying = true; }
   else if (event.key  === 'Escape')  { document.activeElement.blur(); }
+  // right handed
   else if (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
   else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
   else if (event.code === 'KeyA')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyS')   { layerManager.cycleCurrentLayerForward(); }
+  // left handed
+  else if (event.code === 'KeyO')   { modeManager.currentMode = modeManager.modes.layers; }
+  else if (event.code === 'KeyP')   { modeManager.currentMode = modeManager.modes.notes; }
+  else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
+  else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
   else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
   else if (event.key  === 'Shift')   {
     snapping = false;
@@ -377,8 +383,8 @@ subdivisionInput.addEventListener('keydown', event => {
     'Control', 'Alt', 'Meta', 'Shift', 'Tab', 'Backspace', 'Delete', 'Enter'];
   if (!whitelist.includes(event.key)) { event.preventDefault(); }
 
-  if (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
-  if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+  if (event.code === 'KeyQ' || event.code === 'KeyO') { modeManager.currentMode = modeManager.modes.layers; }
+  if (event.code === 'KeyW' || event.code === 'KeyP') { modeManager.currentMode = modeManager.modes.notes; }
 });
 
 subdivisionInput.addEventListener('input', event => {
