@@ -32,8 +32,10 @@ export class LayerManager extends MicroEvent {
     this.subdivisionTimeout = undefined;
     this.subdivisionTimeoutDur = 450;
 
+    this._lastMousePosition = new Point(0, 0);
     this._currentLayers = [];
     this._currentLayerIndex = 0;
+    this._currentRect = undefined;
 
     this.bind('layersChanged', layers => this.updateList());
   }
@@ -43,7 +45,9 @@ export class LayerManager extends MicroEvent {
   }
 
   get currentRect() {
-    return this.currentLayer === undefined ? this.parentRect : this.currentRect;
+    return this.currentLayer === undefined ?
+      this.parentRect
+      : this.currentLayer.rects.find(rect => rect.containsPoint(this._lastMousePosition));
   }
 
   snapPointToLayers(point, thresh = 20) {
@@ -222,6 +226,7 @@ export class LayerManager extends MicroEvent {
 
   updateMouseDown(point, snapping) {
     const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+    this._lastMousePosition.set(point);
 
     if (this.grabbableLayers.length > 0) {
       const chosen = this.grabbableLayers[0];
@@ -230,10 +235,10 @@ export class LayerManager extends MicroEvent {
     else {
       if (!this.copying) {
         this.creation.active = true;
-        const tlX = snapping ? this.targetRect.tl.x : point.x;
+        const tlX = snapping ? this.currentRect.tl.x : point.x;
         const tlY = snapping ? snappedPoint.y : point.y;
         this.creation.rect.tl = new Point(tlX, tlY);
-        const brX = snappedPoint.x === this.targetRect.tl.x ? this.targetRect.br.x : snappedPoint.x;
+        const brX = snappedPoint.x === this.currentRect.tl.x ? this.currentRect.br.x : snappedPoint.x;
         this.creation.rect.br = new Point(brX, snappedPoint.y + this.noteHeight);
       }
     }
@@ -241,10 +246,11 @@ export class LayerManager extends MicroEvent {
 
   updateMouseMove(point, snapping) {
     const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+    this._lastMousePosition.set(point);
 
     // creating layers
     if (this.creation.active) {
-      const x = snappedPoint.x === this.targetRect.tl.x ? this.targetRect.br.x : snappedPoint.x;
+      const x = snappedPoint.x === this.currentRect.tl.x ? this.currentRect.br.x : snappedPoint.x;
       const y = snappedPoint.y + (snappedPoint.y === this.creation.rect.tl.y ? this.noteHeight : 0);
       this.creation.rect.br = new Point(x, y);
     }
@@ -262,7 +268,9 @@ export class LayerManager extends MicroEvent {
     }
   }
 
-  updateMouseUp(inputPoint) {
+  updateMouseUp(point) {
+    this._lastMousePosition.set(point);
+
     if (this.creation.active) {
       this.creation.active = false;
       const absWidth = Math.abs(this.creation.rect.width);

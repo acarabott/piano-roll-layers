@@ -284,7 +284,7 @@ canvas.addEventListener('mousedown', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const snappedPoint = getPointFromInput(event);
-    noteController.updateMouseDown(point, snappedPoint, layerManager.targetRect);
+    noteController.updateMouseDown(point, snappedPoint, layerManager.currentRect);
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]
@@ -325,10 +325,10 @@ canvas.addEventListener('mousemove', event => {
     const focusedSnappedPoint = layerManager.currentLayer === undefined
       ? snappedPoint
       : snapping
-        ? new Point(layerManager.targetRect.x, snappedPoint.y)
+        ? new Point(layerManager.currentRect.x, snappedPoint.y)
         : point;
 
-    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.targetRect);
+    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect);
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]

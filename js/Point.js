@@ -6,6 +6,11 @@ export class Point {
 
   *[Symbol.iterator]() { yield this.x; yield this.y; }
 
+  set(point) {
+    this.x = point.x;
+    this.y = point.y;
+  }
+
   add(point) {
     return new Point(this.x + point.x, this.y + point.y);
   }
