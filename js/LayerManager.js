@@ -34,7 +34,6 @@ export class LayerManager extends MicroEvent {
     this.subdivisionTimeoutDur = 450;
 
     this._lastMousePosition = new Point(0, 0);
-    this._currentLayers = [];
     this._currentLayerIndex = 0;
     this._currentRect = undefined;
 
@@ -126,8 +125,7 @@ export class LayerManager extends MicroEvent {
     const layer = new Layer(...rect);
     layer.subdivision = subdivision;
     this._layers.push(layer);
-    this._currentLayers.push(layer);
-    this._currentLayerIndex = this._currentLayers.indexOf(layer);
+    this._currentLayerIndex = this.currentLayers.indexOf(layer);
     this.trigger('layersChanged', this._layers);
     return layer;
   }
@@ -208,14 +206,18 @@ export class LayerManager extends MicroEvent {
     return this._dragging.layer !== undefined;
   }
 
+  get currentLayers() {
+    return this.layers.filter(layer => layer.frame.containsPoint(this._lastMousePosition));
+  }
+
   get currentLayer() {
-    return this._currentLayers[this._currentLayerIndex % this._currentLayers.length];
+    return this.currentLayers[this._currentLayerIndex % this.currentLayers.length];
   }
 
   cycleCurrentLayerForward() {
     this._currentLayerIndex++;
-    if (this._currentLayerIndex > this._currentLayers.length) {
-      this._currentLayerIndex -= this._currentLayers.length;
+    if (this._currentLayerIndex > this.currentLayers.length) {
+      this._currentLayerIndex -= this.currentLayers.length;
     }
     this.trigger('currentChanged', this.currentLayer);
   }
@@ -223,7 +225,7 @@ export class LayerManager extends MicroEvent {
   cycleCurrentLayerBackward() {
     this._currentLayerIndex--;
     if (this._currentLayerIndex < 0) {
-      this._currentLayerIndex += this._currentLayers.length;
+      this._currentLayerIndex += this.currentLayers.length;
     }
     this.trigger('currentChanged', this.currentLayer);
   }
@@ -237,7 +239,7 @@ export class LayerManager extends MicroEvent {
   }
 
   updateMouseDown(point, snapping) {
-    const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+    const snappedPoint = this.snapPointToLayers(point);
     this._lastMousePosition.set(point);
 
     if (this.grabbableLayers.length > 0) {
@@ -248,21 +250,21 @@ export class LayerManager extends MicroEvent {
       if (!this.copying) {
         this.creation.active = true;
         const tlX = snapping ? this.currentRect.tl.x : point.x;
-        const tlY = snapping ? snappedPoint.y : point.y;
+        const tlY = snappedPoint.y;
         this.creation.rect.tl = new Point(tlX, tlY);
-        const brX = snappedPoint.x === this.currentRect.tl.x ? this.currentRect.br.x : snappedPoint.x;
+        const brX = snapping ? this.currentRect.br.x : point.x;
         this.creation.rect.br = new Point(brX, snappedPoint.y + this.noteHeight);
       }
     }
   }
 
   updateMouseMove(point, snapping) {
-    const snappedPoint = snapping ? this.snapPointToLayers(point) : point;
+    const snappedPoint = this.snapPointToLayers(point);
     this._lastMousePosition.set(point);
 
     // creating layers
     if (this.creation.active) {
-      const x = snappedPoint.x === this.currentRect.tl.x ? this.currentRect.br.x : snappedPoint.x;
+      const x = snapping ? this.currentRect.br.x : point.x;
       const y = snappedPoint.y + (snappedPoint.y === this.creation.rect.tl.y ? this.noteHeight : 0);
       this.creation.rect.br = new Point(x, y);
     }
@@ -272,9 +274,6 @@ export class LayerManager extends MicroEvent {
       this.dragTo(origin);
     }
     else {
-      // update potential current layers
-      this._currentLayers = this.layers.filter(layer => layer.frame.containsPoint(point));
-
       // layers as grabbable
       this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(point, 4));
     }

@@ -3,6 +3,14 @@ import { linlin } from './utils.js';
 
 export class LayerRenderer {
   static render(ctx, layerManager) {
+
+    if (layerManager.currentRect !== undefined && layerManager.layers.length > 1) {
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = color.blue;
+      ctx.fillRect(...layerManager.currentRect);
+      ctx.globalAlpha = 1.0;
+    }
+
     layerManager.layers.filter(layer => layer.active).forEach(layer => {
       const isParentLayer = layer === layerManager.parentLayer;
       const isCurrent = layer === layerManager.currentLayer;

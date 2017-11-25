@@ -216,12 +216,6 @@ function render() {
   // notes
   noteController.render(ctx);
 
-  if (layerManager.currentRect !== undefined) {
-    ctx.globalAlpha = 0.2;
-    ctx.fillStyle = color.blue;
-    ctx.fillRect(...layerManager.currentRect);
-  }
-
   // playhead
   {
     ctx.fillStyle = color.red;
