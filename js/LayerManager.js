@@ -38,6 +38,8 @@ export class LayerManager extends MicroEvent {
     this._currentRect = undefined;
 
     this.bind('layersChanged', layers => this.updateList());
+
+    this._inThresh = 4;
   }
 
   get parentRect() {
@@ -56,7 +58,9 @@ export class LayerManager extends MicroEvent {
   get currentRect() {
     return this.currentLayer === undefined ?
       this.parentRect
-      : this.currentLayer.rects.find(rect => rect.containsPoint(this._lastMousePosition));
+      : this.currentLayer.rects.find(rect => {
+        return rect.containsPoint(this._lastMousePosition, this._inThresh);
+      });
   }
 
   snapPointToLayers(point, thresh = 20) {
@@ -179,8 +183,11 @@ export class LayerManager extends MicroEvent {
     });
   }
 
-  get grabbableLayers() {
-    return this._layers.filter(layer => layer.grabbable);
+  get grabbableLayer() {
+    return this._layers.find(layer => {
+      return layer === this.currentLayer &&
+             layer.frame.isPointOnLine(this._lastMousePosition, this._inThresh);
+      });
   }
 
   setDraggingLayer(layer, grabPoint) {
@@ -207,7 +214,9 @@ export class LayerManager extends MicroEvent {
   }
 
   get currentLayers() {
-    return this.layers.filter(layer => layer.frame.containsPoint(this._lastMousePosition));
+    return this.layers.filter(layer => {
+      return layer.frame.containsPoint(this._lastMousePosition, this._inThresh);
+    });
   }
 
   get currentLayer() {
@@ -242,9 +251,8 @@ export class LayerManager extends MicroEvent {
     const snappedPoint = this.snapPointToLayers(point);
     this._lastMousePosition.set(point);
 
-    if (this.grabbableLayers.length > 0) {
-      const chosen = this.grabbableLayers[0];
-      this.setDraggingLayer(chosen, point);
+    if (this.grabbableLayer !== undefined) {
+      this.setDraggingLayer(this.grabbableLayer, point);
     }
     else {
       if (!this.copying) {
@@ -272,10 +280,6 @@ export class LayerManager extends MicroEvent {
       let origin = point.subtract(this.dragOffset);
       if (snapping) { origin = this.snapPointToLayers(origin); }
       this.dragTo(origin);
-    }
-    else {
-      // layers as grabbable
-      this._layers.forEach(l => l.grabbable = l.frame.isPointOnLine(point, 4));
     }
   }
 

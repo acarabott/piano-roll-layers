@@ -1,5 +1,7 @@
 /*
   TODO:
+  - dragging y snap
+  - shouldn't snap to main rect, want to align to any grid line..
   - nicer looking layer list
   - example button
   - adding note during playback
@@ -175,7 +177,7 @@ let snapping = true;
 
 const cursor = new Cursor();
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
-cursor.addCursorState(() => layerManager.grabbableLayers.length > 0, 'move');
+cursor.addCursorState(() => layerManager.grabbableLayer !== undefined, 'move');
 cursor.addCursorState(() => layerManager.dragging, 'move');
 cursor.addCursorState(() => layerManager.copying, 'copy');
 cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
@@ -312,10 +314,8 @@ canvas.addEventListener('mousemove', event => {
 });
 
 document.addEventListener('keydown', event => {
-  if      (event.key  === 'Alt')     { layerManager.copying = true; }
-  else if (event.key  === 'Escape')  { document.activeElement.blur(); }
   // right handed
-  else if (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
+  if      (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
   else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
   else if (event.code === 'KeyA')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyS')   { layerManager.cycleCurrentLayerForward(); }
@@ -325,6 +325,13 @@ document.addEventListener('keydown', event => {
   else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
   else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
+  else if (event.key  === 'Alt')     { layerManager.copying = true; }
+  else if (event.key  === 'Escape')  {
+    layerManager.creation.active = false;
+    if (document.activeElement !== canvas) {
+      document.activeElement.blur();
+    }
+  }
   else if (event.key  === 'Shift')   {
     snapping = false;
     layerManager.adjustingSubdivision = true;

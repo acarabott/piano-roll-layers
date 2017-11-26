@@ -8,7 +8,6 @@ export class Layer {
     this.height = height;
     this._subdivision = 1;
     this.active = true;
-    this.grabbable = false;
     this.focused = false;
   }
 

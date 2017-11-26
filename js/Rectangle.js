@@ -39,8 +39,14 @@ export class Rectangle {
 
   get drawRect() { return [...this.tl, this.width, this.height]; }
 
-  containsPoint(point) {
-    return point.greaterOrEqualTo(this.tl) && point.lessOrEqualTo(this.br);
+  containsPoint(point, thresh = 0) {
+    if (thresh === 0) {
+      return point.greaterOrEqualTo(this.tl) && point.lessOrEqualTo(this.br);
+    }
+
+    const threshTl = new Point(this.tl.x - thresh, this.tl.y - thresh);
+    const ThreshBr = new Point(this.br.x + thresh, this.br.y + thresh);
+    return point.greaterOrEqualTo(threshTl) && point.lessOrEqualTo(ThreshBr);
   }
 
   containsRect(rect) {
