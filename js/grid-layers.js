@@ -16,7 +16,10 @@
 import { loop, rrandint, midiToFreq, toCapitalCase } from './utils.js';
 import * as color from './color.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
-import { Note, NoteManager, NoteController, NoteRenderer } from './Note.js';
+import { Note } from './Note.js';
+import { NoteManager } from './NoteManager.js';
+import { NoteController } from './NoteController.js';
+import { NoteRenderer } from './NoteRenderer.js';
 import { AudioPlayback } from './AudioPlayback.js';
 import { LayerManager } from './LayerManager.js';
 import { LayerRenderer } from './LayerRenderer.js';
