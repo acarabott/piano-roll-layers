@@ -1,6 +1,5 @@
 /*
   TODO:
-  - shouldn't snap to main rect, want to align to any grid line..
   - resize layers
   - resize notes
   - nicer looking layer list
