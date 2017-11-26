@@ -1,7 +1,8 @@
 /*
   TODO:
-  - dragging y snap
   - shouldn't snap to main rect, want to align to any grid line..
+  - resize layers
+  - resize notes
   - nicer looking layer list
   - example button
   - adding note during playback

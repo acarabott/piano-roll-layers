@@ -277,9 +277,8 @@ export class LayerManager extends MicroEvent {
       this.creation.rect.br = new Point(x, y);
     }
     else if (this.dragging) {
-      let origin = point.subtract(this.dragOffset);
-      if (snapping) { origin = this.snapPointToLayers(origin); }
-      this.dragTo(origin);
+      const dragged = (snapping ? snappedPoint : new Point(point.x, snappedPoint.y));
+      this.dragTo(dragged.subtract(this.dragOffset));
     }
   }
 
