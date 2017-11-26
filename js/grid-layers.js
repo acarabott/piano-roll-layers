@@ -178,17 +178,56 @@ controls.appendChild(layerManager.list);
 let snapping = true;
 
 const cursor = new Cursor();
-cursor.addState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
-cursor.addState(() => layerManager.grabbableLayer !== undefined, 'move');
-cursor.addState(() => layerManager.resizableCorner === LayerManager.corners.tl ||
-                      layerManager.resizableCorner === LayerManager.corners.br, 'nwse-resize');
-cursor.addState(() => layerManager.resizableCorner === LayerManager.corners.tr ||
-                      layerManager.resizableCorner === LayerManager.corners.bl, 'nesw-resize');
-cursor.addState(() => layerManager.dragging, 'move');
-cursor.addState(() => layerManager.copying, 'copy');
-cursor.addState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
-cursor.addState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isGrabbing, 'move');
-cursor.addState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isHovering, 'move');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers;
+}, 'crosshair');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers &&
+         layerManager.grabbableLayer !== undefined;
+}, 'move');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers &&
+         (layerManager.resizableCorner === LayerManager.corners.tl ||
+          layerManager.resizableCorner === LayerManager.corners.br);
+}, 'nwse-resize');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers &&
+         (layerManager.resizableCorner === LayerManager.corners.tr ||
+          layerManager.resizableCorner === LayerManager.corners.bl);
+}, 'nesw-resize');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers &&
+         layerManager.dragging;
+}, 'move');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.layers &&
+         layerManager.copying;
+}, 'copy');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.notes;
+}, 'pointer');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.notes &&
+         noteController.isGrabbing;
+}, 'move');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.notes &&
+         noteController.isHovering;
+}, 'move');
+
+cursor.addState(() => {
+  return modeManager.currentMode === modeManager.modes.notes &&
+         (noteController.isResizing || noteController.isResizeHovering);
+}, 'ew-resize');
 
 
 // Render functions

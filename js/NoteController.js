@@ -11,9 +11,13 @@ export class NoteController {
     this._metadataTemplate = {
       hover: false,
       grabbed: false,
-      grabbedOffset: new Point(0, 0)
+      grabbedOffset: new Point(0, 0),
+      resizing: false,
+      resizeHover: false,
+      resizingSide: undefined,
     };
     this.currentNoteChangedFreq = false;
+    this.resizeThreshold = 4;
   }
 
   getInputNoteTimes(point, snappedPoint, targetRect) {
@@ -43,15 +47,36 @@ export class NoteController {
     return this.manager.notes.filter(note => this.getMetadata(note).hover);
   }
 
+  get isResizeHovering() {
+    return this.manager.notes.some(note => this.getMetadata(note).resizeHover);
+  }
+
+  get resizing() {
+    return this.manager.notes.filter(note => this.getMetadata(note).resizing);
+  }
+
+  get isResizing() {
+    return this.resizing.length > 0;
+  }
+
   updateMouseDown(point, snappedPoint, targetRect) {
     this.manager.notes.forEach(note => {
       const noteRect = this.renderer.getRectFromNote(note);
-      const grabbed = noteRect.containsPoint(point);
+      const resizingSide = noteRect.isPointOnLeftLine (point, this.resizeThreshold) ? 'left'
+                         : noteRect.isPointOnRightLine(point, this.resizeThreshold) ? 'right'
+                         : undefined;
+      const resizing = resizingSide !== undefined;
+      this.setMetadata(note, 'resizing', resizing);
+      this.setMetadata(note, 'resizingSide', resizingSide);
+
+      const grabbed = noteRect.containsPoint(point) && !resizing;
       this.setMetadata(note, 'grabbed', grabbed);
-      this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
+      if (grabbed) {
+        this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
+      }
     });
 
-    if (!this.isGrabbing) {
+    if (!this.isGrabbing && !this.isResizing) {
       const midiNote = this.renderer.getKeyFromPoint(point);
       const freq = midiToFreq(midiNote);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
@@ -70,8 +95,7 @@ export class NoteController {
       this.manager.previewNote.timeStop = times[1];
     }
 
-    const grabbed = this.manager.notes.filter(note => this.getMetadata(note).grabbed);
-    grabbed.forEach(note => {
+    this.grabbed.forEach(note => {
       const midiNote = constrain(this.renderer.getKeyFromPoint(snappedPoint),
                                  this.renderer.rootNote,
                                  this.renderer.rootNote + this.renderer.numKeys);
@@ -87,9 +111,26 @@ export class NoteController {
       note.timeStop = note.timeStart + duration;
     });
 
+    this.resizing.forEach(note => {
+      const side = this.getMetadata(note).resizingSide;
+      const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
+      if (side === 'left') {
+        note.timeStart = Math.min(note.timeStop, times[0]);
+      }
+      else if (side === 'right') {
+        note.timeStop = Math.max(note.timeStart, times[1]);
+      }
+    });
+
     this.manager.notes.forEach(note => {
-      const hover = this.renderer.getRectFromNote(note).containsPoint(point);
-      this.setMetadata(note, 'hover', hover && grabbed.length === 0);
+      const noteRect = this.renderer.getRectFromNote(note);
+      const hover = noteRect.containsPoint(point);
+      const grabbing = this.grabbed.length > 0;
+      this.setMetadata(note, 'hover', hover && !grabbing);
+
+      const resizeHover = noteRect.isPointOnLeftLine (point, this.resizeThreshold) ||
+                          noteRect.isPointOnRightLine(point, this.resizeThreshold);
+      this.setMetadata(note, 'resizeHover', resizeHover && !grabbing);
     });
   }
 
@@ -99,6 +140,7 @@ export class NoteController {
     }
     this.manager.previewNote = undefined;
     this.manager.notes.forEach(note => this.setMetadata(note, 'grabbed', false));
+    this.manager.notes.forEach(note => this.setMetadata(note, 'resizing', false));
   }
 
   render(ctx) {

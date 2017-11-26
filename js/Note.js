@@ -1,12 +1,20 @@
 export class Note {
   constructor(freq, timeStart, timeStop) {
     this.freq = freq;
-    this.timeStart = timeStart;
+    this._timeStart = timeStart;
     this._timeStop = timeStop;
     this.selected = false;
   }
 
   static get MIN_LENGTH() { return 0.001; }
+
+  get timeStart() {
+    return this._timeStart;
+  }
+
+  set timeStart(timeStart) {
+    this._timeStart = Math.min(timeStart, this.timeStop - Note.MIN_LENGTH);
+  }
 
   get timeStop() {
     return this._timeStop;
