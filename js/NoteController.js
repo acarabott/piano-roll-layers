@@ -55,19 +55,19 @@ export class NoteController {
       const midiNote = this.renderer.getKeyFromPoint(point);
       const freq = midiToFreq(midiNote);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
-      this.manager.currentNote = new Note(freq, ...times);
+      this.manager.previewNote = new Note(freq, ...times);
     }
   }
 
   updateMouseMove(point, snappedPoint, targetRect) {
-    if (this.manager.currentNote !== undefined) {
+    if (this.manager.previewing) {
       const midiNote = this.renderer.getKeyFromPoint(point);
-      const prevMidiNote = Math.floor(freqToMidi(this.manager.currentNote.freq));
-      this.manager.currentNote.freq = midiToFreq(midiNote);
+      const prevMidiNote = Math.floor(freqToMidi(this.manager.previewNote.freq));
+      this.manager.previewNote.freq = midiToFreq(midiNote);
       this.currentNoteChangedFreq = midiNote !== prevMidiNote;
 
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
-      this.manager.currentNote.timeStop = times[1];
+      this.manager.previewNote.timeStop = times[1];
     }
 
     const grabbed = this.manager.notes.filter(note => this.getMetadata(note).grabbed);
@@ -87,24 +87,24 @@ export class NoteController {
       note.timeStop = note.timeStart + duration;
     });
 
-    this.manager.notesWithCurrent.forEach(note => {
+    this.manager.notes.forEach(note => {
       const hover = this.renderer.getRectFromNote(note).containsPoint(point);
       this.setMetadata(note, 'hover', hover && grabbed.length === 0);
     });
   }
 
   updateMouseUp(point, onCanvas) {
-    if (onCanvas && this.manager.currentNote !== undefined) {
-      this.manager.addNote(this.manager.currentNote);
+    if (onCanvas && this.manager.previewing) {
+      this.manager.addNote(this.manager.previewNote);
     }
-    this.manager.currentNote = undefined;
-    this.manager.notesWithCurrent.forEach(note => this.setMetadata(note, 'grabbed', false));
+    this.manager.previewNote = undefined;
+    this.manager.notes.forEach(note => this.setMetadata(note, 'grabbed', false));
   }
 
   render(ctx) {
     this.renderer.renderNotes(ctx, this.manager.notes, this.metadata);
-    if (this.manager.currentNote !== undefined) {
-      this.renderer.renderNote(ctx, this.manager.currentNote, color.green, this.metadata);
+    if (this.manager.previewing) {
+      this.renderer.renderNote(ctx, this.manager.previewNote, color.green, this.metadata);
     }
   }
 

@@ -270,7 +270,7 @@ canvas.addEventListener('mousedown', event => {
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]
-      : noteManager.currentNote;
+      : noteManager.previewNote;
   }
 });
 
@@ -315,7 +315,7 @@ canvas.addEventListener('mousemove', event => {
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]
-      : noteManager.currentNote;
+      : noteManager.previewNote;
   }
 });
 

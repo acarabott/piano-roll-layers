@@ -1,7 +1,7 @@
 export class NoteManager {
   constructor() {
     this.notes = [];
-    this.currentNote;
+    this.previewNote = undefined;
   }
 
   addNote(note) {
@@ -14,9 +14,7 @@ export class NoteManager {
     }
   }
 
-  get notesWithCurrent() {
-    const notes = this.notes.slice();
-    if (this.currentNote !== undefined) { notes.push(this.currentNote); }
-    return notes;
+  get previewing() {
+    return this.previewNote !== undefined;
   }
 }
