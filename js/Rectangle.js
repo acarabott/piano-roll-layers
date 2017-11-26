@@ -30,6 +30,24 @@ export class Rectangle {
     this.height = point.y - this.y;
   }
 
+  get tr() {
+    return new Point(this.x + this.width, this.y);
+  }
+
+  set tr(point) {
+    this.width = point.x - this.x;
+    this.y = point.y;
+  }
+
+  get bl() {
+    return new Point(this.x, this.y + this.height);
+  }
+
+  set bl(point) {
+    this.x = point.x;
+    this.height = point.y - this.y;
+  }
+
   *[Symbol.iterator]() {
     yield this.tl.x;
     yield this.tl.y;
@@ -57,15 +75,60 @@ export class Rectangle {
     return this.containsPoint(rect.tl) || this.containsPoint(rect.br);
   }
 
-  isPointOnLine(point, threshold = 1) {
-    const inX = point.x >= this.x && point.x <= this.br.x;
-    const inY = point.y >= this.tl.y && point.y <= this.br.y;
-
-    const onTop =    Math.abs(point.y - this.y) <= threshold && inX;
-    const onRight =  Math.abs(point.x - this.br.x) <= threshold && inY;
-    const onBottom = Math.abs(point.y - this.br.y) <= threshold && inX;
-    const onLeft =   Math.abs(point.x - this.x) <= threshold && inY;
-
-    return onTop || onRight || onBottom || onLeft;
+  isPointInBoundsX(point, threshold = 0) {
+    return point.x >= (this.x - threshold) && point.x <= (this.br.x + threshold);
   }
+
+  isPointInBoundsY(point, threshold = 0) {
+    return point.y >= (this.tl.y - threshold) && point.y <= (this.br.y + threshold);
+  }
+
+  isPointOnTopLine(point, threshold = 0) {
+    return this.isPointInBoundsX(point, threshold) &&
+           point.y >= this.tl.y - threshold && point.y <= this.tl.y + threshold;
+  }
+
+  isPointOnBottomLine(point, threshold = 0) {
+    return this.isPointInBoundsX(point, threshold) &&
+           point.y >= this.br.y - threshold && point.y <= this.br.y + threshold;
+  }
+
+  isPointOnLeftLine(point, threshold = 0) {
+    return this.isPointInBoundsY(point, threshold) &&
+           point.x >= this.tl.x - threshold && point.x <= this.tl.x + threshold;
+  }
+
+  isPointOnRightLine(point, threshold = 0) {
+    return this.isPointInBoundsY(point, threshold) &&
+           point.x >= this.br.x - threshold && point.x <= this.br.x + threshold;
+  }
+
+
+  isPointOnLine(point, threshold = 0) {
+    return this.isPointOnTopLine(point, threshold) ||
+           this.isPointOnBottomLine(point, threshold) ||
+           this.isPointOnLeftLine(point, threshold) ||
+           this.isPointOnRightLine(point, threshold);
+  }
+
+  isPointOnTopLeft(point, threshold = 0) {
+    return this.isPointOnTopLine(point, threshold) &&
+           this.isPointOnLeftLine(point, threshold);
+  }
+
+  isPointOnTopRight(point, threshold = 0) {
+    return this.isPointOnTopLine(point, threshold) &&
+           this.isPointOnRightLine(point, threshold);
+  }
+
+  isPointOnBottomLeft(point, threshold = 0) {
+    return this.isPointOnBottomLine(point, threshold) &&
+           this.isPointOnLeftLine(point, threshold);
+  }
+
+  isPointOnBottomRight(point, threshold = 0) {
+    return this.isPointOnBottomLine(point, threshold) &&
+           this.isPointOnRightLine(point, threshold);
+  }
+
 }

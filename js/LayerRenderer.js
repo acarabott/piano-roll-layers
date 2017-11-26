@@ -27,7 +27,7 @@ export class LayerRenderer {
         ctx.strokeRect(...rect);
         ctx.fillStyle = style;
         if (!isParentLayer) {
-          const fontsize = linlin(layer.width / layer._subdivision, 10, 800, 12, 20);
+          const fontsize = linlin(layer.rect.width / layer._subdivision, 10, 800, 12, 20);
           ctx.font = `${fontsize}px Monaco`;
           ctx.textAlign = 'center';
           ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.25);

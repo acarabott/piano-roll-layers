@@ -1,6 +1,11 @@
+const directions = {
+  up:   Symbol('up'),
+  down: Symbol('down')
+};
+
 export class Scroll {
-  static get up()   { return Symbol('up'); }
-  static get down() { return Symbol('down'); }
+  static get up()   { return directions.up; }
+  static get down() { return directions.down; }
 
   constructor() {
     this.sensitivity = 0.5;

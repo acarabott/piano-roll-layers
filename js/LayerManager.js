@@ -3,7 +3,18 @@ import { Layer } from './Layer.js';
 import { Rectangle } from './Rectangle.js';
 import { MicroEvent } from './MicroEvent.js';
 
+const corners = {
+  tl: Symbol('tl'),
+  tr: Symbol('tr'),
+  bl: Symbol('bl'),
+  br: Symbol('br')
+};
+
 export class LayerManager extends MicroEvent {
+  static get corners() {
+    return corners;
+  }
+
   constructor() {
     super();
     this._parentRect = undefined;
@@ -24,6 +35,23 @@ export class LayerManager extends MicroEvent {
     this.creation = {
       active: false,
       rect: new Rectangle()
+    };
+    this._resizing = {
+      active: false,
+      layer: undefined,
+      cornerType: undefined,
+      start: layer => {
+        this._resizing.active = layer !== undefined;
+        this._resizing.layer = layer;
+        if (layer !== undefined) {
+          this._resizing.cornerType = this.resizableCorner;
+        }
+      },
+      stop: () => {
+        this._resizing.active = false;
+        this._resizing.layer = undefined;
+        this._resizing.cornerType = undefined;
+      }
     };
     this.list = document.createElement('ol');
     this.adjustingSubdivision = false;
@@ -184,10 +212,41 @@ export class LayerManager extends MicroEvent {
   }
 
   get grabbableLayer() {
+    if (this.resizableCorner !== undefined) { return undefined; }
+
     return this._layers.find(layer => {
       return layer === this.currentLayer &&
              layer.frame.isPointOnLine(this._lastMousePosition, this._inThresh);
       });
+  }
+
+  get resizableLayer() {
+    const layer = this._layers.find(layer => layer === this.currentLayer);
+    if (layer === undefined) { return undefined; }
+
+    const frame = this.currentLayer.frame;
+    const mouse = this._lastMousePosition;
+    const thresh = this._inThresh;
+
+    const onAnyCorner = frame.isPointOnTopLeft(mouse, thresh) ||
+                        frame.isPointOnTopRight(mouse, thresh) ||
+                        frame.isPointOnBottomLeft(mouse, thresh) ||
+                        frame.isPointOnBottomRight(mouse, thresh);
+
+    return onAnyCorner ? layer : undefined;
+  }
+
+  get resizableCorner() {
+    if (this.resizableLayer === undefined) { return; }
+
+    const frame = this.resizableLayer.frame;
+    const mouse = this._lastMousePosition;
+    const thresh = this._inThresh;
+    if (frame.isPointOnTopLeft(mouse, thresh)) { return corners.tl; }
+    if (frame.isPointOnTopRight(mouse, thresh)) { return corners.tr; }
+    if (frame.isPointOnBottomLeft(mouse, thresh)) { return corners.bl; }
+    if (frame.isPointOnBottomRight(mouse, thresh)) { return corners.br; }
+    return undefined;
   }
 
   setDraggingLayer(layer, grabPoint) {
@@ -247,12 +306,19 @@ export class LayerManager extends MicroEvent {
     if (this.dragging) { this._dragging.layer.origin = point; }
   }
 
+  get resizing() {
+    return this._resizing.active;
+  }
+
   updateMouseDown(point, snapping) {
     const snappedPoint = this.snapPointToLayers(point);
     this._lastMousePosition.set(point);
 
     if (this.grabbableLayer !== undefined) {
       this.setDraggingLayer(this.grabbableLayer, point);
+    }
+    if (this.resizableCorner !== undefined) {
+      this._resizing.start(this.currentLayer);
     }
     else {
       if (!this.copying) {
@@ -277,6 +343,38 @@ export class LayerManager extends MicroEvent {
         ? snappedPoint.y + this.noteHeight
         : snappedPoint.y;
       this.creation.rect.br = new Point(x, y);
+    }
+    else if (this.resizing) {
+      const x = snapping ? snappedPoint.x : point.x;
+      const y = snappedPoint.y;
+      const type = this._resizing.cornerType;
+      const frame = this._resizing.layer.frame;
+      const newCorner = new Point(x, y);
+
+      if (type === LayerManager.corners.tl) {
+        const br = frame.br;
+        frame.tl = new Point(Math.min(newCorner.x, br.x - 1),
+                             Math.min(newCorner.y, br.y - this.noteHeight));
+        frame.br = br;
+      }
+      else if (type === LayerManager.corners.tr) {
+        const bl = frame.bl;
+        frame.tr = new Point(Math.max(newCorner.x, bl.x + 1),
+                             Math.min(newCorner.y, bl.y - this.noteHeight));
+        frame.bl = bl;
+      }
+      else if (type === LayerManager.corners.bl) {
+        const tr = frame.tr;
+        frame.bl = new Point(Math.min(newCorner.x, tr.x - 1),
+                             Math.max(newCorner.y, tr.y + this.noteHeight));
+        frame.tr = tr;
+      }
+      else if (type === LayerManager.corners.br) {
+        const tl = frame.tl;
+        frame.br = new Point(Math.max(newCorner.x, tl.x + 1),
+                             Math.max(newCorner.y, tl.y + this.noteHeight));
+        frame.tl = tl;
+      }
     }
     else if (this.dragging) {
       const dragged = (snapping ? snappedPoint : new Point(point.x, snappedPoint.y));
@@ -314,5 +412,7 @@ export class LayerManager extends MicroEvent {
       // stop dragging
       this._dragging.clear();
     }
+
+    this._resizing.stop();
   }
 }

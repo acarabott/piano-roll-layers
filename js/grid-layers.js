@@ -1,6 +1,5 @@
 /*
   TODO:
-  - resize layers
   - resize notes
   - nicer looking layer list
   - example button
@@ -178,6 +177,10 @@ let snapping = true;
 const cursor = new Cursor();
 cursor.addState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
 cursor.addState(() => layerManager.grabbableLayer !== undefined, 'move');
+cursor.addState(() => layerManager.resizableCorner === LayerManager.corners.tl ||
+                      layerManager.resizableCorner === LayerManager.corners.br, 'nwse-resize');
+cursor.addState(() => layerManager.resizableCorner === LayerManager.corners.tr ||
+                      layerManager.resizableCorner === LayerManager.corners.bl, 'nesw-resize');
 cursor.addState(() => layerManager.dragging, 'move');
 cursor.addState(() => layerManager.copying, 'copy');
 cursor.addState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
@@ -338,7 +341,9 @@ document.addEventListener('keydown', event => {
   }
   else if (event.key === 'Backspace') {
     if (modeManager.currentMode === modeManager.modes.layers) {
-      layerManager.removeLayer(layerManager.currentLayer);
+      if (layerManager.currentLayer !== layerManager.parentLayer) {
+        layerManager.removeLayer(layerManager.currentLayer);
+      }
     }
     else if (modeManager.currentMode === modeManager.modes.notes) {
       noteController.hovering.forEach(note => noteManager.deleteNote(note));
@@ -417,6 +422,7 @@ document.addEventListener('DOMContentLoaded', mainLoop);
 window.modeManager = modeManager;
 window.modeManagerRenderer = modeManagerRenderer;
 window.layerManager = layerManager;
+window.LayerManager = LayerManager;
 window.noteManager = noteManager;
 window.audio = audio;
 window.audioPlayback = audioPlayback;
