@@ -1,6 +1,5 @@
 /*
   TODO:
-  - resize notes
   - nicer looking layer list
   - example button
   - adding note during playback
