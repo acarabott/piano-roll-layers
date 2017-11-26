@@ -176,13 +176,13 @@ controls.appendChild(layerManager.list);
 let snapping = true;
 
 const cursor = new Cursor();
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
-cursor.addCursorState(() => layerManager.grabbableLayer !== undefined, 'move');
-cursor.addCursorState(() => layerManager.dragging, 'move');
-cursor.addCursorState(() => layerManager.copying, 'copy');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isGrabbing, 'move');
-cursor.addCursorState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isHovering, 'move');
+cursor.addState(() => modeManager.currentMode === modeManager.modes.layers, 'crosshair');
+cursor.addState(() => layerManager.grabbableLayer !== undefined, 'move');
+cursor.addState(() => layerManager.dragging, 'move');
+cursor.addState(() => layerManager.copying, 'copy');
+cursor.addState(() => modeManager.currentMode === modeManager.modes.notes, 'pointer');
+cursor.addState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isGrabbing, 'move');
+cursor.addState(() => modeManager.currentMode === modeManager.modes.notes && noteController.isHovering, 'move');
 
 
 // Render functions
@@ -422,3 +422,4 @@ window.audio = audio;
 window.audioPlayback = audioPlayback;
 window.noteRenderer = noteRenderer;
 window.noteController = noteController;
+window.cursor = cursor;

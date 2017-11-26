@@ -1,10 +1,10 @@
 export class Cursor {
   constructor() {
-    this.cursorStates = [];
+    this.states = [];
   }
 
   update() {
-    const active = this.cursorStates.filter(state => state.testFunc());
+    const active = this.states.filter(state => state.test());
     this.style = active.length === 0
                    ? 'default'
                    : active[active.length - 1].style;
@@ -12,10 +12,10 @@ export class Cursor {
     return [active, this.style];
   }
 
-  // @testFunc is a function that should return a boolean value
+  // @test is a function that should return a boolean value
   // @style is the cursor style to return
-  addCursorState(testFunc, style) {
-    this.cursorStates.push({testFunc, style});
+  addState(test, style) {
+    this.states.push({ test, style });
   }
 
   set style(style) {
