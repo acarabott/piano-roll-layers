@@ -2,6 +2,7 @@
   TODO:
   - nicer looking layer list
   - example button
+  - instructions
   - adding note during playback
   - play from time
   - style
@@ -51,6 +52,29 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   canvas.width - keyRect.width,
                                   keyRect.height);
 
+class Song {
+  constructor() {
+    this.numKeys = 25;
+    this.duration = 60;
+    this.rootNote = 60;
+    this.rect = undefined;
+  }
+
+  positionToTime(x) {
+    return ((x - this.rect.x) / this.rect.width) * this.duration;
+  }
+
+  get noteHeight() {
+    return this.rect.height / this.numKeys;
+  }
+}
+
+const song = new Song();
+song.numKeys = NUM_KEYS;
+song.duration = DURATION;
+song.rootNote = ROOT_NOTE;
+song.rect = patternRect;
+
 // managers
 const modeManager = new ModeManager();
 modeManager.addModes('layers', 'notes');
@@ -58,9 +82,7 @@ modeManager.currentMode = modeManager.modes.layers;
 const modeManagerRenderer = new ModeManagerRenderer(modeManager);
 info.appendChild(modeManagerRenderer.label);
 info.appendChild(modeManagerRenderer.select);
-const layerManager = new LayerManager();
-layerManager.parentRect = patternRect;
-layerManager.numKeys = NUM_KEYS;
+const layerManager = new LayerManager(song);
 
 const noteManager = new NoteManager();
 const noteRenderer = new NoteRenderer();
@@ -470,3 +492,4 @@ window.audioPlayback = audioPlayback;
 window.noteRenderer = noteRenderer;
 window.noteController = noteController;
 window.cursor = cursor;
+window.song = song;

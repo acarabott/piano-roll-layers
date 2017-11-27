@@ -2,6 +2,7 @@ import { Point } from './Point.js';
 import { Layer } from './Layer.js';
 import { Rectangle } from './Rectangle.js';
 import { MicroEvent } from './MicroEvent.js';
+import * as color from './color.js';
 
 const corners = {
   tl: Symbol('tl'),
@@ -15,11 +16,10 @@ export class LayerManager extends MicroEvent {
     return corners;
   }
 
-  constructor() {
+  constructor(song) {
     super();
-    this._parentRect = undefined;
-    this.parentLayer = undefined;
-    this.numKeys = undefined;
+    this.song = song;
+    this.parentLayer = new Layer(...song.rect);
     this._layers = [];
     this.prevCursor = 'default';
     this._dragging = {
@@ -66,26 +66,14 @@ export class LayerManager extends MicroEvent {
     this._currentRect = undefined;
 
     this.bind('layersChanged', layers => this.updateList());
+    this.bind('currentChanged', layer => this.updateList());
 
     this._inThresh = 4;
   }
 
-  get parentRect() {
-    return this._parentRect;
-  }
-
-  set parentRect(parentRect) {
-    this.parentLayer = new Layer(...parentRect);
-    this._parentRect = parentRect;
-  }
-
-  get noteHeight() {
-    return this.parentRect.height / this.numKeys;
-  }
-
   get currentRect() {
     return this.currentLayer === undefined ?
-      this.parentRect
+      this.song.rect
       : this.currentLayer.rects.find(rect => {
         return rect.containsPoint(this._lastMousePosition, this._inThresh);
       });
@@ -104,9 +92,9 @@ export class LayerManager extends MicroEvent {
       });
     });
 
-    const distanceToStepAbove = point.y % this.noteHeight;
-    const lessThanHalfWay = distanceToStepAbove > this.noteHeight / 2;
-    const additionalHeight = (lessThanHalfWay ? this.noteHeight : 0);
+    const distanceToStepAbove = point.y % this.song.noteHeight;
+    const lessThanHalfWay = distanceToStepAbove > this.song.noteHeight / 2;
+    const additionalHeight = (lessThanHalfWay ? this.song.noteHeight : 0);
     const y = point.y - distanceToStepAbove + additionalHeight;
     return new Point(x, y);
   }
@@ -184,19 +172,33 @@ export class LayerManager extends MicroEvent {
   updateList() {
     Array.from(this.list.children).forEach(item => this.list.removeChild(item));
 
+    const positionToTimeString = (xpos) => {
+      const time = this.song.positionToTime(xpos);
+      const timeSecs = Math.floor(time % 60);
+      const timeMins = Math.floor((time - timeSecs) / 60);
+      return `${timeMins.toString().padStart(1, '0')}:${timeSecs.toString().padStart(2, '0')}`;
+    };
+
     this._layers.forEach((layer, i) => {
       const li = document.createElement('li');
 
       const enabledInput = document.createElement('input');
       enabledInput.type = 'checkbox';
       enabledInput.checked = layer.active;
+      enabledInput.classList.add('enabled');
       enabledInput.addEventListener('change', event => {
         layer.active = enabledInput.checked;
       });
       li.appendChild(enabledInput);
 
       const label = document.createElement('span');
-      label.textContent = `Layer ${i + 1} - ${layer.subdivision}`;
+      const isCurrent = layer === this.currentLayer;
+      label.style.backgroundColor = isCurrent ? color.blue : color.white;
+      label.style.color = isCurrent ? color.white : color.black;
+
+      const startTime = positionToTimeString(layer.rect.x);
+      const endTime = positionToTimeString(layer.rect.br.x);
+      label.textContent = `Division: ${layer.subdivision} - ${startTime}-${endTime}`;
       li.appendChild(label);
 
       const removeButton = document.createElement('input');
@@ -205,6 +207,7 @@ export class LayerManager extends MicroEvent {
       removeButton.addEventListener('click', event => {
         this.removeLayer(layer);
       });
+      removeButton.classList.add('removeButton');
       li.appendChild(removeButton);
 
       this.list.appendChild(li);
@@ -327,20 +330,25 @@ export class LayerManager extends MicroEvent {
         const tlY = snappedPoint.y;
         this.creation.rect.tl = new Point(tlX, tlY);
         const brX = snapping ? this.currentRect.br.x : point.x;
-        this.creation.rect.br = new Point(brX, snappedPoint.y + this.noteHeight);
+        this.creation.rect.br = new Point(brX, snappedPoint.y + this.song.noteHeight);
       }
     }
   }
 
   updateMouseMove(point, snapping) {
     const snappedPoint = this.snapPointToLayers(point);
+
+    const prevCurrentLayer = this.currentLayer;
     this._lastMousePosition.set(point);
+    if (this.currentLayer !== prevCurrentLayer) {
+      this.trigger('currentChanged', this.currentLayer);
+    }
 
     // creating layers
     if (this.creation.active) {
       const x = snapping ? snappedPoint.x : point.x;
       const y = snappedPoint.y === this.creation.rect.tl.y
-        ? snappedPoint.y + this.noteHeight
+        ? snappedPoint.y + this.song.noteHeight
         : snappedPoint.y;
       this.creation.rect.br = new Point(x, y);
     }
@@ -354,25 +362,25 @@ export class LayerManager extends MicroEvent {
       if (type === LayerManager.corners.tl) {
         const br = frame.br;
         frame.tl = new Point(Math.min(newCorner.x, br.x - 1),
-                             Math.min(newCorner.y, br.y - this.noteHeight));
+                             Math.min(newCorner.y, br.y - this.song.noteHeight));
         frame.br = br;
       }
       else if (type === LayerManager.corners.tr) {
         const bl = frame.bl;
         frame.tr = new Point(Math.max(newCorner.x, bl.x + 1),
-                             Math.min(newCorner.y, bl.y - this.noteHeight));
+                             Math.min(newCorner.y, bl.y - this.song.noteHeight));
         frame.bl = bl;
       }
       else if (type === LayerManager.corners.bl) {
         const tr = frame.tr;
         frame.bl = new Point(Math.min(newCorner.x, tr.x - 1),
-                             Math.max(newCorner.y, tr.y + this.noteHeight));
+                             Math.max(newCorner.y, tr.y + this.song.noteHeight));
         frame.tr = tr;
       }
       else if (type === LayerManager.corners.br) {
         const tl = frame.tl;
         frame.br = new Point(Math.max(newCorner.x, tl.x + 1),
-                             Math.max(newCorner.y, tl.y + this.noteHeight));
+                             Math.max(newCorner.y, tl.y + this.song.noteHeight));
         frame.tl = tl;
       }
     }
@@ -380,6 +388,7 @@ export class LayerManager extends MicroEvent {
       const dragged = (snapping ? snappedPoint : new Point(point.x, snappedPoint.y));
       this.dragTo(dragged.subtract(this.dragOffset));
     }
+
   }
 
   updateMouseUp(point) {
@@ -392,7 +401,8 @@ export class LayerManager extends MicroEvent {
       if (absWidth > 0 && absHeight > 0) {
         const tl = this.creation.rect.tl;
         const br = this.creation.rect.br;
-        const rect = new Rectangle(Math.min(tl.x, br.x), Math.min(tl.y, br.y), absWidth, absHeight);
+        const rect = new Rectangle(Math.min(tl.x, br.x),
+                                   Math.min(tl.y, br.y), absWidth, absHeight);
         this.addLayer(rect, this.subdivision);
       }
     }

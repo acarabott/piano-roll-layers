@@ -34,6 +34,14 @@ canvas {
   margin: 0;
 }
 
+.removeButton {
+  margin-left: 10px;
+}
+
+.enabled {
+  margin-right: 10px;
+}
+
 .key-wrap {
   display: inline-block;
   width: 150px;
