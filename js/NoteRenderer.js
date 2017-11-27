@@ -6,26 +6,22 @@ import * as color from './color.js';
 export class NoteRenderer {
   constructor(song) {
     this.song = song;
-    this.parentRect = song.rect;
-    this.duration = song.duration;
-    this.numKeys = song.numKeys;
-    this.rootNote = song.rootNote;
   }
 
   getRectFromNote(note) {
-    const x = this.parentRect.x + (note.timeStart / this.duration) * this.parentRect.width;
+    const x = this.song.rect.x + ((note.timeStart / this.song.duration) * this.song.rect.width);
     const midiNote = freqToMidi(note.freq);
-    const noteHeight = this.parentRect.height / this.numKeys;
-    const y = ((this.numKeys - 1) - (midiNote - this.rootNote)) * noteHeight;
-    const width = Math.max(2, this.parentRect.width * ((note.timeStop - note.timeStart) / this.duration));
-
+    const noteHeight = this.song.rect.height / this.song.numKeys;
+    const y = ((this.song.numKeys - 1) - (midiNote - this.song.rootNote)) * noteHeight;
+    const width = Math.max(2, this.song.rect.width *
+                              ((note.timeStop - note.timeStart) / this.song.duration));
     return new Rectangle(x, y, width, noteHeight);
   }
 
   getKeyFromPoint(point) {
-    const noteHeight = this.parentRect.height / this.numKeys;
-    const noteIdx = this.numKeys - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
-    return this.rootNote + noteIdx;
+    const noteHeight = this.song.rect.height / this.song.numKeys;
+    const noteIdx = this.song.numKeys - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
+    return this.song.rootNote + noteIdx;
   }
 
   renderNote(ctx, note, style, metadata = {}) {
@@ -55,6 +51,6 @@ export class NoteRenderer {
   }
 
   xToTime(x) {
-    return ((x - this.parentRect.x) / this.parentRect.width) * this.duration;
+    return ((x - this.song.rect.x) / this.song.rect.width) * this.song.duration;
   }
 }

@@ -81,25 +81,42 @@ function stopPlayback() {
 
 
 // ui
-const subdivisionInput = document.createElement('span');
-subdivisionInput.id = 'subdivision';
+const subdivisionDisplay = document.createElement('span');
+subdivisionDisplay.id = 'subdivision';
+subdivisionDisplay.textContent = layerManager.subdivision;
 layerManager.bind('currentChanged', layer => {
-  if (layer !== undefined) subdivisionInput.textContent = layer.subdivision;
+  if (layer !== undefined) subdivisionDisplay.textContent = layer.subdivision;
 });
-
 layerManager.bind('subdivisionChanged', subdivision => {
-  subdivisionInput.textContent = subdivision;
+  subdivisionDisplay.textContent = subdivision;
 });
 layerManager.bind('subdivisionStringChanged', subdivisionString => {
   if (subdivisionString !== '') {
-    subdivisionInput.textContent = subdivisionString;
+    subdivisionDisplay.textContent = subdivisionString;
   }
 });
 const subdivisionLabel = document.createElement('label');
 subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
 info.appendChild(subdivisionLabel);
-info.appendChild(subdivisionInput);
+info.appendChild(subdivisionDisplay);
+
+const keyboardSizeInput = document.createElement('input');
+keyboardSizeInput.id = 'keyboardSizeInput';
+keyboardSizeInput.name = 'keyboardSizeInput';
+keyboardSizeInput.type = 'number';
+keyboardSizeInput.value = song.numKeys;
+keyboardSizeInput.min = 1;
+keyboardSizeInput.max = Infinity;
+keyboardSizeInput.addEventListener('input', event => {
+  song.numKeys = keyboardSizeInput.valueAsNumber;
+});
+const keyboardSizeLabel = document.createElement('label');
+keyboardSizeLabel.htmlFor = keyboardSizeInput.id;
+keyboardSizeLabel.textContent = 'Number of Keys: ';
+[keyboardSizeLabel, keyboardSizeInput].forEach(el => info.appendChild(el));
+
+
 
 
 const controls = document.createElement('div');
