@@ -14,6 +14,7 @@
 
 import { loop, rrandint, midiToFreq } from './utils.js';
 import * as color from './color.js';
+import { Song } from './Song.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note } from './Note.js';
 import { NoteManager } from './NoteManager.js';
@@ -25,11 +26,6 @@ import { LayerRenderer } from './LayerRenderer.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
-
-// constants
-const NUM_KEYS = 25;
-const DURATION = 10;
-const ROOT_NOTE = 60;
 
 const container = document.getElementById('container');
 // info
@@ -51,27 +47,10 @@ const patternRect = new Rectangle(keyRect.br.x,
                                   canvas.width - keyRect.width,
                                   keyRect.height);
 
-class Song {
-  constructor() {
-    this.numKeys = 25;
-    this.duration = 60;
-    this.rootNote = 60;
-    this.rect = undefined;
-  }
-
-  positionToTime(x) {
-    return ((x - this.rect.x) / this.rect.width) * this.duration;
-  }
-
-  get noteHeight() {
-    return this.rect.height / this.numKeys;
-  }
-}
-
 const song = new Song();
-song.numKeys = NUM_KEYS;
-song.duration = DURATION;
-song.rootNote = ROOT_NOTE;
+song.numKeys = 20;
+song.duration = 30;
+song.rootNote = 60;
 song.rect = patternRect;
 
 // managers
@@ -90,7 +69,7 @@ const noteController = new NoteController(noteManager, noteRenderer);
 // audio
 const audio = new AudioContext();
 const audioPlayback = new AudioPlayback(audio);
-audioPlayback.duration = DURATION;
+audioPlayback.duration = song.duration;
 
 function startPlayback() {
   audioPlayback.playFrom(noteManager.notes);
@@ -99,8 +78,6 @@ function startPlayback() {
 function stopPlayback() {
   audioPlayback.stop();
 }
-
-
 
 
 // ui
@@ -229,8 +206,8 @@ function render() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // piano / background
-  renderPiano(ctx, keyRect, NUM_KEYS);
-  renderPiano(ctx, patternRect, NUM_KEYS, 0.1);
+  renderPiano(ctx, keyRect, song.numKeys);
+  renderPiano(ctx, patternRect, song.numKeys, 0.1);
 
   // layers
   LayerRenderer.render(ctx, layerManager);
@@ -245,7 +222,7 @@ function render() {
     const curTime = audioPlayback.isPlaying
       ? (audio.currentTime - audioPlayback.audioStart)
       : 0;
-    const normTime = curTime / DURATION;
+    const normTime = curTime / song.duration;
     const x = patternRect.x + Math.max(0, patternRect.width * normTime);
     ctx.fillRect(x, 0, 3, canvas.height);
     ctx.globalAlpha = 1.0;
@@ -400,9 +377,9 @@ function test() {
   });
 
   loop(10, (i, n) => {
-    const midiNote = Math.floor(Math.random() * NUM_KEYS) + ROOT_NOTE;
+    const midiNote = Math.floor(Math.random() * song.numKeys) + song.rootNote;
     const freq = midiToFreq(midiNote);
-    const timeStart = DURATION * 0.75 * Math.random();
+    const timeStart = song.duration * 0.75 * Math.random();
     const timeStop = timeStart + Math.random() + 0.2;
     const note = new Note(freq, timeStart, timeStop);
     noteManager.addNote(note);
