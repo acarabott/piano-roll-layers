@@ -114,13 +114,13 @@ export class LayerManager extends MicroEvent {
     if (!Number.isInteger(parseInt(char, 10))) { return; }
 
     clearTimeout(this.subdivisionTimeout);
-    this.subdivisionString += char;
-    if (this.currentLayer !== undefined) {
+    if (this.currentLayer !== undefined && this.currentLayer !== this.parentLayer) {
+      this.subdivisionString += char;
       this.currentLayer.subdivision = parseInt(this.subdivisionString, 10);
+      this.subdivisionTimeout = setTimeout(() => {
+        this._finaliseSubdivision();
+      }, this.subdivisionTimeoutDur);
     }
-    this.subdivisionTimeout = setTimeout(() => {
-      this._finaliseSubdivision();
-    }, this.subdivisionTimeoutDur);
   }
 
   get subdivisionString() {
