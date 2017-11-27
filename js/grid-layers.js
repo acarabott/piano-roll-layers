@@ -26,7 +26,6 @@ import { LayerRenderer } from './LayerRenderer.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
-import { Scroll } from './Scroll.js';
 
 // constants
 const NUM_KEYS = 25;
@@ -159,39 +158,6 @@ subdivisionLabel.textContent = 'Subdivision: ';
 controls.appendChild(subdivisionLabel);
 controls.appendChild(subdivisionInput);
 controls.appendChild(document.createElement('br'));
-
-const scroll = new Scroll();
-scroll.sensitivity = 0.125;
-scroll.range = 1;
-scroll.min = 1;
-layerManager.bind('currentChanged', layer => {
-  if (layer !== undefined) scroll.valueAsFloat = layer.subdivision;
-});
-
-
-const scrollLabel = document.createElement('div');
-scrollLabel.textContent = 'Input';
-scrollLabel.style.fontWeight = 'bold';
-controls.appendChild(scrollLabel);
-
-['trackpad', 'mouse'].forEach((name, i) => {
-  const input = document.createElement('input');
-  input.id = `scroll${name}`;
-  input.type = 'radio';
-  input.name = 'scroll';
-  input.checked = i === 0 ? 'checked' : '';
-  input.addEventListener('change', event => {
-    scroll.trackpad = name === 'trackpad';
-  });
-  const label = document.createElement('label');
-  label.htmlFor = input.id;
-  label.textContent = `${toCapitalCase(name)}: `;
-  label.style.marginLeft = '10px';
-  controls.appendChild(label);
-  controls.appendChild(input);
-  controls.appendChild(document.createElement('br'));
-});
-
 controls.appendChild(layerManager.list);
 
 
@@ -439,16 +405,6 @@ subdivisionInput.addEventListener('keydown', event => {
 
 subdivisionInput.addEventListener('input', event => {
   layerManager.subdivisionInput(event.data);
-});
-
-canvas.addEventListener('wheel', event => {
-  if (layerManager.adjustingSubdivision) {
-    event.preventDefault();
-    if (layerManager.currentLayer !== undefined) {
-      scroll.update(event);
-      layerManager.currentLayer.subdivision = scroll.valueAsInt;
-    }
-  }
 });
 
 // main loop
