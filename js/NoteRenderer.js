@@ -4,11 +4,12 @@ import { Point } from './Point.js';
 import * as color from './color.js';
 
 export class NoteRenderer {
-  constructor() {
-    this.parentRect = undefined;
-    this.duration = undefined;
-    this.numKeys = undefined;
-    this.rootNote = undefined;
+  constructor(song) {
+    this.song = song;
+    this.parentRect = song.rect;
+    this.duration = song.duration;
+    this.numKeys = song.numKeys;
+    this.rootNote = song.rootNote;
   }
 
   getRectFromNote(note) {

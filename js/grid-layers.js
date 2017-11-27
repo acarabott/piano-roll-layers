@@ -84,11 +84,7 @@ info.appendChild(modeManagerRenderer.select);
 const layerManager = new LayerManager(song);
 
 const noteManager = new NoteManager();
-const noteRenderer = new NoteRenderer();
-noteRenderer.parentRect = patternRect;
-noteRenderer.duration = DURATION;
-noteRenderer.numKeys = NUM_KEYS;
-noteRenderer.rootNote = ROOT_NOTE;
+const noteRenderer = new NoteRenderer(song);
 const noteController = new NoteController(noteManager, noteRenderer);
 
 // audio
