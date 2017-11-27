@@ -1,7 +1,7 @@
 /*
   TODO:
+  - copy notes
   - example button
-  - instructions
   - adding note during playback
   - play from time
   - style

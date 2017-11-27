@@ -32,16 +32,13 @@ canvas {
   margin-right: 20px;
 }
 
-#controls {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+thead {
+  font-weight: bold;
 }
 
-#controls li {
-  margin: 0;
+td {
+  padding-left: 20px;
 }
-
 .removeButton {
   margin-left: 10px;
 }
@@ -52,7 +49,7 @@ canvas {
 
 .key-wrap {
   display: inline-block;
-  width: 150px;
+  width: 120px;
 }
 
 .key {
@@ -69,4 +66,9 @@ canvas {
   box-shadow: inset 0 -1px 0 #bbb;
   font-family: monospace;
   /*font-size: 11px;*/
+}
+
+.highlight {
+  color: rgb(43, 156, 212);
+  font-weight: bold;
 }

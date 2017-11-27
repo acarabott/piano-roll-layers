@@ -6,80 +6,105 @@
 </head>
 <body>
   <h1>Musical Grid Layers</h1>
+  <h2>What?</h2>
+  <p>
+    An alternative to having a fixed time grid on a piano roll. Instead you
+    can lay down multiple grids with different subdivisions. New grids and new
+    notes can be snapped to existing grids.
+  </p>
+
+  <h2>Why?</h2>
+  <p>
+    Having a single fixed grid (usually 16th notes) makes the default very
+    inviting and alternatives less accessible. Without a global default, you
+    can explore other rhythms.<br>
+    It also makes it easier to do things that a global grid makes difficult,
+    like nested tuplets or starting a tuplet on the off-beat.<br>
+    New tools make for new approaches!
+  </p>
 
   <div id="container"></div>
   <div id="instructions">
     <h2>Controls</h2>
-    <ul id="controls">
-      <p>There are two modes, in both you click and drag to create.</p>
-      <ol>
-        <li>Layers - Create rhythm templates for drawing notes</li>
-        <li>Notes - Create musical notes</li>
-      </ol>
-      <p>In either mode you click and drag to create them</p>
-      <li>
-        <span class="key-wrap">
-          <span class="key">Q</span>
-        </span> Grid mode
-      </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">W</span>
-        </span> Note mode
-      </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">0</span> - <span class="key">9</span>
-        </span>
-         Set layer subdivision
-     </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">&#x2325; Alt</span>
-        </span>
-        Hold to copy layer
-      </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">&#x232B; Backspace</span>
-        </span>
-        Delete selected note / layer
-      </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">&#x21E7; Shift</span>
-        </span>
-        Hold to disable snapping (on by default)
-      </li>
-      <li>
-        <span class="key-wrap">
-          <span class="key">Space</span>
-        </span>
-        Play / Pause Playback
-      </li>
-    </ul>
+    <p>There are two modes</p>
+    <ol>
+      <li>Layers - Create rhythm templates for drawing notes</li>
+      <li>Notes - Create musical notes</li>
+    </ol>
+    <p>
+      Switch between modes using <span class="key">Q</span> (Layers) and
+      <span class="key">W</span> (Notes), or the drop down menu.
+    </p>
+    <p>
+      Click and drag to create new layers/notes. They will automatically snap to
+      existing layers. Hold <span class="key">&#x21E7; Shift</span> to disable snapping.
+    </p>
+    <p>
+      Set the subdivision of the focused layer by typing with the number keys.
+      It can be any value, after half a second without typing, the value will be set.
+    </p>
+    <p>
+      Use <span class="key">A</span> and <span class="key">S</span> to cycle
+      through the stack of layers (this includes the background layer). <br>
+      The focused layer will be highlighted in <span class=highlight>blue</span>.
+    </p>
+    <p>
+      Move the focused layer by grabbing one of its edges, the cursor will be (TODO CURSOR).<br>
+      Move notes by grabbing anywhere inside of the note.<br>
+      Copy by holding <span class="key">&#x2325; Alt</span>.
+    </p>
+    <p>
+      Resize layers by grabbing one of their corners, the cursor will be (TODO CURSOR)<br>
+      Resize notes by grabbing their left or right edges, cursor (TODO CURSOR)
+    </p>
+    <p>
+      Delete the focused layer or note with <span class="key">&#x232B; Backspace</span>
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <td>Key</td>
+          <td>Action</td>
+          <td>Left Handed</td>
+        </tr>
+      </thead>
+      <tr>
+        <td><span class="key">Q</span></td>
+        <td>Layer mode</td>
+        <td><span class="key">O</span></td>
+      </tr>
+      <tr>
+        <td><span class="key">W</span></td>
+        <td>Note mode</td>
+        <td><span class="key">P</span></td>
+      </tr>
+      <tr>
+        <td><span class="key">0</span> - <span class="key">9</span></td>
+        <td>Set layer subdivision</td>
+      </tr>
+      <tr>
+        <td><span class="key">A</span> <span class="key">S</span></td>
+        <td>Cycle through layers</td>
+        <td><span class="key">K</span> <span class="key">L</span></td>
+      </tr>
+      <tr>
+        <td><span class="key">&#x2325; Alt</span></td>
+        <td>Hold to copy</td>
+      </tr>
+      <tr>
+        <td><span class="key">&#x232B; Backspace</span></td>
+        <td>Delete selected note / layer</td>
+      </tr>
+      <tr>
+        <td><span class="key">&#x21E7; Shift</span></td>
+        <td>Hold to disable snapping (on by default)</td>
+      </tr>
+      <tr>
+        <td><span class="key">Space</span></td>
+        <td>Play / Pause Playback</td>
+      </tr>
 
-    <h2>What?</h2>
-    <p>
-      An alternative to having a fixed time grid on a piano roll. Instead you
-      can lay down multiple grids with different subdivisions. New grids and new
-      notes can be snapped to existing grids.
-    </p>
-
-    <h2>Why?</h2>
-    <p>
-      Having a single fixed grid (usually 16th notes) makes the default very
-      inviting and alternatives less accessible. Without a global default, you
-      can explore other rhythms.
-    </p>
-    <p>
-      It also makes it easier to do things that a global grid makes difficult,
-      like nested tuplets or starting a tuplet on the off-beat.
-    </p>
-    <p>
-      New tools make for new approaches!
-    </p>
-
+    </table>
   </div>
 </body>
 <script src="js/grid-layers.js" type="module"></script>
