@@ -11,16 +11,15 @@ export class NoteRenderer {
   getRectFromNote(note) {
     const x = this.song.rect.x + ((note.timeStart / this.song.duration) * this.song.rect.width);
     const midiNote = freqToMidi(note.freq);
-    const noteHeight = this.song.rect.height / this.song.numKeys;
-    const y = ((this.song.numKeys - 1) - (midiNote - this.song.rootNote)) * noteHeight;
+    const y = ((this.song.numKeys - 1) - (midiNote - this.song.rootNote)) * this.song.noteHeight;
     const width = Math.max(2, this.song.rect.width *
                               ((note.timeStop - note.timeStart) / this.song.duration));
-    return new Rectangle(x, y, width, noteHeight);
+    return new Rectangle(x, y, width, this.song.noteHeight);
   }
 
   getKeyFromPoint(point) {
-    const noteHeight = this.song.rect.height / this.song.numKeys;
-    const noteIdx = this.song.numKeys - 1 - ((point.y - (point.y % noteHeight)) / noteHeight);
+    const noteIdx = (this.song.numKeys - 1) -
+                    ((point.y - (point.y % this.song.noteHeight)) / this.song.noteHeight);
     return this.song.rootNote + noteIdx;
   }
 

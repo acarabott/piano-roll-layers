@@ -88,6 +88,7 @@ export class NoteController {
     if (this.manager.previewing) {
       const midiNote = this.renderer.getKeyFromPoint(point);
       const prevMidiNote = Math.floor(freqToMidi(this.manager.previewNote.freq));
+
       this.manager.previewNote.freq = midiToFreq(midiNote);
       this.currentNoteChangedFreq = midiNote !== prevMidiNote;
 
@@ -97,15 +98,15 @@ export class NoteController {
 
     this.grabbed.forEach(note => {
       const midiNote = constrain(this.renderer.getKeyFromPoint(snappedPoint),
-                                 this.renderer.rootNote,
-                                 this.renderer.rootNote + this.renderer.numKeys);
+                                 this.renderer.song.rootNote,
+                                 this.renderer.song.rootNote + this.renderer.song.numKeys);
       note.freq = midiToFreq(midiNote);
 
       const duration = note.timeStop - note.timeStart;
       const snapping = point.equalTo(snappedPoint);
       const newTopLeft = snapping
         ? snappedPoint.subtract(this.getMetadata(note).grabbedOffset)
-        : snappedPoint;
+        : point;
 
       note.timeStart = Math.max(0, this.renderer.xToTime(newTopLeft.x));
       note.timeStop = note.timeStart + duration;
