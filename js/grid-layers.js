@@ -1,6 +1,7 @@
 /*
   TODO:
   - copy notes
+  - refactor note renderer using Song
   - example button
   - adding note during playback
   - play from time
@@ -12,7 +13,7 @@
 // Helper functions
 // -----------------------------------------------------------------------------
 
-import { loop, rrandint, midiToFreq } from './utils.js';
+import { constrain, loop, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { Song } from './Song.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
@@ -45,7 +46,7 @@ const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
 const patternRect = new Rectangle(keyRect.br.x,
                                   keyRect.y,
                                   canvas.width - keyRect.width,
-                                  keyRect.height);
+                                  canvas.height);
 
 const song = new Song();
 song.numKeys = 20;
@@ -148,9 +149,14 @@ rootNoteInput.type = 'number';
 rootNoteInput.value = song.rootNote;
 rootNoteInput.min = 0;
 rootNoteInput.max = Infinity;
+rootNoteInput.step = 12;
 rootNoteInput.style.width = '40px';
-rootNoteInput.addEventListener('input', event => {
-  song.rootNote = rootNoteInput.valueAsNumber;
+rootNoteInput.style.marginRight = '20px';
+rootNoteInput.addEventListener('change', event => {
+  const input = rootNoteInput.valueAsNumber;
+  const newRoot = input - (input % 12);
+  song.rootNote = newRoot;
+  rootNoteInput.value = newRoot;
 });
 const rootNoteLabel = document.createElement('label');
 rootNoteLabel.htmlFor = rootNoteInput.id;
@@ -170,9 +176,8 @@ durationInput.addEventListener('input', event => {
 });
 const durationLabel = document.createElement('label');
 durationLabel.htmlFor = durationInput.id;
-durationLabel.textContent = 'Duration (s): ';
+durationLabel.textContent = 'Duration (seconds): ';
 [durationLabel, durationInput].forEach(el => controls.appendChild(el));
-
 
 controls.appendChild(layerManager.list);
 
@@ -328,9 +333,7 @@ document.addEventListener('mouseup', event => {
   const point = new Point(event.offsetX, event.offsetY);
 
   if (modeManager.currentMode === modeManager.modes.layers) {
-    if (event.srcElement === canvas) {
-      layerManager.updateMouseUp(point);
-    }
+    layerManager.updateMouseUp(point);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     noteController.updateMouseUp(point, event.srcElement === canvas);
@@ -340,8 +343,10 @@ document.addEventListener('mouseup', event => {
   audioPlayback.previewNote = undefined;
 });
 
-canvas.addEventListener('mousemove', event => {
-  const point = new Point(event.offsetX, event.offsetY);
+
+document.addEventListener('mousemove', event => {
+  const point = new Point(constrain(event.pageX - canvas.offsetLeft, 0, canvas.width),
+                          constrain(event.pageY - canvas.offsetTop, 0, canvas.height));
 
   layerManager.updateMouseMove(point, snapping);
 
@@ -373,6 +378,7 @@ document.addEventListener('keydown', event => {
   else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
   else if (event.key  === 'Alt')    { layerManager.copying = true; }
+  else if (event.key  === 'Shift')  { snapping = false; }
   else if (event.code === 'Space')  {
     event.preventDefault();
     audioPlayback.isPlaying ? stopPlayback() : startPlayback();
@@ -381,11 +387,7 @@ document.addEventListener('keydown', event => {
     layerManager.creation.active = false;
     if (document.activeElement !== canvas) { document.activeElement.blur(); }
   }
-  else if (event.key === 'Shift')   {
-    snapping = false;
-    layerManager.adjustingSubdivision = true;
-  }
-  else if (event.key === 'Backspace') {
+  else if (event.key === 'Backspace' || event.code === 'KeyX' || event.code === 'KeyM') {
     if (modeManager.currentMode === modeManager.modes.layers) {
       if (layerManager.currentLayer !== layerManager.parentLayer) {
         layerManager.removeLayer(layerManager.currentLayer);
@@ -407,7 +409,6 @@ document.addEventListener('keydown', event => {
 document.addEventListener('keyup', event => {
   if      (event.key === 'Shift') { snapping = true; }
   else if (event.key === 'Alt')   { layerManager.copying = false; }
-  else if (event.key === 'Shift') { layerManager.adjustingSubdivision = false; }
 });
 
 // main loop
@@ -419,13 +420,20 @@ function mainLoop() {
 }
 
 function test() {
+  function randomNote(min) {
+    return Math.floor(Math.random() * song.numKeys) + min;
+  }
+
+  function randomTime(min) {
+    return (Math.random() * (song.duration - min)) + min;
+  }
+
   loop(4, (i, n) => {
-    const x = rrandint(patternRect.x, patternRect.width * 0.75);
-    const y = rrandint(patternRect.y, patternRect.height * 0.75);
-    const width = rrandint(patternRect.width * 0.25, patternRect.width - x);
-    const height = rrandint(patternRect.height * 0.25, patternRect.height - y);
-    const rect = new Rectangle(x, y , width, height);
-    layerManager.addLayer(rect, rrandint(1, 10));
+    const noteStart = randomNote(song.rootNote);
+    const noteStop = randomNote(noteStart);
+    const timeStart = randomTime(song.duration);
+    const timeStop = randomTime(timeStart);
+    layerManager.addLayer(midiToFreq(noteStart), midiToFreq(noteStop), timeStart, timeStop);
   });
 
   loop(10, (i, n) => {
@@ -452,3 +460,4 @@ window.noteRenderer = noteRenderer;
 window.noteController = noteController;
 window.cursor = cursor;
 window.song = song;
+window.canvas = canvas;

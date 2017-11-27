@@ -3,6 +3,7 @@ import { Layer } from './Layer.js';
 import { Rectangle } from './Rectangle.js';
 import { MicroEvent } from './MicroEvent.js';
 import * as color from './color.js';
+import { midiToFreq, freqToMidi } from './utils.js';
 
 const corners = {
   tl: Symbol('tl'),
@@ -19,9 +20,20 @@ export class LayerManager extends MicroEvent {
   constructor(song) {
     super();
     this.song = song;
-    this.parentLayer = new Layer(...song.rect);
     this._layers = [];
-    this.prevCursor = 'default';
+    this.parentLayer = new Layer(midiToFreq(song.rootNote),
+                                 midiToFreq(song.rootNote + song.numKeys),
+                                 0,
+                                 this.song.duration);
+    song.bind('numKeys', numKeys => {
+      this.parentLayer.freqStop = midiToFreq(song.rootNote + numKeys);
+    });
+    song.bind('duration', duration => this.parentLayer.timeStop = duration);
+    song.bind('rootNote', rootNote => {
+      this.parentLayer.freqStart = midiToFreq(rootNote);
+      this.parentLayer.freqStop = midiToFreq(rootNote + song.numKeys);
+    });
+
     this._dragging = {
       sourceLayer: undefined,
       layer: undefined,
@@ -32,10 +44,12 @@ export class LayerManager extends MicroEvent {
         this.setDraggingLayer(undefined);
       }
     };
+
     this.creation = {
       active: false,
       rect: new Rectangle()
     };
+
     this._resizing = {
       active: false,
       layer: undefined,
@@ -53,8 +67,8 @@ export class LayerManager extends MicroEvent {
         this._resizing.cornerType = undefined;
       }
     };
+
     this.list = document.createElement('ol');
-    this.adjustingSubdivision = false;
 
     this._subdivision = 3;
     this._subdivisionString = '';
@@ -71,10 +85,28 @@ export class LayerManager extends MicroEvent {
     this._inThresh = 4;
   }
 
+  getLayerFrame(layer) {
+    const x = this.song.timeToPosition(layer.timeStart);
+    const y = this.song.freqToPosition(layer.freqStop);
+    const width = this.song.timeToPosition(layer.timeStop) - x;
+    const height = this.song.freqToPosition(layer.freqStart) - y;
+
+    return new Rectangle(this.song.rect.x + x, y, width, height);
+  }
+
+  getLayerRects(layer) {
+    const rect = this.getLayerFrame(layer);
+    const subWidth = Math.round(rect.width / layer.subdivision);
+    return Array.from(Array(layer.subdivision)).map((_, i) => {
+      const x = rect.x + (i * subWidth);
+      return new Rectangle(x, rect.y, subWidth, rect.height);
+    });
+  }
+
   get currentRect() {
     return this.currentLayer === undefined ?
       this.song.rect
-      : this.currentLayer.rects.find(rect => {
+      : this.getLayerRects(this.currentLayer).find(rect => {
         return rect.containsPoint(this._lastMousePosition, this._inThresh);
       });
   }
@@ -141,13 +173,19 @@ export class LayerManager extends MicroEvent {
     this.trigger('subdivisionChanged', this.subdivision);
   }
 
-  addLayer(rect, subdivision) {
-    const layer = new Layer(...rect);
+  addLayer(freqStart, freqStop, timeStart, timeStop, subdivision) {
+    const layer = new Layer(freqStart, freqStop, timeStart, timeStop);
     layer.subdivision = subdivision;
     this._layers.push(layer);
     this.currentLayerIndex = this.currentLayers.indexOf(layer);
     this.trigger('layersChanged', this._layers);
     return layer;
+  }
+
+  addLayerFrom(layer) {
+    return this.addLayer(layer.freqStart, layer.freqStop,
+                         layer.timeStart, layer.timeStop,
+                         layer.subdivision);
   }
 
   removeLayer(layer) {
@@ -164,7 +202,7 @@ export class LayerManager extends MicroEvent {
 
   // returns all rectangles of all layers as a single array
   get rects() {
-    return this.layers.map(l => l.rects).reduce((cur, prev) => {
+    return this.layers.map(layer => this.getLayerRects(layer)).reduce((cur, prev) => {
       return prev.concat(cur);
     }, []);
   }
@@ -196,8 +234,8 @@ export class LayerManager extends MicroEvent {
       label.style.backgroundColor = isCurrent ? color.blue : color.white;
       label.style.color = isCurrent ? color.white : color.black;
 
-      const startTime = positionToTimeString(layer.rect.x);
-      const endTime = positionToTimeString(layer.rect.br.x);
+      const startTime = positionToTimeString(this.getLayerFrame(layer).x);
+      const endTime = positionToTimeString(this.getLayerFrame(layer).br.x);
       label.textContent = `Division: ${layer.subdivision} - ${startTime}-${endTime}`;
       li.appendChild(label);
 
@@ -215,19 +253,24 @@ export class LayerManager extends MicroEvent {
   }
 
   get grabbableLayer() {
-    if (this.resizableCorner !== undefined) { return undefined; }
+    if (this.currentLayer !== undefined &&
+        this.currentLayer !== this.parentLayer &&
+        this.resizableCorner === undefined)
+    {
+      const rect = this.getLayerFrame(this.currentLayer);
+      const mouseIsOnEdge = rect.isPointOnLine(this._lastMousePosition, this._inThresh);
 
-    return this._layers.find(layer => {
-      return layer === this.currentLayer &&
-             layer.frame.isPointOnLine(this._lastMousePosition, this._inThresh);
-      });
+      if (mouseIsOnEdge) { return this.currentLayer; }
+    }
+
+    return undefined;
   }
 
   get resizableLayer() {
     const layer = this._layers.find(layer => layer === this.currentLayer);
     if (layer === undefined) { return undefined; }
 
-    const frame = this.currentLayer.frame;
+    const frame = this.getLayerFrame(this.currentLayer);
     const mouse = this._lastMousePosition;
     const thresh = this._inThresh;
 
@@ -242,7 +285,7 @@ export class LayerManager extends MicroEvent {
   get resizableCorner() {
     if (this.resizableLayer === undefined) { return; }
 
-    const frame = this.resizableLayer.frame;
+    const frame = this.getLayerFrame(this.resizableLayer);
     const mouse = this._lastMousePosition;
     const thresh = this._inThresh;
     if (frame.isPointOnTopLeft(mouse, thresh)) { return corners.tl; }
@@ -255,8 +298,8 @@ export class LayerManager extends MicroEvent {
   setDraggingLayer(layer, grabPoint) {
     this._dragging.sourceLayer = layer;
     this._dragging.layer =  layer === undefined ? undefined : layer.clone();
-    this._dragging.origin = layer === undefined ? undefined : layer.frame.tl;
-    this._dragging.offset = layer === undefined ? undefined : grabPoint.subtract(layer.frame.tl);
+    this._dragging.origin = layer === undefined ? undefined : this.getLayerFrame(layer).tl;
+    this._dragging.offset = layer === undefined ? undefined : grabPoint.subtract(this.getLayerFrame(layer).tl);
   }
 
   get draggingLayer() {
@@ -286,7 +329,7 @@ export class LayerManager extends MicroEvent {
 
   get currentLayers() {
     return this.layers.filter(layer => {
-      return layer.frame.containsPoint(this._lastMousePosition, this._inThresh);
+      return this.getLayerFrame(layer).containsPoint(this._lastMousePosition, this._inThresh);
     });
   }
 
@@ -312,16 +355,19 @@ export class LayerManager extends MicroEvent {
     this.currentLayerIndex = newIndex;
   }
 
-  get dragOffset() {
-    return this._dragging.offset;
-  }
-
-  dragTo(point) {
-    if (this.dragging) { this._dragging.layer.origin = point; }
-  }
-
   get resizing() {
     return this._resizing.active;
+  }
+
+  setLayerOrigin(layer, point) {
+    const constrainedPoint = point.max(this.song.rect.tl).min(this.song.rect.br);
+    const freqStop = this.song.positionToFreq(constrainedPoint.y);
+    const noteRange = freqToMidi(layer.freqStop) - freqToMidi(layer.freqStart);
+    const freqStart = midiToFreq(freqToMidi(freqStop) - noteRange);
+    const timeStart = this.song.positionToTime(constrainedPoint.x);
+    const timeStop =  timeStart + (layer.timeStop - layer.timeStart);
+
+    layer.set(freqStart, freqStop, timeStart, timeStop);
   }
 
   updateMouseDown(point, snapping) {
@@ -331,18 +377,16 @@ export class LayerManager extends MicroEvent {
     if (this.grabbableLayer !== undefined) {
       this.setDraggingLayer(this.grabbableLayer, point);
     }
-    if (this.resizableCorner !== undefined) {
+    else if (this.resizableCorner !== undefined) {
       this._resizing.start(this.currentLayer);
     }
-    else {
-      if (!this.copying) {
-        this.creation.active = true;
-        const tlX = snapping ? this.currentRect.tl.x : point.x;
-        const tlY = snappedPoint.y;
-        this.creation.rect.tl = new Point(tlX, tlY);
-        const brX = snapping ? this.currentRect.br.x : point.x;
-        this.creation.rect.br = new Point(brX, snappedPoint.y + this.song.noteHeight);
-      }
+    else if (!this.copying) {
+      this.creation.active = true;
+      const tlX = snapping ? this.currentRect.tl.x : point.x;
+      const tlY = snappedPoint.y;
+      this.creation.rect.tl = new Point(tlX, tlY);
+      const brX = snapping ? this.currentRect.br.x : point.x;
+      this.creation.rect.br = new Point(brX, snappedPoint.y + this.song.noteHeight);
     }
   }
 
@@ -371,7 +415,7 @@ export class LayerManager extends MicroEvent {
       const x = snapping ? snappedPoint.x : point.x;
       const y = snappedPoint.y;
       const type = this._resizing.cornerType;
-      const frame = this._resizing.layer.frame;
+      const frame = this.getLayerFrame(this._resizing.layer);
       const newCorner = new Point(x, y);
 
       if (type === LayerManager.corners.tl) {
@@ -398,12 +442,13 @@ export class LayerManager extends MicroEvent {
                              Math.max(newCorner.y, tl.y + this.song.noteHeight));
         frame.tl = tl;
       }
+      this._resizing.layer.set(...this.song.rectToFreqsAndTimes(frame));
     }
     else if (this.dragging) {
-      const dragged = (snapping ? snappedPoint : new Point(point.x, snappedPoint.y));
-      this.dragTo(dragged.subtract(this.dragOffset));
+      const shifted = point.subtract(this._dragging.offset);
+      const origin = snapping ? this.snapPointToLayers(shifted) : shifted;
+      this.setLayerOrigin(this.draggingLayer, origin);
     }
-
   }
 
   updateMouseUp(point) {
@@ -418,26 +463,26 @@ export class LayerManager extends MicroEvent {
         const br = this.creation.rect.br;
         const rect = new Rectangle(Math.min(tl.x, br.x),
                                    Math.min(tl.y, br.y), absWidth, absHeight);
-        this.addLayer(rect, this.subdivision);
+        this.addLayer(...this.song.rectToFreqsAndTimes(rect), this.subdivision);
       }
     }
 
     if (this.dragging) {
       if (this.copying) {
         // copy the layer
-        this.addLayer(this.draggingLayer.frame, this.draggingLayer.subdivision);
+        this.addLayerFrom(this.draggingLayer);
 
         // reset the original
         this._dragging.origin = this._dragging.origin;
       }
       else {
         // move the original
-        this._dragging.sourceLayer.origin = this._dragging.layer.frame.tl;
+        this.setLayerOrigin(this._dragging.sourceLayer,
+                            this.getLayerFrame(this.draggingLayer).tl);
       }
       // stop dragging
       this._dragging.clear();
     }
-
     this._resizing.stop();
   }
 }

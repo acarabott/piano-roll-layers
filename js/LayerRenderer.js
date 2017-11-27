@@ -23,11 +23,12 @@ export class LayerRenderer {
 
       // subdivisions
       ctx.lineWidth = lineWidth;
-      layer.rects.forEach((rect, i) => {
+      layerManager.getLayerRects(layer).forEach((rect, i) => {
         ctx.strokeRect(...rect);
         ctx.fillStyle = style;
         if (!isParentLayer) {
-          const fontsize = linlin(layer.rect.width / layer._subdivision, 10, 800, 12, 20);
+          const val = layerManager.getLayerFrame(layer).width / layer._subdivision;
+          const fontsize = linlin(val, 10, 800, 12, 20);
           ctx.font = `${fontsize}px Monaco`;
           ctx.textAlign = 'center';
           ctx.fillText(i + 1, rect.x + rect.width / 2, rect.y + fontsize * 1.25);
@@ -36,7 +37,7 @@ export class LayerRenderer {
 
       // border
       ctx.lineWidth = lineWidth * 2;
-      ctx.strokeRect(...layer.frame);
+      ctx.strokeRect(...layerManager.getLayerFrame(layer));
 
       ctx.restore();
     });
@@ -52,7 +53,9 @@ export class LayerRenderer {
       ctx.lineWidth = 2;
       ctx.setLineDash([20, 10]);
       ctx.strokeStyle = layerManager.copying ? color.green : color.black;
-      layerManager.draggingLayer.rects.forEach(rect => ctx.strokeRect(...rect));
+      layerManager.getLayerRects(layerManager.draggingLayer).forEach(rect => {
+        ctx.strokeRect(...rect);
+      });
     }
   }
 }
