@@ -321,15 +321,16 @@ document.addEventListener('keydown', event => {
   else if (event.code === 'KeyP')   { modeManager.currentMode = modeManager.modes.notes; }
   else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
-  else if (event.code === 'Space')  { event.preventDefault(); audioPlayback.isPlaying ? stopPlayback() : startPlayback(); }
-  else if (event.key  === 'Alt')     { layerManager.copying = true; }
-  else if (event.key  === 'Escape')  {
-    layerManager.creation.active = false;
-    if (document.activeElement !== canvas) {
-      document.activeElement.blur();
-    }
+  else if (event.key  === 'Alt')    { layerManager.copying = true; }
+  else if (event.code === 'Space')  {
+    event.preventDefault();
+    audioPlayback.isPlaying ? stopPlayback() : startPlayback();
   }
-  else if (event.key  === 'Shift')   {
+  else if (event.key  === 'Escape') {
+    layerManager.creation.active = false;
+    if (document.activeElement !== canvas) { document.activeElement.blur(); }
+  }
+  else if (event.key === 'Shift')   {
     snapping = false;
     layerManager.adjustingSubdivision = true;
   }
