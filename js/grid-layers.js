@@ -84,6 +84,7 @@ function stopPlayback() {
 const subdivisionDisplay = document.createElement('span');
 subdivisionDisplay.id = 'subdivision';
 subdivisionDisplay.textContent = layerManager.subdivision;
+subdivisionDisplay.style.marginRight = '20px';
 layerManager.bind('currentChanged', layer => {
   if (layer !== undefined) subdivisionDisplay.textContent = layer.subdivision;
 });
@@ -100,24 +101,6 @@ subdivisionLabel.htmlFor = 'subdivision';
 subdivisionLabel.textContent = 'Subdivision: ';
 info.appendChild(subdivisionLabel);
 info.appendChild(subdivisionDisplay);
-
-const keyboardSizeInput = document.createElement('input');
-keyboardSizeInput.id = 'keyboardSizeInput';
-keyboardSizeInput.name = 'keyboardSizeInput';
-keyboardSizeInput.type = 'number';
-keyboardSizeInput.value = song.numKeys;
-keyboardSizeInput.min = 1;
-keyboardSizeInput.max = Infinity;
-keyboardSizeInput.addEventListener('input', event => {
-  song.numKeys = keyboardSizeInput.valueAsNumber;
-});
-const keyboardSizeLabel = document.createElement('label');
-keyboardSizeLabel.htmlFor = keyboardSizeInput.id;
-keyboardSizeLabel.textContent = 'Number of Keys: ';
-[keyboardSizeLabel, keyboardSizeInput].forEach(el => info.appendChild(el));
-
-
-
 
 const controls = document.createElement('div');
 controls.id = 'controls';
@@ -140,6 +123,41 @@ playButton.addEventListener('click', event => {
   updatePlayButton();
 });
 controls.appendChild(playButton);
+
+const keyboardSizeInput = document.createElement('input');
+keyboardSizeInput.id = 'keyboardSizeInput';
+keyboardSizeInput.name = 'keyboardSizeInput';
+keyboardSizeInput.type = 'number';
+keyboardSizeInput.value = song.numKeys;
+keyboardSizeInput.min = 1;
+keyboardSizeInput.max = Infinity;
+keyboardSizeInput.style.width = '40px';
+keyboardSizeInput.style.marginRight = '20px';
+keyboardSizeInput.addEventListener('input', event => {
+  song.numKeys = keyboardSizeInput.valueAsNumber;
+});
+const keyboardSizeLabel = document.createElement('label');
+keyboardSizeLabel.htmlFor = keyboardSizeInput.id;
+keyboardSizeLabel.textContent = 'Number of keys: ';
+[keyboardSizeLabel, keyboardSizeInput].forEach(el => controls.appendChild(el));
+
+const rootNoteInput = document.createElement('input');
+rootNoteInput.id = 'rootNoteInput';
+rootNoteInput.name = 'rootNoteInput';
+rootNoteInput.type = 'number';
+rootNoteInput.value = song.rootNote;
+rootNoteInput.min = 0;
+rootNoteInput.max = Infinity;
+rootNoteInput.style.width = '40px';
+rootNoteInput.addEventListener('input', event => {
+  song.rootNote = rootNoteInput.valueAsNumber;
+});
+const rootNoteLabel = document.createElement('label');
+rootNoteLabel.htmlFor = rootNoteInput.id;
+rootNoteLabel.textContent = 'Root note: ';
+[rootNoteLabel, rootNoteInput].forEach(el => controls.appendChild(el));
+
+
 controls.appendChild(layerManager.list);
 
 
