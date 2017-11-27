@@ -34,6 +34,7 @@ const ROOT_NOTE = 60;
 const container = document.getElementById('container');
 // info
 const info = document.createElement('div');
+info.id = 'info';
 container.appendChild(info);
 
 // canvas
@@ -107,6 +108,27 @@ function stopPlayback() {
 
 
 // ui
+const subdivisionInput = document.createElement('span');
+subdivisionInput.id = 'subdivision';
+layerManager.bind('currentChanged', layer => {
+  if (layer !== undefined) subdivisionInput.textContent = layer.subdivision;
+});
+
+layerManager.bind('subdivisionChanged', subdivision => {
+  subdivisionInput.textContent = subdivision;
+});
+layerManager.bind('subdivisionStringChanged', subdivisionString => {
+  if (subdivisionString !== '') {
+    subdivisionInput.textContent = subdivisionString;
+  }
+});
+const subdivisionLabel = document.createElement('label');
+subdivisionLabel.htmlFor = 'subdivision';
+subdivisionLabel.textContent = 'Subdivision: ';
+info.appendChild(subdivisionLabel);
+info.appendChild(subdivisionInput);
+
+
 const controls = document.createElement('div');
 controls.id = 'controls';
 
@@ -120,7 +142,6 @@ playButton.style.fontSize = '20px';
 playButton.style.background = 'white';
 playButton.style.marginBottom = '20px';
 
-window.playButton = playButton;
 function updatePlayButton() {
   playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
 }
@@ -129,34 +150,6 @@ playButton.addEventListener('click', event => {
   updatePlayButton();
 });
 controls.appendChild(playButton);
-
-const subdivisionInput = document.createElement('input');
-subdivisionInput.id = 'subdivision';
-subdivisionInput.type = 'text';
-subdivisionInput.value = layerManager.subdivision;
-subdivisionInput.style.width = '40px';
-layerManager.bind('currentChanged', layer => {
-  if (layer !== undefined) subdivisionInput.value = layer.subdivision;
-});
-layerManager.bind('subdivisionChanged', subdivision => {
-  subdivisionInput.value = subdivision;
-  subdivisionInput.selectionStart = 0;
-  subdivisionInput.selectionEnd = subdivisionInput.value.length;
-});
-layerManager.bind('subdivisionStringChanged', subdivisionString => {
-  if (subdivisionString !== '') {
-    subdivisionInput.value = subdivisionString;
-  }
-});
-
-
-
-const subdivisionLabel = document.createElement('label');
-subdivisionLabel.htmlFor = 'subdivision';
-subdivisionLabel.textContent = 'Subdivision: ';
-controls.appendChild(subdivisionLabel);
-controls.appendChild(subdivisionInput);
-controls.appendChild(document.createElement('br'));
 controls.appendChild(layerManager.list);
 
 
@@ -390,20 +383,6 @@ document.addEventListener('keyup', event => {
   if      (event.key === 'Shift') { snapping = true; }
   else if (event.key === 'Alt')   { layerManager.copying = false; }
   else if (event.key === 'Shift') { layerManager.adjustingSubdivision = false; }
-});
-
-subdivisionInput.addEventListener('keydown', event => {
-  const whitelist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowUp',
-    'Control', 'Alt', 'Meta', 'Shift', 'Tab', 'Backspace', 'Delete', 'Enter'];
-  if (!whitelist.includes(event.key)) { event.preventDefault(); }
-
-  if (event.code === 'KeyQ' || event.code === 'KeyO') { modeManager.currentMode = modeManager.modes.layers; }
-  if (event.code === 'KeyW' || event.code === 'KeyP') { modeManager.currentMode = modeManager.modes.notes; }
-});
-
-subdivisionInput.addEventListener('input', event => {
-  layerManager.subdivisionInput(event.data);
 });
 
 // main loop

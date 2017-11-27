@@ -145,7 +145,7 @@ export class LayerManager extends MicroEvent {
     const layer = new Layer(...rect);
     layer.subdivision = subdivision;
     this._layers.push(layer);
-    this._currentLayerIndex = this.currentLayers.indexOf(layer);
+    this.currentLayerIndex = this.currentLayers.indexOf(layer);
     this.trigger('layersChanged', this._layers);
     return layer;
   }
@@ -275,6 +275,15 @@ export class LayerManager extends MicroEvent {
     return this._dragging.layer !== undefined;
   }
 
+  get currentLayerIndex() {
+    return this._currentLayerIndex;
+  }
+
+  set currentLayerIndex(index) {
+    this._currentLayerIndex = index;
+    this.trigger('currentChanged', this.currentLayer);
+  }
+
   get currentLayers() {
     return this.layers.filter(layer => {
       return layer.frame.containsPoint(this._lastMousePosition, this._inThresh);
@@ -282,23 +291,25 @@ export class LayerManager extends MicroEvent {
   }
 
   get currentLayer() {
-    return this.currentLayers[this._currentLayerIndex % this.currentLayers.length];
+    return this.currentLayers[this.currentLayerIndex % this.currentLayers.length];
   }
 
   cycleCurrentLayerForward() {
-    this._currentLayerIndex++;
-    if (this._currentLayerIndex > this.currentLayers.length) {
-      this._currentLayerIndex -= this.currentLayers.length;
+    // using setter, so no ++
+    let newIndex = this.currentLayerIndex + 1;
+    if (newIndex > this.currentLayers.length) {
+      newIndex -= this.currentLayers.length;
     }
-    this.trigger('currentChanged', this.currentLayer);
+    this.currentLayerIndex = newIndex;
   }
 
   cycleCurrentLayerBackward() {
-    this._currentLayerIndex--;
-    if (this._currentLayerIndex < 0) {
-      this._currentLayerIndex += this.currentLayers.length;
+    // using setter, so no --
+    let newIndex = this.currentLayerIndex - 1;
+    if (newIndex < 0) {
+      newIndex += this.currentLayers.length;
     }
-    this.trigger('currentChanged', this.currentLayer);
+    this.currentLayerIndex = newIndex;
   }
 
   get dragOffset() {

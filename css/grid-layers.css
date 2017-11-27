@@ -24,6 +24,14 @@ canvas {
   width: 40%;
 }
 
+#info {
+  margin-bottom: 20px;
+}
+
+#modeSelect {
+  margin-right: 20px;
+}
+
 #controls {
   list-style: none;
   margin: 0;
