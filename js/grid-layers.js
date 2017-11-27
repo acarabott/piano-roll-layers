@@ -12,7 +12,7 @@
 // Helper functions
 // -----------------------------------------------------------------------------
 
-import { loop, rrandint, midiToFreq, toCapitalCase } from './utils.js';
+import { loop, rrandint, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note } from './Note.js';
