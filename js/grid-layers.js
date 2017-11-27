@@ -1,6 +1,5 @@
 /*
   TODO:
-  - nicer looking layer list
   - example button
   - instructions
   - adding note during playback
