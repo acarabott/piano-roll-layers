@@ -357,7 +357,11 @@ export class LayerManager extends MicroEvent {
 
     // creating layers
     if (this.creation.active) {
-      const x = snapping ? snappedPoint.x : point.x;
+      const x = snapping
+        ? snappedPoint.x === this.creation.rect.x
+          ? this.creation.rect.br.x
+          : snappedPoint.x
+        : point.x;
       const y = snappedPoint.y === this.creation.rect.tl.y
         ? snappedPoint.y + this.song.noteHeight
         : snappedPoint.y;
