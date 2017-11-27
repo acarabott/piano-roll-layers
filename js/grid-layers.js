@@ -157,6 +157,22 @@ rootNoteLabel.htmlFor = rootNoteInput.id;
 rootNoteLabel.textContent = 'Root note: ';
 [rootNoteLabel, rootNoteInput].forEach(el => controls.appendChild(el));
 
+const durationInput = document.createElement('input');
+durationInput.id = 'durationInput';
+durationInput.name = 'durationInput';
+durationInput.type = 'number';
+durationInput.value = song.duration;
+durationInput.min = 0;
+durationInput.max = Infinity;
+durationInput.style.width = '40px';
+durationInput.addEventListener('input', event => {
+  song.duration = durationInput.valueAsNumber;
+});
+const durationLabel = document.createElement('label');
+durationLabel.htmlFor = durationInput.id;
+durationLabel.textContent = 'Duration (s): ';
+[durationLabel, durationInput].forEach(el => controls.appendChild(el));
+
 
 controls.appendChild(layerManager.list);
 
