@@ -1,5 +1,6 @@
 /*
   TODO:
+  - rounding of rects means sometimes frame and subdivisions don't align...
   - key to deactivate layer
   - video instructions?
   - example button
