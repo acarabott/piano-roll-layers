@@ -72,3 +72,8 @@ td {
   color: rgb(43, 156, 212);
   font-weight: bold;
 }
+
+button {
+  -webkit-appearance: none;
+  background: rgb(43, 156, 212);
+}

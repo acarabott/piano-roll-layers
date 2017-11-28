@@ -115,7 +115,11 @@ function main() {
   playButton.style.display = 'block';
   playButton.style.width = `${canvas.width}px`;
   playButton.style.fontSize = '20px';
-  playButton.style.background = 'white';
+  playButton.style.background = color.blue;
+  playButton.style.color = color.white;
+  playButton.style.padding = '5px';
+
+
   playButton.style.marginBottom = '20px';
   audioPlayback.bind('isPlaying', isPlaying => {
     playButton.textContent = isPlaying ? 'Stop' : 'Play';
