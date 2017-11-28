@@ -1,17 +1,3 @@
-/*
-  TODO:
-  - rounding of rects means sometimes frame and subdivisions don't align...
-  - key to deactivate layer
-  - video instructions?
-  - example button
-  - style
-  - better sound
-  - put at top and overlay the vertical lines?
-*/
-
-// Helper functions
-// -----------------------------------------------------------------------------
-
 import { constrain, loop, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { Song } from './Song.js';
