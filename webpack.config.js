@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-const buildPath = 'dist';
+const buildPath = 'docs';
 
 module.exports = {
   entry: ['babel-polyfill', './app.js'],
