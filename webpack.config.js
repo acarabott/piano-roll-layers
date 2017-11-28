@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const buildPath = 'dist';
 
 module.exports = {
-  entry: ['babel-polyfill', './js/grid-layers.js'],
+  entry: ['babel-polyfill', './app.js'],
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, buildPath)
