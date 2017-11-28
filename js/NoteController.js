@@ -1,12 +1,12 @@
 import { Note } from './Note.js';
 import { Point } from './Point.js';
-import { freqToMidi, midiToFreq, constrain } from './utils.js';
 import * as color from './color.js';
 
 export class NoteController {
-  constructor(noteManager, noteRenderer) {
+  constructor(noteManager, noteRenderer, song) {
     this.manager = noteManager;
     this.renderer = noteRenderer;
+    this.song = song;
     this.metadata = new Map();
     this._metadataTemplate = {
       hover: false,
@@ -25,9 +25,9 @@ export class NoteController {
   getInputNoteTimes(point, snappedPoint, targetRect) {
     const snapping = !point.equalTo(snappedPoint);
     const x = snapping ? targetRect.x : point.x;
-    const timeStart = this.renderer.xToTime(x);
+    const timeStart = this.song.positionToTime(x);
     const timeStop = snapping
-      ? this.renderer.xToTime(targetRect.br.x)
+      ? this.song.positionToTime(targetRect.br.x)
       : timeStart + Note.MIN_LENGTH;
 
     return [timeStart, timeStop];
@@ -80,8 +80,7 @@ export class NoteController {
     });
 
     if (!this.isGrabbing && !this.isResizing) {
-      const midiNote = this.renderer.getKeyFromPoint(point);
-      const freq = midiToFreq(midiNote);
+      const freq = this.song.positionToFreq(point.y);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.manager.previewNote = new Note(freq, ...times);
     }
@@ -89,28 +88,20 @@ export class NoteController {
 
   updateMouseMove(point, snappedPoint, targetRect, snapping) {
     if (this.manager.previewing) {
-      const midiNote = this.renderer.getKeyFromPoint(point);
-      const prevMidiNote = Math.floor(freqToMidi(this.manager.previewNote.freq));
-
-      this.manager.previewNote.freq = midiToFreq(midiNote);
-      this.currentNoteChangedFreq = midiNote !== prevMidiNote;
+      this.manager.previewNote.freq = this.song.positionToFreq(point.y);
 
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.manager.previewNote.timeStop = times[1];
     }
 
     this.grabbed.forEach(note => {
-      const midiNote = constrain(this.renderer.getKeyFromPoint(point),
-                                 this.renderer.song.rootNote,
-                                 this.renderer.song.rootNote + this.renderer.song.numKeys);
-      note.freq = midiToFreq(midiNote);
-
+      note.freq = this.song.positionToFreq(point.y);
       const duration = note.timeStop - note.timeStart;
       const newTopLeft = snapping
         ? snappedPoint
         : point.subtract(this.getMetadata(note).grabbedOffset);
 
-      note.timeStart = Math.max(0, this.renderer.xToTime(newTopLeft.x));
+      note.timeStart = Math.max(0, this.song.positionToTime(newTopLeft.x));
       note.timeStop = note.timeStart + duration;
     });
 

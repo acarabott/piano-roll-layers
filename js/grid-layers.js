@@ -1,7 +1,6 @@
 /*
   TODO:
   - preview on resize note
-  - refactor note renderer using Song
   - example button
   - adding note during playback
   - play from time
@@ -65,7 +64,7 @@ const layerManager = new LayerManager(song);
 
 const noteManager = new NoteManager();
 const noteRenderer = new NoteRenderer(song);
-const noteController = new NoteController(noteManager, noteRenderer);
+const noteController = new NoteController(noteManager, noteRenderer, song);
 
 // audio
 const audio = new AudioContext();

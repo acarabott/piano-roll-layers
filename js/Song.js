@@ -1,5 +1,6 @@
 import { MicroEvent } from './MicroEvent.js';
 import { midiToFreq, freqToMidi } from './utils.js';
+import { Rectangle } from './Rectangle.js';
 
 export class Song extends MicroEvent {
   constructor() {
@@ -68,11 +69,23 @@ export class Song extends MicroEvent {
     return midiToFreq(this.rootNote + idx);
   }
 
+  positionToMidiNote(y) {
+    return freqToMidi(this.positionToFreq(y));
+  }
+
   rectToFreqsAndTimes(rect) {
     const freqStart = this.positionToFreq(rect.br.y);
     const freqStop  = this.positionToFreq(rect.y);
     const timeStart = this.positionToTime(rect.x);
     const timeStop  = this.positionToTime(rect.br.x);
     return [freqStart, freqStop, timeStart, timeStop];
+  }
+
+  freqsAndTimesToRect(freqStart, freqStop, timeStart, timeStop) {
+    const x = this.timeToPosition(timeStart);
+    const y = this.freqToPosition(freqStop);
+    const width = this.timeToPosition(timeStop) - x;
+    const height = this.freqToPosition(freqStart) - y;
+    return new Rectangle(x, y, width, height);
   }
 }
