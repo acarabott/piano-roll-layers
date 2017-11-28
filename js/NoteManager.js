@@ -28,6 +28,7 @@ export class NoteManager extends MicroEvent{
 
   addNote(note) {
     this.notes.push(note);
+    this.trigger('notes', this.notes);
   }
 
   deleteNote(note) {
@@ -159,9 +160,10 @@ export class NoteManager extends MicroEvent{
     });
   }
 
-  updateMouseUp(point, onCanvas) {
-    if (onCanvas && this.creating) {
+  updateMouseUp(point) {
+    if (this.creating) {
       this.addNote(this.previewNote);
+      this.creating = false;
     }
     this.previewNote = undefined;
     this.notes.forEach(note => {
@@ -173,7 +175,6 @@ export class NoteManager extends MicroEvent{
       this.setMetadata(note, 'resizing', false);
       this.setMetadata(note, 'originalGrabbedNote', undefined);
     });
-    this.creating = false;
   }
 
   render(ctx) {

@@ -5,7 +5,7 @@ export class AudioPlayback {
     this.audio = audioContext;
     this.lookahead = 0.05;
     this.audioStart = 0;
-    this.notes = [];
+    this._notes = [];
     this.marker = Symbol('played');
     this._previewNote = undefined;
     this._currentNodes = undefined;
@@ -15,9 +15,20 @@ export class AudioPlayback {
     this.duration = 0;
   }
 
-  playFrom(notes) {
+  get notes() {
+    return this._notes;
+  }
+
+  set notes(notes) {
+    this._notes = notes.map(note => {
+      const newNote = note.clone();
+      newNote[this.marker] = false;
+      return newNote;
+    });
+  }
+
+  play() {
     this.audioStart = this.audio.currentTime + this.lookahead;
-    this.notes = notes.map(note => note.clone());
     this.isPlaying = true;
   }
 
@@ -52,9 +63,14 @@ export class AudioPlayback {
       return osc;
     });
 
+    let timeStart = audioStart + note.timeStart;
+    if (timeStart < this.audio.currentTime) {
+      timeStart = this.audio.currentTime + 0.1;
+    }
+
     const volume = 0.1;
     gain.gain.setValueAtTime(0.0, this.audio.currentTime + 0.01);
-    gain.gain.setTargetAtTime(volume, audioStart + note.timeStart, 0.001);
+    gain.gain.setTargetAtTime(volume, timeStart, 0.001);
 
     const releaseTime = audioStart + note.timeStop - 0.1;
     gain.gain.setValueAtTime(volume, releaseTime);
@@ -64,7 +80,7 @@ export class AudioPlayback {
     gain.connect(this.audio.destination);
 
     oscs.forEach(osc => {
-      osc.start(audioStart + note.timeStart);
+      osc.start(timeStart);
       osc.stop(audioStart + note.timeStop + 1);
     });
 
@@ -75,9 +91,15 @@ export class AudioPlayback {
     if (!this.isPlaying) { return; }
 
     const toPlay = this.notes.filter(note => {
+      const now = this.audio.currentTime;
       const noteStartTime = this.audioStart + note.timeStart;
-      return noteStartTime >= this.audio.currentTime &&
-             noteStartTime <= this.audio.currentTime + this.lookahead;
+      const noteStopTime = this.audioStart + note.timeStop;
+      const inUnplayedNote = !note[this.marker] &&
+            noteStartTime <= now &&
+            noteStopTime  >= now;
+      const inLookaheadWindow = noteStartTime >= now &&
+                                noteStartTime <= now + this.lookahead;
+      return inLookaheadWindow || inUnplayedNote;
     });
 
     toPlay.forEach(note => {
@@ -89,7 +111,7 @@ export class AudioPlayback {
     });
 
     if (this.loop && this.currentTime >= this.duration) {
-      this.playFrom(this.notes);
+      this.play();
     }
   }
 

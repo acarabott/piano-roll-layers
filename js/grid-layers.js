@@ -1,7 +1,7 @@
 /*
   TODO:
+  - video instructions?
   - example button
-  - adding note during playback
   - play from time
   - style
   - note release
@@ -68,15 +68,7 @@ audioPlayback.duration = song.duration;
 const noteRenderer = new NoteRenderer(song);
 const noteManager = new NoteManager(song, noteRenderer);
 noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
-
-function startPlayback() {
-  audioPlayback.playFrom(noteManager.notes);
-}
-
-function stopPlayback() {
-  audioPlayback.stop();
-}
-
+noteManager.bind('notes', notes => audioPlayback.notes = notes);
 
 
 // ui
@@ -118,7 +110,7 @@ function updatePlayButton() {
   playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
 }
 playButton.addEventListener('click', event => {
-  audioPlayback.isPlaying ? stopPlayback() : startPlayback();
+  audioPlayback.isPlaying ? audioPlayback.stop() : audioPlayback.play();
   updatePlayButton();
 });
 controls.appendChild(playButton);
@@ -330,7 +322,7 @@ document.addEventListener('mouseup', event => {
     layerManager.updateMouseUp(point);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    noteManager.updateMouseUp(point, event.srcElement === canvas);
+    noteManager.updateMouseUp(point);
   }
 
   layerManager.setDraggingLayer(undefined);
@@ -373,7 +365,7 @@ document.addEventListener('keydown', event => {
   }
   else if (event.code === 'Space')  {
     event.preventDefault();
-    audioPlayback.isPlaying ? stopPlayback() : startPlayback();
+    audioPlayback.isPlaying ? audioPlayback.stop() : audioPlayback.play();
   }
   else if (event.key  === 'Escape') {
     layerManager.creation.active = false;
