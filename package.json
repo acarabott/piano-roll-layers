@@ -1,0 +1,32 @@
+{
+  "name": "piano-roll-layers",
+  "version": "1.0.0",
+  "description": "A prototype interface for inputting fancier rhythms on a piano roll Edit",
+  "main": "index.html",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "start": "webpack-dev-server --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acarabott/piano-roll-layers.git"
+  },
+  "author": "Arthur Carabott",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/acarabott/piano-roll-layers/issues"
+  },
+  "homepage": "https://github.com/acarabott/piano-roll-layers#readme",
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "webpack": "^3.8.1",
+    "webpack-dev-server": "^2.9.5"
+  }
+}
