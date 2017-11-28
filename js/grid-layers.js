@@ -18,7 +18,6 @@ import { Song } from './Song.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note } from './Note.js';
 import { NoteManager } from './NoteManager.js';
-import { NoteController } from './NoteController.js';
 import { NoteRenderer } from './NoteRenderer.js';
 import { AudioPlayback } from './AudioPlayback.js';
 import { LayerManager } from './LayerManager.js';
@@ -62,9 +61,8 @@ info.appendChild(modeManagerRenderer.label);
 info.appendChild(modeManagerRenderer.select);
 const layerManager = new LayerManager(song);
 
-const noteManager = new NoteManager();
 const noteRenderer = new NoteRenderer(song);
-const noteController = new NoteController(noteManager, noteRenderer, song);
+const noteManager = new NoteManager(song, noteRenderer);
 
 // audio
 const audio = new AudioContext();
@@ -223,17 +221,17 @@ cursor.addState(() => {
 
 cursor.addState(() => {
   return modeManager.currentMode === modeManager.modes.notes &&
-         noteController.isGrabbing;
+         noteManager.isGrabbing;
 }, 'move');
 
 cursor.addState(() => {
   return modeManager.currentMode === modeManager.modes.notes &&
-         noteController.isHovering;
+         noteManager.isHovering;
 }, 'move');
 
 cursor.addState(() => {
   return modeManager.currentMode === modeManager.modes.notes &&
-         (noteController.isResizing || noteController.isResizeHovering);
+         (noteManager.isResizing || noteManager.isResizeHovering);
 }, 'ew-resize');
 
 
@@ -268,7 +266,7 @@ function render() {
   LayerRenderer.render(ctx, layerManager);
 
   // notes
-  noteController.render(ctx);
+  noteManager.render(ctx);
 
   // playhead
   {
@@ -312,10 +310,10 @@ canvas.addEventListener('mousedown', event => {
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const snappedPoint = getPointFromInput(event);
-    noteController.updateMouseDown(point, snappedPoint, layerManager.currentRect);
+    noteManager.updateMouseDown(point, snappedPoint, layerManager.currentRect);
 
-    audioPlayback.previewNote = noteController.isGrabbing
-      ? noteController.grabbed[0]
+    audioPlayback.previewNote = noteManager.isGrabbing
+      ? noteManager.grabbed[0]
       : noteManager.previewNote;
   }
 });
@@ -335,7 +333,7 @@ document.addEventListener('mouseup', event => {
     layerManager.updateMouseUp(point);
   }
   else if (modeManager.currentMode === modeManager.modes.notes) {
-    noteController.updateMouseUp(point, event.srcElement === canvas);
+    noteManager.updateMouseUp(point, event.srcElement === canvas);
   }
 
   layerManager.setDraggingLayer(undefined);
@@ -357,10 +355,10 @@ document.addEventListener('mousemove', event => {
         ? new Point(layerManager.currentRect.x, snappedPoint.y)
         : point;
 
-    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
+    noteManager.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
 
-    audioPlayback.previewNote = noteController.isGrabbing
-      ? noteController.grabbed[0]
+    audioPlayback.previewNote = noteManager.isGrabbing
+      ? noteManager.grabbed[0]
       : noteManager.previewNote;
   }
 });
@@ -379,7 +377,7 @@ document.addEventListener('keydown', event => {
   else if (event.key  === 'Shift')  { snapping = false; }
   else if (event.key  === 'Alt')    {
     layerManager.copying = true;
-    noteController.copying = true;
+    noteManager.copying = true;
   }
   else if (event.code === 'Space')  {
     event.preventDefault();
@@ -396,7 +394,7 @@ document.addEventListener('keydown', event => {
       }
     }
     else if (modeManager.currentMode === modeManager.modes.notes) {
-      noteController.hovering.forEach(note => noteManager.deleteNote(note));
+      noteManager.hovering.forEach(note => noteManager.deleteNote(note));
     }
   }
 
@@ -412,7 +410,7 @@ document.addEventListener('keyup', event => {
   if      (event.key === 'Shift') { snapping = true; }
   else if (event.key === 'Alt')   {
     layerManager.copying = false;
-    noteController.copying = false;
+    noteManager.copying = false;
   }
 });
 
@@ -462,7 +460,7 @@ window.noteManager = noteManager;
 window.audio = audio;
 window.audioPlayback = audioPlayback;
 window.noteRenderer = noteRenderer;
-window.noteController = noteController;
+window.noteManager = noteManager;
 window.cursor = cursor;
 window.song = song;
 window.canvas = canvas;

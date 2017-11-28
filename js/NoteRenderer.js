@@ -55,8 +55,4 @@ export class NoteRenderer {
       this.renderNote(ctx, note, color.orange, metadata.get(note), copying);
     });
   }
-
-  xToTime(x) {
-    return ((x - this.song.rect.x) / this.song.rect.width) * this.song.duration;
-  }
 }
