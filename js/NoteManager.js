@@ -22,6 +22,7 @@ export class NoteManager extends MicroEvent{
     };
     this.currentNoteChangedFreq = false;
     this.resizeThreshold = 4;
+    this.creating = false;
     this.copying = false;
   }
 
@@ -112,10 +113,11 @@ export class NoteManager extends MicroEvent{
                           const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
                           return new Note(freq, ...times);
                      })();
+    this.creating = !this.isGrabbing && !this.isResizing;
   }
 
   updateMouseMove(point, snappedPoint, targetRect, snapping) {
-    if (this.previewing) {
+    if (this.creating) {
       this.previewNote.freq = this.song.positionToFreq(point.y);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.previewNote.timeStop = times[1];
@@ -131,6 +133,7 @@ export class NoteManager extends MicroEvent{
 
       note.timeStart = Math.max(0, this.song.positionToTime(newTopLeft.x));
       note.timeStop = note.timeStart + duration;
+      this.trigger('previewNote', this.previewNote);
     });
 
     this.resizing.forEach(note => {
@@ -157,7 +160,7 @@ export class NoteManager extends MicroEvent{
   }
 
   updateMouseUp(point, onCanvas) {
-    if (onCanvas && this.previewing) {
+    if (onCanvas && this.creating) {
       this.addNote(this.previewNote);
     }
     this.previewNote = undefined;
@@ -170,6 +173,7 @@ export class NoteManager extends MicroEvent{
       this.setMetadata(note, 'resizing', false);
       this.setMetadata(note, 'originalGrabbedNote', undefined);
     });
+    this.creating = false;
   }
 
   render(ctx) {
