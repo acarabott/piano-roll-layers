@@ -1,6 +1,8 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
 const buildPath = 'dist';
 
 module.exports = {
@@ -12,10 +14,11 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: 'index.html',
+      template: 'src/index.html',
       inject: 'head'
     }),
     new CleanWebpackPlugin([buildPath]),
+    new UglifyJSPlugin(),
   ],
 
   module: {
@@ -26,7 +29,7 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            // presets: ['@babel/preset-env']
+            presets: ['env']
           }
         }
       },

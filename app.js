@@ -1,2 +1,2 @@
-require('./css/grid-layers.css');
-require('./js/grid-layers.js');
+require('./src/css/grid-layers.css');
+require('./src/js/grid-layers.js');
