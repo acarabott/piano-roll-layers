@@ -3,7 +3,7 @@
   - video instructions?
   - example button
   - style
-  - note release
+  - better sound
   - put at top and overlay the vertical lines?
 */
 
