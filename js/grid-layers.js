@@ -1,5 +1,7 @@
 /*
   TODO:
+  - dragging notes resizes them...
+  - layers in bottom half of note go to next note
   - example button
   - adding note during playback
   - play from time

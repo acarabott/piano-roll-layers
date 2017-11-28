@@ -174,7 +174,7 @@ export class NoteManager extends MicroEvent{
 
   render(ctx) {
     this.renderer.renderNotes(ctx, this.notes, this.metadata, this.copying);
-    if (this.previewing) {
+    if (this.previewing && !this.isGrabbing) {
       this.renderer.renderNote(ctx, this.previewNote, color.green,
                                this.metadata, this.copying);
     }
