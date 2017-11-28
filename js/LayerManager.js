@@ -82,7 +82,7 @@ export class LayerManager extends MicroEvent {
     this.bind('layersChanged', layers => this.updateList());
     this.bind('currentChanged', layer => this.updateList());
 
-    this._inThresh = 4;
+    this._inThresh = 10;
   }
 
   getLayerFrame(layer) {
@@ -334,7 +334,9 @@ export class LayerManager extends MicroEvent {
   }
 
   get currentLayer() {
-    return this.currentLayers[this.currentLayerIndex % this.currentLayers.length];
+    return this.resizing
+      ? this._resizing.layer
+      : this.currentLayers[this.currentLayerIndex % this.currentLayers.length];
   }
 
   cycleCurrentLayerForward() {
