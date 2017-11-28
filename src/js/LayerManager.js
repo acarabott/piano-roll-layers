@@ -202,9 +202,11 @@ export class LayerManager extends MicroEvent {
 
   // returns all rectangles of all layers as a single array
   get rects() {
-    return this.layers.map(layer => this.getLayerRects(layer)).reduce((cur, prev) => {
-      return prev.concat(cur);
-    }, []);
+    return this.layers
+      .filter(layer => layer.active)
+      .map(layer => this.getLayerRects(layer)).reduce((cur, prev) => {
+        return prev.concat(cur);
+      }, []);
   }
 
   updateList() {
@@ -329,7 +331,8 @@ export class LayerManager extends MicroEvent {
 
   get currentLayers() {
     return this.layers.filter(layer => {
-      return this.getLayerFrame(layer).containsPoint(this._lastMousePosition, this._inThresh);
+      return layer.active &&
+             this.getLayerFrame(layer).containsPoint(this._lastMousePosition, this._inThresh);
     });
   }
 

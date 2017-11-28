@@ -438,6 +438,8 @@ function main() {
 
   // test();
   mainLoop();
+
+  window.layerManager = layerManager;
 }
 
 document.addEventListener('DOMContentLoaded', main);
