@@ -137,7 +137,7 @@ export class LayerManager extends MicroEvent {
     const int = parseInt(this.subdivisionString, 10);
     this.subdivision = isFinite(int) ? int : this.subdivision;
     this.subdivisionString = '';
-    if (this.currentLayer !== undefined) {
+    if (this.currentLayer !== undefined && this.currentLayer !== this.parentLayer) {
       this.currentLayer.subdivision = this.subdivision;
     }
   }

@@ -1,5 +1,6 @@
 /*
   TODO:
+  - key to deactivate layer
   - video instructions?
   - example button
   - style
