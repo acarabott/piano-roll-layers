@@ -371,7 +371,6 @@ export class LayerManager extends MicroEvent {
   }
 
   updateMouseDown(point, snapping) {
-    const snappedPoint = this.snapPointToLayers(point);
     this._lastMousePosition.set(point);
 
     if (this.grabbableLayer !== undefined) {
@@ -382,11 +381,14 @@ export class LayerManager extends MicroEvent {
     }
     else if (!this.copying) {
       this.creation.active = true;
+
       const tlX = snapping ? this.currentRect.tl.x : point.x;
-      const tlY = snappedPoint.y;
+      const tlY = point.y - (point.y % this.song.noteHeight);
       this.creation.rect.tl = new Point(tlX, tlY);
+
       const brX = snapping ? this.currentRect.br.x : point.x;
-      this.creation.rect.br = new Point(brX, snappedPoint.y + this.song.noteHeight);
+      const brY = tlY + this.song.noteHeight;
+      this.creation.rect.br = new Point(brX, brY);
     }
   }
 
