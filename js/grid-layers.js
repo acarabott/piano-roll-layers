@@ -25,6 +25,8 @@ import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
 import { Playhead } from './Playhead.js';
 
+document.addEventListener('DOMContentLoaded', event => {
+
 const container = document.getElementById('container');
 // info
 const info = document.createElement('div');
@@ -448,3 +450,5 @@ window.noteManager = noteManager;
 window.cursor = cursor;
 window.song = song;
 window.canvas = canvas;
+
+});
