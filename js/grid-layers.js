@@ -65,6 +65,13 @@ const audio = new AudioContext();
 const audioPlayback = new AudioPlayback(audio);
 audioPlayback.duration = song.duration;
 const playhead = new Playhead(song);
+audioPlayback.bind('playheadTime', time => playhead.time = time);
+playhead.bind('time', time => audioPlayback._playheadTime = time);
+playhead.bind('grabbed', grabbed => {
+  if (grabbed && audioPlayback.isPlaying) {
+    audioPlayback.stop();
+  }
+});
 
 const noteRenderer = new NoteRenderer(song);
 const noteManager = new NoteManager(song, noteRenderer);
@@ -227,6 +234,11 @@ cursor.addState(() => {
          (noteManager.isResizing || noteManager.isResizeHovering);
 }, 'ew-resize');
 
+cursor.addState(() => {
+  return playhead.hover;
+}, 'ew-resize');
+
+
 
 // Render functions
 // -----------------------------------------------------------------------------
@@ -262,7 +274,7 @@ function render() {
   noteManager.render(ctx);
 
   // playhead
-  playhead.render(ctx, audioPlayback.playheadTime, color.red, 0.8);
+  playhead.render(ctx, color.red, 0.8);
 
   ctx.restore();
 }
@@ -286,25 +298,23 @@ function getPointFromInput(event) {
 canvas.addEventListener('mousedown', event => {
   const point = new Point(event.offsetX, event.offsetY);
 
-  if (modeManager.currentMode === modeManager.modes.layers) {
-    layerManager.updateMouseDown(point, snapping);
-  }
-  else if (modeManager.currentMode === modeManager.modes.notes) {
-    const snappedPoint = getPointFromInput(event);
-    noteManager.updateMouseDown(point, snappedPoint, layerManager.currentRect);
-  }
-});
+  playhead.updateMouseDown(point);
 
-document.addEventListener('mousedown', event => {
-  if (modeManager.currentMode === modeManager.modes.layers) {
-    if (event.target === document.body) {
-      layerManager.currentLayer = undefined;
+  if (!playhead.grabbed) {
+    if (modeManager.currentMode === modeManager.modes.layers) {
+      layerManager.updateMouseDown(point, snapping);
+    }
+    else if (modeManager.currentMode === modeManager.modes.notes) {
+      const snappedPoint = getPointFromInput(event);
+      noteManager.updateMouseDown(point, snappedPoint, layerManager.currentRect);
     }
   }
 });
 
 document.addEventListener('mouseup', event => {
   const point = new Point(event.offsetX, event.offsetY);
+
+  playhead.updateMouseUp(point);
 
   if (modeManager.currentMode === modeManager.modes.layers) {
     layerManager.updateMouseUp(point);
@@ -333,6 +343,8 @@ document.addEventListener('mousemove', event => {
 
     noteManager.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
   }
+
+  playhead.updateMouseMove(point);
 });
 
 document.addEventListener('keydown', event => {

@@ -16,7 +16,7 @@ export class AudioPlayback extends MicroEvent {
     this._isPlaying = false;
     this.loop = true;
     this.duration = 0;
-    this.playheadTime = 0;
+    this._playheadTime = 0;
     const updateIntervalMs = this.lookahead * 0.5 * 1000;
     this.updateAction = new BackgroundAction(updateIntervalMs);
   }
@@ -45,6 +45,15 @@ export class AudioPlayback extends MicroEvent {
       return this.isPlaying;
     });
     this.trigger('isPlaying', isPlaying);
+  }
+
+  get playheadTime() {
+    return this._playheadTime;
+  }
+
+  set playheadTime(playheadTime) {
+    this._playheadTime = playheadTime;
+    this.trigger('playheadTime', playheadTime);
   }
 
   play() {
