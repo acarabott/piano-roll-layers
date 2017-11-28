@@ -91,7 +91,7 @@ export class LayerManager extends MicroEvent {
     const width = this.song.timeToPosition(layer.timeStop) - x;
     const height = this.song.freqToPosition(layer.freqStart) - y;
 
-    return new Rectangle(this.song.rect.x + x, y, width, height);
+    return new Rectangle(x, y, width, height);
   }
 
   getLayerRects(layer) {

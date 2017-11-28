@@ -51,7 +51,7 @@ export class Song extends MicroEvent {
   }
 
   timeToPosition(time) {
-    return Math.round((time / this.duration) * this.rect.width);
+    return this.rect.x + Math.round((time / this.duration) * this.rect.width);
   }
 
   positionToTime(x) {
@@ -60,7 +60,7 @@ export class Song extends MicroEvent {
 
   freqToPosition(freq) {
     const midiNote = freqToMidi(freq);
-    return (this.numKeys - (midiNote - this.rootNote)) * this.noteHeight;
+    return this.rect.y + ((this.numKeys - (midiNote - this.rootNote)) * this.noteHeight);
   }
 
   positionToFreq(y) {
