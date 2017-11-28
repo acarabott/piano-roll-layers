@@ -1,7 +1,10 @@
+import { MicroEvent } from './MicroEvent.js';
 import { Note } from './Note.js';
+import { BackgroundAction } from './BackgroundAction.js';
 
-export class AudioPlayback {
+export class AudioPlayback extends MicroEvent {
   constructor(audioContext) {
+    super();
     this.audio = audioContext;
     this.lookahead = 0.05;
     this.audioStart = 0;
@@ -10,9 +13,12 @@ export class AudioPlayback {
     this._previewNote = undefined;
     this._currentNodes = undefined;
     this._nodes = new Map();
-    this.isPlaying = false;
+    this._isPlaying = false;
     this.loop = true;
     this.duration = 0;
+    this.playheadTime = 0;
+    const updateIntervalMs = this.lookahead * 0.5 * 1000;
+    this.updateAction = new BackgroundAction(updateIntervalMs);
   }
 
   get notes() {
@@ -20,6 +26,7 @@ export class AudioPlayback {
   }
 
   set notes(notes) {
+    this.stopAllNodes();
     this._notes = notes.map(note => {
       const newNote = note.clone();
       newNote[this.marker] = false;
@@ -27,8 +34,21 @@ export class AudioPlayback {
     });
   }
 
+  get isPlaying() {
+    return this._isPlaying;
+  }
+
+  set isPlaying(isPlaying) {
+    this._isPlaying = isPlaying;
+    this.updateAction.set(() => {
+      this.update();
+      return this.isPlaying;
+    });
+    this.trigger('isPlaying', isPlaying);
+  }
+
   play() {
-    this.audioStart = this.audio.currentTime + this.lookahead;
+    this.audioStart = this.audio.currentTime + this.lookahead - this.playheadTime;
     this.isPlaying = true;
   }
 
@@ -43,13 +63,16 @@ export class AudioPlayback {
     }, 500);
   }
 
-  stop() {
-    this._nodes.forEach((nodeObj, key) => {
-      this.stopNode(nodeObj);
-    });
+  stopAllNodes() {
+    this._nodes.forEach((nodeObj, key) => this.stopNode(nodeObj));
     this._nodes.clear();
-    this.notes = [];
+  }
+
+  stop() {
+    this.stopAllNodes();
+    this._notes.forEach(note => note[this.marker] = false);
     this.isPlaying = false;
+    this.updateAction.cancel();
   }
 
   playNote(note, audioStart) {
@@ -88,8 +111,6 @@ export class AudioPlayback {
   }
 
   update() {
-    if (!this.isPlaying) { return; }
-
     const toPlay = this.notes.filter(note => {
       const now = this.audio.currentTime;
       const noteStartTime = this.audioStart + note.timeStart;
@@ -113,6 +134,8 @@ export class AudioPlayback {
     if (this.loop && this.currentTime >= this.duration) {
       this.play();
     }
+
+    this.playheadTime = this.currentTime + this.lookahead;
   }
 
   set previewNote(note) {

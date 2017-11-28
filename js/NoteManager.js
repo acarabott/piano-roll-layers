@@ -34,6 +34,7 @@ export class NoteManager extends MicroEvent{
   deleteNote(note) {
     if (this.notes.includes(note)) {
       this.notes.splice(this.notes.indexOf(note), 1);
+      this.trigger('notes', this.notes);
     }
   }
 

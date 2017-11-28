@@ -2,7 +2,6 @@
   TODO:
   - video instructions?
   - example button
-  - play from time
   - style
   - note release
   - put at top and overlay the vertical lines?
@@ -105,14 +104,13 @@ playButton.style.width = `${canvas.width}px`;
 playButton.style.fontSize = '20px';
 playButton.style.background = 'white';
 playButton.style.marginBottom = '20px';
-
-function updatePlayButton() {
-  playButton.textContent = audioPlayback.isPlaying ? 'Stop' : 'Play';
-}
+audioPlayback.bind('isPlaying', isPlaying => {
+  playButton.textContent = isPlaying ? 'Stop' : 'Play';
+});
 playButton.addEventListener('click', event => {
   audioPlayback.isPlaying ? audioPlayback.stop() : audioPlayback.play();
-  updatePlayButton();
 });
+
 controls.appendChild(playButton);
 
 const keyboardSizeInput = document.createElement('input');
@@ -265,10 +263,7 @@ function render() {
   {
     ctx.fillStyle = color.red;
     ctx.globalAlpha = 0.8;
-    const curTime = audioPlayback.isPlaying
-      ? (audio.currentTime - audioPlayback.audioStart)
-      : 0;
-    const normTime = curTime / song.duration;
+    const normTime = audioPlayback.playheadTime / song.duration;
     const x = patternRect.x + Math.max(0, patternRect.width * normTime);
     ctx.fillRect(x, 0, 3, canvas.height);
     ctx.globalAlpha = 1.0;
@@ -281,9 +276,7 @@ function render() {
 // Update loop
 // -----------------------------------------------------------------------------
 function update() {
-  audioPlayback.update();
   cursor.update();
-  updatePlayButton();
 }
 
 // User Input
