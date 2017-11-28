@@ -358,7 +358,7 @@ document.addEventListener('mousemove', event => {
         ? new Point(layerManager.currentRect.x, snappedPoint.y)
         : point;
 
-    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect);
+    noteController.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
 
     audioPlayback.previewNote = noteController.isGrabbing
       ? noteController.grabbed[0]
