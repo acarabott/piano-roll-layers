@@ -12,12 +12,14 @@ export class NoteController {
       hover: false,
       grabbed: false,
       grabbedOffset: new Point(0, 0),
+      originalGrabbedNote: undefined,
       resizing: false,
       resizeHover: false,
       resizingSide: undefined,
     };
     this.currentNoteChangedFreq = false;
     this.resizeThreshold = 4;
+    this.copying = false;
   }
 
   getInputNoteTimes(point, snappedPoint, targetRect) {
@@ -73,6 +75,7 @@ export class NoteController {
       this.setMetadata(note, 'grabbed', grabbed);
       if (grabbed) {
         this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
+        this.setMetadata(note, 'originalGrabbedNote', note.clone());
       }
     });
 
@@ -139,14 +142,22 @@ export class NoteController {
       this.manager.addNote(this.manager.previewNote);
     }
     this.manager.previewNote = undefined;
-    this.manager.notes.forEach(note => this.setMetadata(note, 'grabbed', false));
-    this.manager.notes.forEach(note => this.setMetadata(note, 'resizing', false));
+    this.manager.notes.forEach(note => {
+      const meta = this.getMetadata(note);
+      if (this.copying && meta.grabbed) {
+        this.manager.addNote(meta.originalGrabbedNote);
+      }
+      this.setMetadata(note, 'grabbed', false);
+      this.setMetadata(note, 'resizing', false);
+      this.setMetadata(note, 'originalGrabbedNote', undefined);
+    });
   }
 
   render(ctx) {
-    this.renderer.renderNotes(ctx, this.manager.notes, this.metadata);
+    this.renderer.renderNotes(ctx, this.manager.notes, this.metadata, this.copying);
     if (this.manager.previewing) {
-      this.renderer.renderNote(ctx, this.manager.previewNote, color.green, this.metadata);
+      this.renderer.renderNote(ctx, this.manager.previewNote, color.green,
+                               this.metadata, this.copying);
     }
   }
 

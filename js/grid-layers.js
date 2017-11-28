@@ -1,6 +1,5 @@
 /*
   TODO:
-  - copy notes
   - preview on resize note
   - refactor note renderer using Song
   - example button
@@ -378,8 +377,11 @@ document.addEventListener('keydown', event => {
   else if (event.code === 'KeyP')   { modeManager.currentMode = modeManager.modes.notes; }
   else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
   else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
-  else if (event.key  === 'Alt')    { layerManager.copying = true; }
   else if (event.key  === 'Shift')  { snapping = false; }
+  else if (event.key  === 'Alt')    {
+    layerManager.copying = true;
+    noteController.copying = true;
+  }
   else if (event.code === 'Space')  {
     event.preventDefault();
     audioPlayback.isPlaying ? stopPlayback() : startPlayback();
@@ -409,7 +411,10 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keyup', event => {
   if      (event.key === 'Shift') { snapping = true; }
-  else if (event.key === 'Alt')   { layerManager.copying = false; }
+  else if (event.key === 'Alt')   {
+    layerManager.copying = false;
+    noteController.copying = false;
+  }
 });
 
 // main loop
