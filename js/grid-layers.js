@@ -1,6 +1,7 @@
 /*
   TODO:
   - copy notes
+  - preview on resize note
   - refactor note renderer using Song
   - example button
   - adding note during playback
