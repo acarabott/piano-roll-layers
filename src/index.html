@@ -8,16 +8,64 @@
 </head>
 <body>
   <h1>Musical Grid Layers</h1>
-  <h2>What?</h2>
-  <p>
-    An alternative to having a fixed time grid on a piano roll. Instead you
-    can lay down multiple grids with different subdivisions. New grids and new
-    notes can be snapped to existing grids.
-  </p>
-
-  <div id="container"></div>
+  <div id="main">
+    <div id="container"></div>
+    <div id="key-commands">
+      <h2>Key Commands</h2>
+      <table>
+        <thead>
+          <tr>
+            <td>Key</td>
+            <td>Action</td>
+            <td>Left Handed</td>
+          </tr>
+        </thead>
+        <tr>
+          <td><span class="key">Q</span></td>
+          <td>Layer mode</td>
+          <td><span class="key">O</span></td>
+        </tr>
+        <tr>
+          <td><span class="key">W</span></td>
+          <td>Note mode</td>
+          <td><span class="key">P</span></td>
+        </tr>
+        <tr>
+          <td><span class="key">0</span> - <span class="key">9</span></td>
+          <td>Set layer subdivision</td>
+        </tr>
+        <tr>
+          <td><span class="key">A</span> <span class="key">S</span></td>
+          <td>Cycle through layers</td>
+          <td><span class="key">K</span> <span class="key">L</span></td>
+        </tr>
+        <tr>
+          <td><span class="key">&#x2325; Alt</span></td>
+          <td>Hold to copy</td>
+        </tr>
+        <tr>
+          <td><span class="key">&#x232B; Backspace</span></td>
+          <td>Delete selected note / layer</td>
+        </tr>
+        <tr>
+          <td><span class="key">&#x21E7; Shift</span></td>
+          <td>Hold to disable snapping (on by default)</td>
+        </tr>
+        <tr>
+          <td><span class="key">Space</span></td>
+          <td>Play / Pause Playback</td>
+        </tr>
+      </table>
+    </div>
+  </div>
   <div id="instructions">
-    <h2>Controls</h2>
+    <h2>What?</h2>
+    <p>
+      An alternative to having a fixed time grid on a piano roll. Instead you
+      can lay down multiple grids with different subdivisions. New grids and new
+      notes can be snapped to existing grids.
+    </p>
+    <h2>Instructions</h2>
     <p>There are two modes</p>
     <ol>
       <li>Layers - Create rhythm templates for drawing notes</li>
@@ -52,50 +100,7 @@
     <p>
       Delete the focused layer or note with <span class="key">&#x232B; Backspace</span>
     </p>
-    <table>
-      <thead>
-        <tr>
-          <td>Key</td>
-          <td>Action</td>
-          <td>Left Handed</td>
-        </tr>
-      </thead>
-      <tr>
-        <td><span class="key">Q</span></td>
-        <td>Layer mode</td>
-        <td><span class="key">O</span></td>
-      </tr>
-      <tr>
-        <td><span class="key">W</span></td>
-        <td>Note mode</td>
-        <td><span class="key">P</span></td>
-      </tr>
-      <tr>
-        <td><span class="key">0</span> - <span class="key">9</span></td>
-        <td>Set layer subdivision</td>
-      </tr>
-      <tr>
-        <td><span class="key">A</span> <span class="key">S</span></td>
-        <td>Cycle through layers</td>
-        <td><span class="key">K</span> <span class="key">L</span></td>
-      </tr>
-      <tr>
-        <td><span class="key">&#x2325; Alt</span></td>
-        <td>Hold to copy</td>
-      </tr>
-      <tr>
-        <td><span class="key">&#x232B; Backspace</span></td>
-        <td>Delete selected note / layer</td>
-      </tr>
-      <tr>
-        <td><span class="key">&#x21E7; Shift</span></td>
-        <td>Hold to disable snapping (on by default)</td>
-      </tr>
-      <tr>
-        <td><span class="key">Space</span></td>
-        <td>Play / Pause Playback</td>
-      </tr>
-    </table>
+
     <h2>Why?</h2>
     <p>
       Having a single fixed grid (usually 16th notes) makes the default very

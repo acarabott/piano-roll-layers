@@ -7,8 +7,20 @@ h1 {
   font-weight: 100;
 }
 
+h2 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
 canvas {
   border: 1px black solid;
+}
+
+#main {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow:auto;
 }
 
 #container {
@@ -17,11 +29,14 @@ canvas {
   margin-right: 40px;
 }
 
-#instructions {
-  display: inline-block;
+#key-commands {
   float: left;
-  min-width: 400px;
   width: 30%;
+  clear: right;
+}
+
+#instructions {
+  max-width: 50%;
 }
 
 #info {

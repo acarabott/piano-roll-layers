@@ -185,6 +185,9 @@ function main() {
   durationLabel.textContent = 'Duration (seconds): ';
   [durationLabel, durationInput].forEach(el => controls.appendChild(el));
 
+  const listHeader = document.createElement('h2');
+  listHeader.textContent = 'Layers';
+  controls.appendChild(listHeader);
   controls.appendChild(layerManager.list);
 
 
