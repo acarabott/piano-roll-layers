@@ -1,13 +1,15 @@
+import { MicroEvent } from './MicroEvent.js';
 import { Note } from './Note.js';
 import { Point } from './Point.js';
 import * as color from './color.js';
 
-export class NoteManager {
+export class NoteManager extends MicroEvent{
   constructor(song, noteRenderer) {
+    super();
     this.song = song;
     this.renderer = noteRenderer;
     this.notes = [];
-    this.previewNote = undefined;
+    this._previewNote = undefined;
     this.metadata = new Map();
     this._metadataTemplate = {
       hover: false,
@@ -31,6 +33,15 @@ export class NoteManager {
     if (this.notes.includes(note)) {
       this.notes.splice(this.notes.indexOf(note), 1);
     }
+  }
+
+  get previewNote() {
+    return this._previewNote;
+  }
+
+  set previewNote(previewNote) {
+    this._previewNote = previewNote;
+    this.trigger('previewNote', previewNote);
   }
 
   get previewing() {
@@ -94,19 +105,21 @@ export class NoteManager {
       }
     });
 
-    if (!this.isGrabbing && !this.isResizing) {
-      const freq = this.song.positionToFreq(point.y);
-      const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
-      this.previewNote = new Note(freq, ...times);
-    }
+    this.previewNote = this.isGrabbing ? this.grabbed[0]
+                     : this.isResizing ? this.resizing[0]
+                     : (() => {
+                          const freq = this.song.positionToFreq(point.y);
+                          const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
+                          return new Note(freq, ...times);
+                     })();
   }
 
   updateMouseMove(point, snappedPoint, targetRect, snapping) {
     if (this.previewing) {
       this.previewNote.freq = this.song.positionToFreq(point.y);
-
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.previewNote.timeStop = times[1];
+      this.trigger('previewNote', this.previewNote);
     }
 
     this.grabbed.forEach(note => {

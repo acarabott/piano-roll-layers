@@ -1,6 +1,5 @@
 /*
   TODO:
-  - preview on resize note
   - example button
   - adding note during playback
   - play from time
@@ -61,13 +60,14 @@ info.appendChild(modeManagerRenderer.label);
 info.appendChild(modeManagerRenderer.select);
 const layerManager = new LayerManager(song);
 
-const noteRenderer = new NoteRenderer(song);
-const noteManager = new NoteManager(song, noteRenderer);
-
 // audio
 const audio = new AudioContext();
 const audioPlayback = new AudioPlayback(audio);
 audioPlayback.duration = song.duration;
+
+const noteRenderer = new NoteRenderer(song);
+const noteManager = new NoteManager(song, noteRenderer);
+noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
 
 function startPlayback() {
   audioPlayback.playFrom(noteManager.notes);
@@ -76,6 +76,7 @@ function startPlayback() {
 function stopPlayback() {
   audioPlayback.stop();
 }
+
 
 
 // ui
@@ -311,10 +312,6 @@ canvas.addEventListener('mousedown', event => {
   else if (modeManager.currentMode === modeManager.modes.notes) {
     const snappedPoint = getPointFromInput(event);
     noteManager.updateMouseDown(point, snappedPoint, layerManager.currentRect);
-
-    audioPlayback.previewNote = noteManager.isGrabbing
-      ? noteManager.grabbed[0]
-      : noteManager.previewNote;
   }
 });
 
@@ -337,7 +334,6 @@ document.addEventListener('mouseup', event => {
   }
 
   layerManager.setDraggingLayer(undefined);
-  audioPlayback.previewNote = undefined;
 });
 
 
@@ -356,10 +352,6 @@ document.addEventListener('mousemove', event => {
         : point;
 
     noteManager.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
-
-    audioPlayback.previewNote = noteManager.isGrabbing
-      ? noteManager.grabbed[0]
-      : noteManager.previewNote;
   }
 });
 
