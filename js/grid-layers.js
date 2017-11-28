@@ -23,6 +23,7 @@ import { LayerRenderer } from './LayerRenderer.js';
 import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
+import { Playhead } from './Playhead.js';
 
 const container = document.getElementById('container');
 // info
@@ -63,6 +64,7 @@ const layerManager = new LayerManager(song);
 const audio = new AudioContext();
 const audioPlayback = new AudioPlayback(audio);
 audioPlayback.duration = song.duration;
+const playhead = new Playhead(song);
 
 const noteRenderer = new NoteRenderer(song);
 const noteManager = new NoteManager(song, noteRenderer);
@@ -260,14 +262,7 @@ function render() {
   noteManager.render(ctx);
 
   // playhead
-  {
-    ctx.fillStyle = color.red;
-    ctx.globalAlpha = 0.8;
-    const normTime = audioPlayback.playheadTime / song.duration;
-    const x = patternRect.x + Math.max(0, patternRect.width * normTime);
-    ctx.fillRect(x, 0, 3, canvas.height);
-    ctx.globalAlpha = 1.0;
-  }
+  playhead.render(ctx, audioPlayback.playheadTime, color.red, 0.8);
 
   ctx.restore();
 }
