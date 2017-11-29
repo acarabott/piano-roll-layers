@@ -3,9 +3,10 @@ import { Note } from './Note.js';
 import { BackgroundAction } from './BackgroundAction.js';
 
 export class AudioPlayback extends MicroEvent {
-  constructor(audioContext) {
+  constructor(audioContext, song) {
     super();
     this.audio = audioContext;
+    this.song = song;
     this.lookahead = 0.05;
     this.audioStart = 0;
     this._notes = [];
@@ -15,7 +16,6 @@ export class AudioPlayback extends MicroEvent {
     this._notePlaybackData = new Map();
     this._isPlaying = false;
     this.loop = true;
-    this.duration = 0;
     this._playheadTime = 0;
     const updateIntervalMs = this.lookahead * 0.5 * 1000;
     this.updateAction = new BackgroundAction(updateIntervalMs);
@@ -149,8 +149,10 @@ export class AudioPlayback extends MicroEvent {
       }
     });
 
-    if (this.loop && this.currentTime >= this.duration) {
-      this.play();
+    if (this.currentTime >= this.song.duration) {
+      this.stop();
+      this.playheadTime = 0;
+      if (this.loop) { this.play(); }
     }
 
     this.playheadTime = this.currentTime + this.lookahead;

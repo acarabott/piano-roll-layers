@@ -34,8 +34,7 @@ function main() {
   // audio
   ensureAudioContext();
   const audio = new AudioContext();
-  const audioPlayback = new AudioPlayback(audio);
-  audioPlayback.duration = song.duration;
+  const audioPlayback = new AudioPlayback(audio, song);
 
   // mode manager
   const modeManager = new ModeManager();
@@ -157,7 +156,7 @@ function main() {
   durationInput.name = 'durationInput';
   durationInput.type = 'number';
   durationInput.value = song.duration;
-  durationInput.min = 0;
+  durationInput.min = 1;
   durationInput.max = Infinity;
   durationInput.style.width = '40px';
   durationInput.addEventListener('input', event => {
