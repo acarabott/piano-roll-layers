@@ -1,5 +1,7 @@
 import { Rectangle } from './Rectangle.js';
 import { MicroEvent } from './MicroEvent.js';
+import { constrain } from './utils.js';
+
 
 export class Playhead extends MicroEvent {
   constructor(song, songRenderer) {
@@ -10,6 +12,15 @@ export class Playhead extends MicroEvent {
     this._grabbed = false;
     this.hover = false;
     this.mouseThreshold = 4;
+  }
+
+  get time() {
+    return this._time;
+  }
+
+  set time(time) {
+    this._time = constrain(time, 0, this.song.duration);
+    this.trigger('time', this.time);
   }
 
   get rect() {
@@ -53,7 +64,6 @@ export class Playhead extends MicroEvent {
     this.hover = this.rect.containsPoint(point, this.mouseThreshold);
     if (this.grabbed) {
       this.time = this.songRenderer.positionToTime(point.x);
-      this.trigger('time', this.time);
     }
   }
 
