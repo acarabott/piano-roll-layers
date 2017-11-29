@@ -51,8 +51,12 @@ export class NoteRenderer {
   }
 
   renderNotes(ctx, notes, metadata, copying) {
+    ctx.save();
+
     notes.forEach(note => {
       this.renderNote(ctx, note, color.orange, metadata.get(note), copying);
     });
+
+    ctx.restore();
   }
 }

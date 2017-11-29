@@ -1,6 +1,7 @@
 import { ensureAudioContext, constrain, loop, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { Song } from './Song.js';
+import { SongRenderer } from './SongRenderer.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
 import { Note } from './Note.js';
 import { NoteManager } from './NoteManager.js';
@@ -8,7 +9,6 @@ import { NoteRenderer } from './NoteRenderer.js';
 import { AudioPlayback } from './AudioPlayback.js';
 import { LayerManager } from './LayerManager.js';
 import { LayerRenderer } from './LayerRenderer.js';
-import { Rectangle } from './Rectangle.js';
 import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
 import { Playhead } from './Playhead.js';
@@ -20,25 +20,15 @@ function main() {
   info.id = 'info';
   container.appendChild(info);
 
-  // canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = 800;
-  canvas.height = 400;
-  canvas.setAttribute('tabindex', 1);
-  container.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-
-  const keyRect = new Rectangle(0, 0, canvas.width * 0.075, canvas.height);
-  const patternRect = new Rectangle(keyRect.br.x,
-                                    keyRect.y,
-                                    canvas.width - keyRect.width,
-                                    canvas.height);
-
   const song = new Song();
   song.numKeys = 20;
   song.duration = 30;
   song.rootNote = 60;
-  song.rect = patternRect;
+
+  const songRenderer = new SongRenderer();
+  songRenderer.song = song;
+  song.rect = songRenderer.patternRect;
+  container.appendChild(songRenderer.canvas);
 
   // managers
   const modeManager = new ModeManager();
@@ -97,7 +87,7 @@ function main() {
   const playButton = document.createElement('button');
   playButton.textContent = 'Play';
   playButton.style.display = 'block';
-  playButton.style.width = `${canvas.width}px`;
+  playButton.style.width = `${songRenderer.canvas.width}px`;
   playButton.style.fontSize = '20px';
   playButton.style.background = color.blue;
   playButton.style.color = color.white;
@@ -218,40 +208,20 @@ function main() {
   // Render functions
   // -----------------------------------------------------------------------------
 
-  function renderPiano(ctx, drawRect, numKeys, alpha = 1.0) {
-    const colors = ['w', 'b', 'w', 'b', 'w', 'w', 'b', 'w', 'b', 'w', 'b', 'w'];
-    const keyHeight = drawRect.height / numKeys;
-
-    loop(numKeys, i => {
-      ctx.fillStyle = colors[i % colors.length] === 'w'
-        ? `rgba(255, 255, 255, ${alpha}`
-        : `rgba(0, 0, 0, ${alpha}`;
-      const y = drawRect.y + ((numKeys - (i + 1)) * keyHeight);
-      ctx.fillRect(drawRect.x, y, drawRect.width, keyHeight);
-      ctx.strokeStyle = `rgba(100, 100, 100, ${alpha})`;
-      ctx.strokeRect(drawRect.x, y, drawRect.width, keyHeight);
-    });
-  }
-
   function render() {
-    ctx.save();
-    ctx.fillStyle = 'rgb(255, 255, 255)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // piano / background
-    renderPiano(ctx, keyRect, song.numKeys);
-    renderPiano(ctx, patternRect, song.numKeys, 0.1);
+    songRenderer.ctx.save();
+    // keys / background
+    songRenderer.render();
 
     // layers
-    LayerRenderer.render(ctx, layerManager);
+    LayerRenderer.render(songRenderer.ctx, layerManager);
 
     // notes
-    noteManager.render(ctx);
+    noteManager.render(songRenderer.ctx);
 
     // playhead
-    playhead.render(ctx, color.red, 0.8);
-
-    ctx.restore();
+    playhead.render(songRenderer.ctx, color.red, 0.8);
+    songRenderer.ctx.restore();
   }
 
 
@@ -270,7 +240,7 @@ function main() {
     return point;
   }
 
-  canvas.addEventListener('mousedown', event => {
+  songRenderer.canvas.addEventListener('mousedown', event => {
     const point = new Point(event.offsetX, event.offsetY);
 
     playhead.updateMouseDown(point);
@@ -303,8 +273,8 @@ function main() {
 
 
   document.addEventListener('mousemove', event => {
-    const point = new Point(constrain(event.pageX - canvas.offsetLeft, 0, canvas.width),
-                            constrain(event.pageY - canvas.offsetTop, 0, canvas.height));
+    const point = new Point(constrain(event.pageX - songRenderer.canvas.offsetLeft, 0, songRenderer.canvas.width),
+                            constrain(event.pageY - songRenderer.canvas.offsetTop, 0, songRenderer.canvas.height));
 
     layerManager.updateMouseMove(point, cursor.snapping);
 
@@ -344,7 +314,7 @@ function main() {
     }
     else if (event.key  === 'Escape') {
       layerManager.creation.active = false;
-      if (document.activeElement !== canvas) { document.activeElement.blur(); }
+      if (document.activeElement !== songRenderer.canvas) { document.activeElement.blur(); }
     }
     else if (event.key === 'Backspace' || event.code === 'KeyX' || event.code === 'KeyM') {
       if (modeManager.currentMode === modeManager.modes.layers) {
@@ -358,7 +328,7 @@ function main() {
     }
 
     // subdivision input
-    if (event.target === canvas) {
+    if (event.target === songRenderer.canvas) {
       if (isFinite(parseInt(event.key, 10))) {
         layerManager.subdivisionInput(event.key);
       }

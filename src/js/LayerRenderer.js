@@ -3,6 +3,7 @@ import { linlin } from './utils.js';
 
 export class LayerRenderer {
   static render(ctx, layerManager) {
+    ctx.save();
 
     if (layerManager.currentRect !== undefined && layerManager.layers.length > 1) {
       ctx.globalAlpha = 0.2;
@@ -57,5 +58,7 @@ export class LayerRenderer {
         ctx.strokeRect(...rect);
       });
     }
+
+    ctx.restore();
   }
 }

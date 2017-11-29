@@ -30,10 +30,14 @@ export class Playhead extends MicroEvent {
   }
 
   render(ctx, color, alpha=0.5) {
+    ctx.save();
+
     ctx.fillStyle = color;
     ctx.globalAlpha = alpha;
     ctx.fillRect(...this.rect);
     ctx.globalAlpha = 1.0;
+
+    ctx.restore();
   }
 
   updateMouseDown(point) {
