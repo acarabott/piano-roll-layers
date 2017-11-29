@@ -37,3 +37,13 @@ export function freqToMidi(freq) {
 export function toCapitalCase(string) {
   return `${string[0].toUpperCase()}${string.slice(1)}`;
 }
+
+export function ensureAudioContext() {
+  const ctx = window.hasOwnProperty('AudioContext') ? window.AudioContext
+            : window.hasOwnProperty('webkitAudioContext') ? window.webkitAudioContext
+            : undefined;
+  window.AudioContext = ctx;
+  if (ctx === undefined) {
+    throw Error('WebAudio API is not supported!');
+  }
+}

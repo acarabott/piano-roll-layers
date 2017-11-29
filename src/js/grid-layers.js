@@ -1,4 +1,4 @@
-import { constrain, loop, midiToFreq } from './utils.js';
+import { ensureAudioContext, constrain, loop, midiToFreq } from './utils.js';
 import * as color from './color.js';
 import { Song } from './Song.js';
 import { ModeManager, ModeManagerRenderer } from './ModeManager.js';
@@ -15,9 +15,7 @@ import { Playhead } from './Playhead.js';
 
 
 function main() {
-
   const container = document.getElementById('container');
-  // info
   const info = document.createElement('div');
   info.id = 'info';
   container.appendChild(info);
@@ -52,6 +50,7 @@ function main() {
   const layerManager = new LayerManager(song);
 
   // audio
+  ensureAudioContext();
   const audio = new AudioContext();
   const audioPlayback = new AudioPlayback(audio);
   audioPlayback.duration = song.duration;
