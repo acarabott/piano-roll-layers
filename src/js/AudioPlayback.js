@@ -12,7 +12,7 @@ export class AudioPlayback extends MicroEvent {
     this.marker = Symbol('played');
     this._previewNote = undefined;
     this._currentNodes = undefined;
-    this._playbackData = new Map();
+    this._notePlaybackData = new Map();
     this._isPlaying = false;
     this.loop = true;
     this.duration = 0;
@@ -61,21 +61,21 @@ export class AudioPlayback extends MicroEvent {
     this.isPlaying = true;
   }
 
-  stopNode(nodeObj) {
+  stopNoteData(data) {
+    data.gain.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
+    data.gain.gain.cancelScheduledValues(this.audio.currentTime + 0.2);
     // caching these so timeout has a proper reference to them
-    const gainNode = nodeObj.gain;
-    const oscNodes = nodeObj.oscs;
-    gainNode.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
-    gainNode.gain.cancelScheduledValues(this.audio.currentTime + 0.2);
+    const oscNodes = data.oscs;
+    const gain = data.gain;
     setTimeout(() => {
+      gain.disconnect();
       oscNodes.forEach(osc => osc.disconnect());
-      gainNode.disconnect();
     }, 500);
   }
 
   stopAllNodes() {
-    this._playbackData.forEach((nodeObj, key) => this.stopNode(nodeObj));
-    this._playbackData.clear();
+    this._notePlaybackData.forEach((data, key) => this.stopNoteData(data));
+    this._notePlaybackData.clear();
   }
 
   stop() {
@@ -85,7 +85,7 @@ export class AudioPlayback extends MicroEvent {
     this.updateAction.cancel();
   }
 
-  createNoteData(note) {
+  createNotePlaybackData(note) {
     const gain = this.audio.createGain();
     const oscs = [-5, 0, 5].map(detune => {
       const osc = this.audio.createOscillator();
@@ -95,31 +95,36 @@ export class AudioPlayback extends MicroEvent {
       osc.connect(gain);
       return osc;
     });
+
     return { note, oscs, gain };
   }
 
-  playNoteFromData(data, audioStart) {
-    const { note, oscs, gain } = data;
-    let timeStart = audioStart + note.timeStart;
+  playNotePlaybackData(data, audioStart) {
+    let timeStart = audioStart + data.note.timeStart;
     if (timeStart < this.audio.currentTime) {
       timeStart = this.audio.currentTime + 0.1;
     }
 
     const volume = 0.1;
-    gain.gain.setValueAtTime(0.0, this.audio.currentTime + 0.01);
-    gain.gain.setTargetAtTime(volume, timeStart, 0.001);
+    data.gain.gain.setValueAtTime(0.0, this.audio.currentTime + 0.01);
+    data.gain.gain.setTargetAtTime(volume, timeStart, 0.001);
 
-    const releaseTime = audioStart + note.timeStop - 0.1;
-    gain.gain.setValueAtTime(volume, releaseTime);
-    gain.gain.setTargetAtTime(0.0, releaseTime, 0.001);
+    const releaseTime = audioStart + data.note.timeStop - 0.1;
+    data.gain.gain.setValueAtTime(volume, releaseTime);
+    data.gain.gain.setTargetAtTime(0.0, releaseTime, 0.001);
 
+    data.gain.connect(this.audio.destination);
 
-    gain.connect(this.audio.destination);
-
-    oscs.forEach(osc => {
+    const timeStop = audioStart + data.note.timeStop + 1;
+    data.oscs.forEach(osc => {
       osc.start(timeStart);
-      osc.stop(audioStart + note.timeStop + 1);
+      osc.stop(timeStop);
     });
+
+    const wait = (timeStop - timeStart) * 1000;
+    data.timeout = setTimeout(() => {
+      this.stopNoteData(data);
+    }, wait);
   }
 
   update() {
@@ -137,9 +142,9 @@ export class AudioPlayback extends MicroEvent {
 
     toPlay.forEach(note => {
       if (!note[this.marker]) {
-        const noteData = this.createNoteData(note);
-        this.playNoteFromData(noteData);
-        this._playbackData.set(noteData, this.audioStart);
+        const nodes = this.createNotePlaybackData(note);
+        this.playNotePlaybackData(nodes, this.audioStart);
+        this._notePlaybackData.set(note, nodes);
         note[this.marker] = true;
       }
     });
@@ -157,23 +162,17 @@ export class AudioPlayback extends MicroEvent {
                      Math.abs(this._previewNote.freq - note.freq) < Number.EPSILON;
     if (sameFreq) { return; }
 
+    // if notes already being previewed, stop them
     if (this._currentNodes !== undefined) {
-      const gainNode = this._currentNodes.gain;
-      gainNode.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
-      gainNode.gain.cancelScheduledValues(this.audio.currentTime + 0.2);
-      const oscNodes = this._currentNodes.oscs;
-      setTimeout(() => {
-        oscNodes.forEach(osc => osc.disconnect());
-        gainNode.disconnect();
-      }, 500);
+      this.stopNoteData(this._currentNodes);
       this._currentNodes = undefined;
     }
 
     const gotNote = note !== undefined;
-    this._previewNote = gotNote ? new Note(note.freq, 0, 60) : undefined;
-    this._currentNodes = gotNote ? this.createNoteData(this._previewNote) : undefined;
+    this._previewNote = gotNote ? new Note(note.freq, 0.05, 60) : undefined;
+    this._currentNodes = gotNote ? this.createNotePlaybackData(this._previewNote) : undefined;
     if (gotNote) {
-      this.playNoteFromData(this._currentNodes, this.audio.currentTime + 0.05);
+      this.playNotePlaybackData(this._currentNodes, this.audio.currentTime + 0.05);
     }
   }
 
