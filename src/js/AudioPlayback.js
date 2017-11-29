@@ -169,10 +169,10 @@ export class AudioPlayback extends MicroEvent {
       this._currentNodes = undefined;
     }
 
-    this._previewNote = note === undefined ? undefined : new Note(note.freq, 0, 60);
-    // play new note
-    if (this._previewNote !== undefined) {
-      this._currentNodes = this.createNoteData(this._previewNote);
+    const gotNote = note !== undefined;
+    this._previewNote = gotNote ? new Note(note.freq, 0, 60) : undefined;
+    this._currentNodes = gotNote ? this.createNoteData(this._previewNote) : undefined;
+    if (gotNote) {
       this.playNoteFromData(this._currentNodes, this.audio.currentTime + 0.05);
     }
   }
