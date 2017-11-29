@@ -208,13 +208,12 @@ function main() {
   }, 'move');
 
   cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers &&
-           layerManager.copying;
-  }, 'copy');
-
-  cursor.addState(() => {
     return modeManager.currentMode === modeManager.modes.notes;
   }, 'pointer');
+
+  cursor.addState(() => {
+    return layerManager.copying || noteManager.copying;
+  }, 'copy');
 
   cursor.addState(() => {
     return modeManager.currentMode === modeManager.modes.notes &&
