@@ -9,6 +9,7 @@ export class SongRenderer extends MicroEvent {
     super();
     this.song = undefined;
     this.canvas = document.createElement('canvas');
+    this.canvas.tabIndex = 0;
     this.canvas.width = 800;
     this.canvas.height = 400;
     this.ctx = this.canvas.getContext('2d');
