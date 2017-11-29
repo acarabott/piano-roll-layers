@@ -70,7 +70,7 @@ export class SongRenderer {
     const keyColors = [
       color.white, color.black, color.white, color.black,
       color.white, color.white, color.black, color.white,
-      color.black, color.white, color.black];
+      color.black, color.white, color.black, color.white];
 
     this.ctx.globalAlpha = alpha;
     loop(this.song.numKeys, i => {
