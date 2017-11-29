@@ -12,7 +12,7 @@ export class AudioPlayback extends MicroEvent {
     this.marker = Symbol('played');
     this._previewNote = undefined;
     this._currentNodes = undefined;
-    this._nodes = new Map();
+    this._playbackData = new Map();
     this._isPlaying = false;
     this.loop = true;
     this.duration = 0;
@@ -62,10 +62,11 @@ export class AudioPlayback extends MicroEvent {
   }
 
   stopNode(nodeObj) {
+    // caching these so timeout has a proper reference to them
     const gainNode = nodeObj.gain;
+    const oscNodes = nodeObj.oscs;
     gainNode.gain.setTargetAtTime(0.0, this.audio.currentTime + 0.1, 0.001);
     gainNode.gain.cancelScheduledValues(this.audio.currentTime + 0.2);
-    const oscNodes = nodeObj.oscs;
     setTimeout(() => {
       oscNodes.forEach(osc => osc.disconnect());
       gainNode.disconnect();
@@ -73,8 +74,8 @@ export class AudioPlayback extends MicroEvent {
   }
 
   stopAllNodes() {
-    this._nodes.forEach((nodeObj, key) => this.stopNode(nodeObj));
-    this._nodes.clear();
+    this._playbackData.forEach((nodeObj, key) => this.stopNode(nodeObj));
+    this._playbackData.clear();
   }
 
   stop() {
@@ -84,7 +85,7 @@ export class AudioPlayback extends MicroEvent {
     this.updateAction.cancel();
   }
 
-  playNote(note, audioStart) {
+  createNoteData(note) {
     const gain = this.audio.createGain();
     const oscs = [-5, 0, 5].map(detune => {
       const osc = this.audio.createOscillator();
@@ -94,7 +95,11 @@ export class AudioPlayback extends MicroEvent {
       osc.connect(gain);
       return osc;
     });
+    return { note, oscs, gain };
+  }
 
+  playNoteFromData(data, audioStart) {
+    const { note, oscs, gain } = data;
     let timeStart = audioStart + note.timeStart;
     if (timeStart < this.audio.currentTime) {
       timeStart = this.audio.currentTime + 0.1;
@@ -115,8 +120,6 @@ export class AudioPlayback extends MicroEvent {
       osc.start(timeStart);
       osc.stop(audioStart + note.timeStop + 1);
     });
-
-    return { note, oscs, gain };
   }
 
   update() {
@@ -134,8 +137,9 @@ export class AudioPlayback extends MicroEvent {
 
     toPlay.forEach(note => {
       if (!note[this.marker]) {
-        const nodes = this.playNote(note, this.audioStart);
-        this._nodes.set(note, nodes);
+        const noteData = this.createNoteData(note);
+        this.playNoteFromData(noteData);
+        this._playbackData.set(noteData, this.audioStart);
         note[this.marker] = true;
       }
     });
@@ -168,7 +172,8 @@ export class AudioPlayback extends MicroEvent {
     this._previewNote = note === undefined ? undefined : new Note(note.freq, 0, 60);
     // play new note
     if (this._previewNote !== undefined) {
-      this._currentNodes = this.playNote(this._previewNote, this.audio.currentTime + 0.05);
+      this._currentNodes = this.createNoteData(this._previewNote);
+      this.playNoteFromData(this._currentNodes, this.audio.currentTime + 0.05);
     }
   }
 
