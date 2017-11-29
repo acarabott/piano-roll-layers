@@ -58,9 +58,7 @@ function main() {
   audioPlayback.bind('playheadTime', time => playhead.time = time);
   playhead.bind('time', time => audioPlayback._playheadTime = time);
   playhead.bind('grabbed', grabbed => {
-    if (grabbed && audioPlayback.isPlaying) {
-      audioPlayback.stop();
-    }
+    if (grabbed && audioPlayback.isPlaying) { audioPlayback.stop(); }
   });
 
   const noteRenderer = new NoteRenderer(song);
@@ -75,7 +73,7 @@ function main() {
   subdivisionDisplay.textContent = layerManager.subdivision;
   subdivisionDisplay.style.marginRight = '20px';
   layerManager.bind('currentChanged', layer => {
-    if (layer !== undefined) subdivisionDisplay.textContent = layer.subdivision;
+    if (layer !== undefined) { subdivisionDisplay.textContent = layer.subdivision; }
   });
   layerManager.bind('subdivisionChanged', subdivision => {
     subdivisionDisplay.textContent = subdivision;
