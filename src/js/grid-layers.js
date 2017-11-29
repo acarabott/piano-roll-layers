@@ -94,7 +94,10 @@ function main() {
   const playButton = document.createElement('button');
   playButton.textContent = 'Play';
   playButton.style.display = 'block';
-  playButton.style.width = `${songRenderer.canvas.width}px`;
+  playButton.style.width = `${songRenderer.width}px`;
+  songRenderer.bind('canvasSize', ([width, height]) => {
+    playButton.style.width = `${songRenderer.width}px`;
+  });
   playButton.style.fontSize = '20px';
   playButton.style.background = color.blue;
   playButton.style.color = color.white;
@@ -164,6 +167,36 @@ function main() {
   durationLabel.htmlFor = durationInput.id;
   durationLabel.textContent = 'Duration (seconds): ';
   [durationLabel, durationInput].forEach(el => controls.appendChild(el));
+
+  const canvasWidthInput = document.createElement('input');
+  canvasWidthInput.id = 'canvasWidthInput';
+  canvasWidthInput.name = 'canvasWidthInput';
+  canvasWidthInput.type = 'number';
+  canvasWidthInput.value = songRenderer.width;
+  canvasWidthInput.min = 0;
+  canvasWidthInput.max = Infinity;
+  canvasWidthInput.style.width = '40px';
+  canvasWidthInput.addEventListener('input', event => {
+    songRenderer.width = event.target.valueAsNumber;
+  });
+  const canvasHeightInput = document.createElement('input');
+  canvasHeightInput.id = 'canvasHeightInput';
+  canvasHeightInput.name = 'canvasHeightInput';
+  canvasHeightInput.type = 'number';
+  canvasHeightInput.value = songRenderer.height;
+  canvasHeightInput.min = 0;
+  canvasHeightInput.max = Infinity;
+  canvasHeightInput.style.width = '40px';
+  canvasHeightInput.addEventListener('input', event => {
+    songRenderer.height = event.target.valueAsNumber;
+  });
+
+  const canvasInputsLabel = document.createElement('label');
+  canvasInputsLabel.htmlFor = canvasWidthInput.id;
+  canvasInputsLabel.textContent = 'Canvas Size: ';
+  [canvasInputsLabel, canvasWidthInput, canvasHeightInput].forEach(el => controls.appendChild(el));
+
+
 
   const listHeader = document.createElement('h2');
   listHeader.textContent = 'Layers';
@@ -280,8 +313,8 @@ function main() {
 
 
   document.addEventListener('mousemove', event => {
-    const point = new Point(constrain(event.pageX - songRenderer.canvas.offsetLeft, 0, songRenderer.canvas.width),
-                            constrain(event.pageY - songRenderer.canvas.offsetTop, 0, songRenderer.canvas.height));
+    const point = new Point(constrain(event.pageX - songRenderer.canvas.offsetLeft, 0, songRenderer.width),
+                            constrain(event.pageY - songRenderer.canvas.offsetTop, 0, songRenderer.height));
 
     layerManager.updateMouseMove(point, cursor.snapping);
 

@@ -8,7 +8,7 @@ h1 {
 }
 
 h2 {
-  margin-top: 0;
+  margin-top: 10px;
   margin-bottom: 5px;
 }
 
@@ -24,7 +24,6 @@ canvas {
 }
 
 #container {
-  width: 800px;
   float: left;
   margin-right: 40px;
 }
@@ -33,6 +32,14 @@ canvas {
   float: left;
   width: 30%;
   clear: right;
+}
+
+#controls label {
+  margin-left: 20px;
+}
+
+#controls label:first-of-type {
+  margin-left: 0px;
 }
 
 #instructions {

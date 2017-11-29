@@ -2,14 +2,34 @@ import { Rectangle } from './Rectangle.js';
 import * as color from './color.js';
 import { loop } from './utils.js';
 import { midiToFreq, freqToMidi } from './utils.js';
+import { MicroEvent } from './MicroEvent.js';
 
-export class SongRenderer {
+export class SongRenderer extends MicroEvent {
   constructor() {
+    super();
     this.song = undefined;
     this.canvas = document.createElement('canvas');
     this.canvas.width = 800;
     this.canvas.height = 400;
     this.ctx = this.canvas.getContext('2d');
+  }
+
+  get width() {
+    return this.canvas.width;
+  }
+
+  set width(width) {
+    this.canvas.width = Math.max(0, width);
+    this.trigger('canvasSize', [this.canvas.width, this.canvas.height]);
+  }
+
+  get height() {
+    return this.canvas.height;
+  }
+
+  set height(height) {
+    this.canvas.height = Math.max(0, height);
+    this.trigger('canvasSize', [this.canvas.width, this.canvas.height]);
   }
 
   get keyRect() {
