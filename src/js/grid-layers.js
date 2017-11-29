@@ -200,7 +200,7 @@ function main() {
   {
     const notesModeCursorTest = (test, style) => {
       cursor.addState(() => {
-        return modeManager.currentMode === modeManager.notes && test();
+        return modeManager.currentMode === modeManager.modes.notes && test();
       }, style);
     };
     notesModeCursorTest(() => true, 'pointer');
