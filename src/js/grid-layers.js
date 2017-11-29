@@ -27,7 +27,6 @@ function main() {
 
   const songRenderer = new SongRenderer();
   songRenderer.song = song;
-  song.rect = songRenderer.patternRect;
   container.appendChild(songRenderer.canvas);
 
   // managers
@@ -37,22 +36,22 @@ function main() {
   const modeManagerRenderer = new ModeManagerRenderer(modeManager);
   info.appendChild(modeManagerRenderer.label);
   info.appendChild(modeManagerRenderer.select);
-  const layerManager = new LayerManager(song);
+  const layerManager = new LayerManager(song, songRenderer);
 
   // audio
   ensureAudioContext();
   const audio = new AudioContext();
   const audioPlayback = new AudioPlayback(audio);
   audioPlayback.duration = song.duration;
-  const playhead = new Playhead(song);
+  const playhead = new Playhead(song, songRenderer);
   audioPlayback.bind('playheadTime', time => playhead.time = time);
   playhead.bind('time', time => audioPlayback._playheadTime = time);
   playhead.bind('grabbed', grabbed => {
     if (grabbed && audioPlayback.isPlaying) { audioPlayback.stop(); }
   });
 
-  const noteRenderer = new NoteRenderer(song);
-  const noteManager = new NoteManager(song, noteRenderer);
+  const noteRenderer = new NoteRenderer(songRenderer);
+  const noteManager = new NoteManager(noteRenderer, songRenderer);
   noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
   noteManager.bind('notes', notes => audioPlayback.notes = notes);
 

@@ -4,16 +4,16 @@ import { Point } from './Point.js';
 import * as color from './color.js';
 
 export class NoteRenderer {
-  constructor(song) {
-    this.song = song;
+  constructor(songRenderer) {
+    this.songRenderer = songRenderer;
   }
 
   getRectFromNote(note) {
     const nextNote = freqToMidi(note.freq) - 1;
-    const rect = this.song.freqsAndTimesToRect(midiToFreq(nextNote),
-                                               note.freq,
-                                               note.timeStart,
-                                               note.timeStop);
+    const rect = this.songRenderer.freqsAndTimesToRect(midiToFreq(nextNote),
+                                                       note.freq,
+                                                       note.timeStart,
+                                                       note.timeStop);
     return rect;
   }
 

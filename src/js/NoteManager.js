@@ -4,9 +4,8 @@ import { Point } from './Point.js';
 import * as color from './color.js';
 
 export class NoteManager extends MicroEvent{
-  constructor(song, noteRenderer) {
+  constructor(noteRenderer) {
     super();
-    this.song = song;
     this.renderer = noteRenderer;
     this.notes = [];
     this._previewNote = undefined;
@@ -54,9 +53,9 @@ export class NoteManager extends MicroEvent{
   getInputNoteTimes(point, snappedPoint, targetRect) {
     const snapping = !point.equalTo(snappedPoint);
     const x = snapping ? targetRect.x : point.x;
-    const timeStart = this.song.positionToTime(x);
+    const timeStart = this.renderer.songRenderer.positionToTime(x);
     const timeStop = snapping
-      ? this.song.positionToTime(targetRect.br.x)
+      ? this.renderer.songRenderer.positionToTime(targetRect.br.x)
       : timeStart + Note.MIN_LENGTH;
 
     return [timeStart, timeStop];
@@ -111,7 +110,7 @@ export class NoteManager extends MicroEvent{
     this.previewNote = this.isGrabbing ? this.grabbed[0]
                      : this.isResizing ? this.resizing[0]
                      : (() => {
-                          const freq = this.song.positionToFreq(point.y);
+                          const freq = this.renderer.songRenderer.positionToFreq(point.y);
                           const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
                           return new Note(freq, ...times);
                      })();
@@ -120,20 +119,20 @@ export class NoteManager extends MicroEvent{
 
   updateMouseMove(point, snappedPoint, targetRect, snapping) {
     if (this.creating) {
-      this.previewNote.freq = this.song.positionToFreq(point.y);
+      this.previewNote.freq = this.renderer.songRenderer.positionToFreq(point.y);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.previewNote.timeStop = times[1];
       this.trigger('previewNote', this.previewNote);
     }
 
     this.grabbed.forEach(note => {
-      note.freq = this.song.positionToFreq(point.y);
+      note.freq = this.renderer.songRenderer.positionToFreq(point.y);
       const duration = note.timeStop - note.timeStart;
       const newTopLeft = snapping
         ? snappedPoint
         : point.subtract(this.getMetadata(note).grabbedOffset);
 
-      note.timeStart = Math.max(0, this.song.positionToTime(newTopLeft.x));
+      note.timeStart = Math.max(0, this.renderer.songRenderer.positionToTime(newTopLeft.x));
       note.timeStop = note.timeStart + duration;
       this.trigger('previewNote', this.previewNote);
     });

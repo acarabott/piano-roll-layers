@@ -17,9 +17,10 @@ export class LayerManager extends MicroEvent {
     return corners;
   }
 
-  constructor(song) {
+  constructor(song, songRenderer) {
     super();
     this.song = song;
+    this.songRenderer = songRenderer;
     this._layers = [];
     this.parentLayer = new Layer(midiToFreq(song.rootNote),
                                  midiToFreq(song.rootNote + song.numKeys),
@@ -86,10 +87,10 @@ export class LayerManager extends MicroEvent {
   }
 
   getLayerFrame(layer) {
-    const x = this.song.timeToPosition(layer.timeStart);
-    const y = this.song.freqToPosition(layer.freqStop);
-    const width = this.song.timeToPosition(layer.timeStop) - x;
-    const height = this.song.freqToPosition(layer.freqStart) - y;
+    const x = this.songRenderer.timeToPosition(layer.timeStart);
+    const y = this.songRenderer.freqToPosition(layer.freqStop);
+    const width = this.songRenderer.timeToPosition(layer.timeStop) - x;
+    const height = this.songRenderer.freqToPosition(layer.freqStart) - y;
 
     return new Rectangle(x, y, width, height);
   }
@@ -105,7 +106,7 @@ export class LayerManager extends MicroEvent {
 
   get currentRect() {
     return this.currentLayer === undefined ?
-      this.song.rect
+      this.songRenderer.Patternrect
       : this.getLayerRects(this.currentLayer).find(rect => {
         return rect.containsPoint(this._lastMousePosition, this._inThresh);
       });
@@ -124,9 +125,9 @@ export class LayerManager extends MicroEvent {
       });
     });
 
-    const distanceToStepAbove = point.y % this.song.noteHeight;
-    const lessThanHalfWay = distanceToStepAbove > this.song.noteHeight / 2;
-    const additionalHeight = (lessThanHalfWay ? this.song.noteHeight : 0);
+    const distanceToStepAbove = point.y % this.songRenderer.noteHeight;
+    const lessThanHalfWay = distanceToStepAbove > this.songRenderer.noteHeight / 2;
+    const additionalHeight = (lessThanHalfWay ? this.songRenderer.noteHeight : 0);
     const y = point.y - distanceToStepAbove + additionalHeight;
     return new Point(x, y);
   }
@@ -213,7 +214,7 @@ export class LayerManager extends MicroEvent {
     Array.from(this.list.children).forEach(item => this.list.removeChild(item));
 
     const positionToTimeString = (xpos) => {
-      const time = this.song.positionToTime(xpos);
+      const time = this.songRenderer.positionToTime(xpos);
       const timeSecs = Math.floor(time % 60);
       const timeMins = Math.floor((time - timeSecs) / 60);
       return `${timeMins.toString().padStart(1, '0')}:${timeSecs.toString().padStart(2, '0')}`;
@@ -365,11 +366,11 @@ export class LayerManager extends MicroEvent {
   }
 
   setLayerOrigin(layer, point) {
-    const constrainedPoint = point.max(this.song.rect.tl).min(this.song.rect.br);
-    const freqStop = this.song.positionToFreq(constrainedPoint.y);
+    const constrainedPoint = point.max(this.songRenderer.Patternrect.tl).min(this.songRenderer.Patternrect.br);
+    const freqStop = this.songRenderer.positionToFreq(constrainedPoint.y);
     const noteRange = freqToMidi(layer.freqStop) - freqToMidi(layer.freqStart);
     const freqStart = midiToFreq(freqToMidi(freqStop) - noteRange);
-    const timeStart = this.song.positionToTime(constrainedPoint.x);
+    const timeStart = this.songRenderer.positionToTime(constrainedPoint.x);
     const timeStop =  timeStart + (layer.timeStop - layer.timeStart);
 
     layer.set(freqStart, freqStop, timeStart, timeStop);
@@ -388,11 +389,11 @@ export class LayerManager extends MicroEvent {
       this.creation.active = true;
 
       const tlX = snapping ? this.currentRect.tl.x : point.x;
-      const tlY = point.y - (point.y % this.song.noteHeight);
+      const tlY = point.y - (point.y % this.songRenderer.noteHeight);
       this.creation.rect.tl = new Point(tlX, tlY);
 
       const brX = snapping ? this.currentRect.br.x : point.x;
-      const brY = tlY + this.song.noteHeight;
+      const brY = tlY + this.songRenderer.noteHeight;
       this.creation.rect.br = new Point(brX, brY);
     }
   }
@@ -414,7 +415,7 @@ export class LayerManager extends MicroEvent {
           : snappedPoint.x
         : point.x;
       const y = snappedPoint.y === this.creation.rect.tl.y
-        ? snappedPoint.y + this.song.noteHeight
+        ? snappedPoint.y + this.songRenderer.noteHeight
         : snappedPoint.y;
       this.creation.rect.br = new Point(x, y);
     }
@@ -428,28 +429,28 @@ export class LayerManager extends MicroEvent {
       if (type === LayerManager.corners.tl) {
         const br = frame.br;
         frame.tl = new Point(Math.min(newCorner.x, br.x - 1),
-                             Math.min(newCorner.y, br.y - this.song.noteHeight));
+                             Math.min(newCorner.y, br.y - this.songRenderer.noteHeight));
         frame.br = br;
       }
       else if (type === LayerManager.corners.tr) {
         const bl = frame.bl;
         frame.tr = new Point(Math.max(newCorner.x, bl.x + 1),
-                             Math.min(newCorner.y, bl.y - this.song.noteHeight));
+                             Math.min(newCorner.y, bl.y - this.songRenderer.noteHeight));
         frame.bl = bl;
       }
       else if (type === LayerManager.corners.bl) {
         const tr = frame.tr;
         frame.bl = new Point(Math.min(newCorner.x, tr.x - 1),
-                             Math.max(newCorner.y, tr.y + this.song.noteHeight));
+                             Math.max(newCorner.y, tr.y + this.songRenderer.noteHeight));
         frame.tr = tr;
       }
       else if (type === LayerManager.corners.br) {
         const tl = frame.tl;
         frame.br = new Point(Math.max(newCorner.x, tl.x + 1),
-                             Math.max(newCorner.y, tl.y + this.song.noteHeight));
+                             Math.max(newCorner.y, tl.y + this.songRenderer.noteHeight));
         frame.tl = tl;
       }
-      this._resizing.layer.set(...this.song.rectToFreqsAndTimes(frame));
+      this._resizing.layer.set(...this.songRenderer.rectToFreqsAndTimes(frame));
     }
     else if (this.dragging) {
       const shifted = point.subtract(this._dragging.offset);
@@ -470,7 +471,7 @@ export class LayerManager extends MicroEvent {
         const br = this.creation.rect.br;
         const rect = new Rectangle(Math.min(tl.x, br.x),
                                    Math.min(tl.y, br.y), absWidth, absHeight);
-        this.addLayer(...this.song.rectToFreqsAndTimes(rect), this.subdivision);
+        this.addLayer(...this.songRenderer.rectToFreqsAndTimes(rect), this.subdivision);
       }
     }
 

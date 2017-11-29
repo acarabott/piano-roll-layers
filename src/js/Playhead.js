@@ -2,9 +2,10 @@ import { Rectangle } from './Rectangle.js';
 import { MicroEvent } from './MicroEvent.js';
 
 export class Playhead extends MicroEvent {
-  constructor(song) {
+  constructor(song, songRenderer) {
     super();
     this.song = song;
+    this.songRenderer = songRenderer;
     this.time = 0;
     this._grabbed = false;
     this.hover = false;
@@ -14,9 +15,11 @@ export class Playhead extends MicroEvent {
   get rect() {
     const normTime = this.time / this.song.duration;
     const width = this.hover ? 6 : 3;
-    const x = this.song.rect.x + Math.max(0, this.song.rect.width * normTime) - (width / 2);
-    const y = this.song.rect.y;
-    const height = this.song.rect.height;
+    const x = this.songRenderer.patternRect.x +
+              Math.max(0, this.songRenderer.patternRect.width * normTime) -
+              (width / 2);
+    const y = this.songRenderer.patternRect.y;
+    const height = this.songRenderer.patternRect.height;
     return new Rectangle(x, y, width, height);
   }
 
@@ -49,7 +52,7 @@ export class Playhead extends MicroEvent {
   updateMouseMove(point) {
     this.hover = this.rect.containsPoint(point, this.mouseThreshold);
     if (this.grabbed) {
-      this.time = this.song.positionToTime(point.x);
+      this.time = this.songRenderer.positionToTime(point.x);
       this.trigger('time', this.time);
     }
   }
