@@ -15,11 +15,13 @@ import { Playhead } from './Playhead.js';
 
 
 function main() {
+  // DOM
   const container = document.getElementById('container');
   const info = document.createElement('div');
   info.id = 'info';
   container.appendChild(info);
 
+  // song
   const song = new Song();
   song.numKeys = 20;
   song.duration = 30;
@@ -29,20 +31,30 @@ function main() {
   songRenderer.song = song;
   container.appendChild(songRenderer.canvas);
 
-  // managers
-  const modeManager = new ModeManager();
-  modeManager.addModes('layers', 'notes');
-  modeManager.currentMode = modeManager.modes.layers;
-  const modeManagerRenderer = new ModeManagerRenderer(modeManager);
-  info.appendChild(modeManagerRenderer.label);
-  info.appendChild(modeManagerRenderer.select);
-  const layerManager = new LayerManager(song, songRenderer);
-
   // audio
   ensureAudioContext();
   const audio = new AudioContext();
   const audioPlayback = new AudioPlayback(audio);
   audioPlayback.duration = song.duration;
+
+  // mode manager
+  const modeManager = new ModeManager();
+  modeManager.addModes('layers', 'notes');
+  modeManager.currentMode = modeManager.modes.layers;
+
+  const modeManagerRenderer = new ModeManagerRenderer(modeManager);
+  info.appendChild(modeManagerRenderer.label);
+  info.appendChild(modeManagerRenderer.select);
+
+  // layers
+  const layerManager = new LayerManager(song, songRenderer);
+  const layerRenderer = new LayerRenderer(layerManager);
+
+  // notes
+  const noteRenderer = new NoteRenderer(songRenderer);
+  const noteManager = new NoteManager(noteRenderer, songRenderer);
+  noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
+  noteManager.bind('notes', notes => audioPlayback.notes = notes);
   const playhead = new Playhead(song, songRenderer);
   audioPlayback.bind('playheadTime', time => playhead.time = time);
   playhead.bind('time', time => audioPlayback._playheadTime = time);
@@ -50,10 +62,6 @@ function main() {
     if (grabbed && audioPlayback.isPlaying) { audioPlayback.stop(); }
   });
 
-  const noteRenderer = new NoteRenderer(songRenderer);
-  const noteManager = new NoteManager(noteRenderer, songRenderer);
-  noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
-  noteManager.bind('notes', notes => audioPlayback.notes = notes);
 
 
   // ui
@@ -213,7 +221,7 @@ function main() {
     songRenderer.render();
 
     // layers
-    LayerRenderer.render(songRenderer.ctx, layerManager);
+    layerRenderer.render(songRenderer.ctx);
 
     // notes
     noteManager.render(songRenderer.ctx);

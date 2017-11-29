@@ -106,7 +106,7 @@ export class LayerManager extends MicroEvent {
 
   get currentRect() {
     return this.currentLayer === undefined ?
-      this.songRenderer.Patternrect
+      this.songRenderer.patternRect
       : this.getLayerRects(this.currentLayer).find(rect => {
         return rect.containsPoint(this._lastMousePosition, this._inThresh);
       });
@@ -366,7 +366,7 @@ export class LayerManager extends MicroEvent {
   }
 
   setLayerOrigin(layer, point) {
-    const constrainedPoint = point.max(this.songRenderer.Patternrect.tl).min(this.songRenderer.Patternrect.br);
+    const constrainedPoint = point.max(this.songRenderer.patternRect.tl).min(this.songRenderer.patternRect.br);
     const freqStop = this.songRenderer.positionToFreq(constrainedPoint.y);
     const noteRange = freqToMidi(layer.freqStop) - freqToMidi(layer.freqStart);
     const freqStart = midiToFreq(freqToMidi(freqStop) - noteRange);
