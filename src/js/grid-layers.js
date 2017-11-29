@@ -175,61 +175,42 @@ function main() {
   controls.appendChild(listHeader);
   controls.appendChild(layerManager.list);
 
-
-  // user input
-  let snapping = true;
-
   const cursor = new Cursor();
+  cursor.snapping = true;
+  // layer mode
+  {
+    const layersModeCursorTest = (test, style) => {
+      cursor.addState(() => {
+        return modeManager.currentMode === modeManager.modes.layers && test();
+      }, style);
+    };
 
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers;
-  }, 'crosshair');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers &&
-           layerManager.grabbableLayer !== undefined;
-  }, 'move');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers &&
-           (layerManager.resizableCorner === LayerManager.corners.tl ||
-            layerManager.resizableCorner === LayerManager.corners.br);
-  }, 'nwse-resize');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers &&
-           (layerManager.resizableCorner === LayerManager.corners.tr ||
-            layerManager.resizableCorner === LayerManager.corners.bl);
-  }, 'nesw-resize');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.layers &&
-           layerManager.dragging;
-  }, 'move');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.notes;
-  }, 'pointer');
-
-  cursor.addState(() => {
-    return layerManager.copying || noteManager.copying;
-  }, 'copy');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.notes &&
-           noteManager.isGrabbing;
-  }, 'move');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.notes &&
-           noteManager.isHovering;
-  }, 'move');
-
-  cursor.addState(() => {
-    return modeManager.currentMode === modeManager.modes.notes &&
-           (noteManager.isResizing || noteManager.isResizeHovering);
-  }, 'ew-resize');
-
+    layersModeCursorTest(() => true, 'crosshair');
+    layersModeCursorTest(() => layerManager.grabbableLayer !== undefined, 'move');
+    layersModeCursorTest(() => {
+      return layerManager.resizableCorner === LayerManager.corners.tl ||
+             layerManager.resizableCorner === LayerManager.corners.br;
+    }, 'nwse-resize');
+    layersModeCursorTest(() => {
+      return layerManager.resizableCorner === LayerManager.corners.tr ||
+             layerManager.resizableCorner === LayerManager.corners.bl;
+    }, 'nesw-resize');
+    layersModeCursorTest(() => layerManager.dragging, 'move');
+    layersModeCursorTest(() => layerManager.copying, 'copy');
+  }
+  // notes mode
+  {
+    const notesModeCursorTest = (test, style) => {
+      cursor.addState(() => {
+        return modeManager.currentMode === modeManager.notes && test();
+      }, style);
+    };
+    notesModeCursorTest(() => true, 'pointer');
+    notesModeCursorTest(() => noteManager.copying, 'copy');
+    notesModeCursorTest(() => noteManager.isGrabbing || noteManager.isHovering, 'move');
+    notesModeCursorTest(() => (noteManager.isResizing || noteManager.isResizeHovering), 'ew-resize');
+  }
+  // playhead
   cursor.addState(() => {
     return playhead.hover;
   }, 'ew-resize');
@@ -287,7 +268,7 @@ function main() {
 
   function getPointFromInput(event) {
     let point = new Point(event.offsetX, event.offsetY);
-    if (snapping) { point = layerManager.snapPointToLayers(point); }
+    if (cursor.snapping) { point = layerManager.snapPointToLayers(point); }
     return point;
   }
 
@@ -298,7 +279,7 @@ function main() {
 
     if (!playhead.grabbed) {
       if (modeManager.currentMode === modeManager.modes.layers) {
-        layerManager.updateMouseDown(point, snapping);
+        layerManager.updateMouseDown(point, cursor.snapping);
       }
       else if (modeManager.currentMode === modeManager.modes.notes) {
         const snappedPoint = getPointFromInput(event);
@@ -327,17 +308,17 @@ function main() {
     const point = new Point(constrain(event.pageX - canvas.offsetLeft, 0, canvas.width),
                             constrain(event.pageY - canvas.offsetTop, 0, canvas.height));
 
-    layerManager.updateMouseMove(point, snapping);
+    layerManager.updateMouseMove(point, cursor.snapping);
 
     if (modeManager.currentMode === modeManager.modes.notes) {
       const snappedPoint = getPointFromInput(event);
       const focusedSnappedPoint = layerManager.currentLayer === undefined
         ? snappedPoint
-        : snapping
+        : cursor.snapping
           ? new Point(layerManager.currentRect.x, snappedPoint.y)
           : point;
 
-      noteManager.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, snapping);
+      noteManager.updateMouseMove(point, focusedSnappedPoint, layerManager.currentRect, cursor.snapping);
     }
 
     playhead.updateMouseMove(point);
@@ -354,7 +335,7 @@ function main() {
     else if (event.code === 'KeyP')   { modeManager.currentMode = modeManager.modes.notes; }
     else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
     else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
-    else if (event.key  === 'Shift')  { snapping = false; }
+    else if (event.key  === 'Shift')  { cursor.snapping = false; }
     else if (event.key  === 'Alt')    {
       layerManager.copying = true;
       noteManager.copying = true;
@@ -387,7 +368,7 @@ function main() {
   });
 
   document.addEventListener('keyup', event => {
-    if      (event.key === 'Shift') { snapping = true; }
+    if      (event.key === 'Shift') { cursor.snapping = true; }
     else if (event.key === 'Alt')   {
       layerManager.copying = false;
       noteManager.copying = false;
@@ -431,8 +412,6 @@ function main() {
 
   // test();
   mainLoop();
-
-  window.layerManager = layerManager;
 }
 
 document.addEventListener('DOMContentLoaded', main);

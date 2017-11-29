@@ -1,6 +1,7 @@
 export class Cursor {
   constructor() {
     this.states = [];
+    this.snapping = false;
   }
 
   update() {
