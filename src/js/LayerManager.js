@@ -104,7 +104,7 @@ export class LayerManager extends MicroEvent {
 
   getLayerRects(layer) {
     const rect = this.getLayerFrame(layer);
-    const subWidth = Math.round(rect.width / layer.subdivision);
+    const subWidth = rect.width / layer.subdivision;
     return Array.from(Array(layer.subdivision)).map((_, i) => {
       const x = rect.x + (i * subWidth);
       return new Rectangle(x, rect.y, subWidth, rect.height);
