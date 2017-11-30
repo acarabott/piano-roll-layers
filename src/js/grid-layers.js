@@ -148,6 +148,23 @@ function main() {
   rootNoteLabel.style.marginLeft = '10px';
   [rootNoteLabel, rootNoteInput].forEach(el => controls.appendChild(el));
 
+  const tempoInput = document.createElement('input');
+  tempoInput.id = 'tempoInput';
+  tempoInput.name = 'tempoInput';
+  tempoInput.type = 'number';
+  tempoInput.value = song.tempo;
+  tempoInput.min = 1;
+  tempoInput.max = Infinity;
+  tempoInput.style.width = '35px';
+  tempoInput.addEventListener('input', event => {
+    const number = tempoInput.valueAsNumber;
+    if (!isNaN(number)) { song.tempo = number; }
+  });
+  const tempoLabel = document.createElement('label');
+  tempoLabel.htmlFor = tempoInput.id;
+  tempoLabel.textContent = 'Tempo: ';
+  [tempoLabel, tempoInput].forEach(el => controls.appendChild(el));
+
   const durationInput = document.createElement('input');
   durationInput.id = 'durationInput';
   durationInput.name = 'durationInput';
