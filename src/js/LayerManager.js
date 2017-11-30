@@ -35,6 +35,13 @@ export class LayerManager extends MicroEvent {
       this.parentLayer.freqStop = midiToFreq(rootNote + song.numKeys);
     });
 
+    song.bind('tempo', (tempo, delta) => {
+      this._layers.forEach(layer => {
+        layer.timeStart *= delta;
+        layer.timeStop *= delta;
+      });
+    });
+
     this._dragging = {
       sourceLayer: undefined,
       layer: undefined,

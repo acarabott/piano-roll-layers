@@ -4,9 +4,10 @@ import { Point } from './Point.js';
 import * as color from './color.js';
 
 export class NoteManager extends MicroEvent{
-  constructor(noteRenderer) {
+  constructor(noteRenderer, song) {
     super();
     this.renderer = noteRenderer;
+    this.song = song;
     this.notes = [];
     this._previewNote = undefined;
     this.metadata = new Map();
@@ -23,6 +24,14 @@ export class NoteManager extends MicroEvent{
     this.resizeThreshold = 4;
     this.creating = false;
     this.copying = false;
+
+    song.bind('tempo', (tempo, delta) => {
+      this.notes.forEach(note => {
+        note.timeStart *= delta;
+        note.timeStop *= delta;
+      });
+      this.trigger('notes', this.notes);
+    });
   }
 
   addNote(note) {

@@ -41,7 +41,12 @@ export class Song extends MicroEvent {
   }
 
   set tempo(tempo) {
+    const prev = this.tempo;
     this._tempo = Math.max(0, tempo);
-    this.trigger('tempo', this.tempo);
+    this.trigger('tempo', this.tempo, prev / this.tempo);
+  }
+
+  get speed() {
+    return this.tempo / 60;
   }
 }

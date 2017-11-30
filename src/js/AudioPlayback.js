@@ -18,8 +18,8 @@ export class AudioPlayback extends MicroEvent {
     const updateIntervalMs = this.lookahead * 0.5 * 1000;
     this.updateAction = new BackgroundAction(updateIntervalMs);
 
-    this.song.bind('tempo', (tempo, prevTempo) => {
-      this.playheadTime = (prevTempo / tempo) * this.playheadTime;
+    this.song.bind('tempo', (tempo, delta) => {
+      this.playheadTime = delta * this.playheadTime;
     });
   }
 

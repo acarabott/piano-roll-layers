@@ -46,7 +46,7 @@ function main() {
 
   // notes
   const noteRenderer = new NoteRenderer(songRenderer);
-  const noteManager = new NoteManager(noteRenderer, songRenderer);
+  const noteManager = new NoteManager(noteRenderer, song);
 
   // audio
   ensureAudioContext();
