@@ -24,11 +24,8 @@ export class Playhead extends MicroEvent {
   }
 
   get rect() {
-    const normTime = this.time / this.song.duration;
     const width = this.hover ? 6 : 3;
-    const x = this.songRenderer.patternRect.x +
-              Math.max(0, this.songRenderer.patternRect.width * normTime) -
-              (width / 2);
+    const x = this.songRenderer.timeToPosition(this.time) - (width / 2);
     const y = this.songRenderer.patternRect.y;
     const height = this.songRenderer.patternRect.height;
     return new Rectangle(x, y, width, height);
