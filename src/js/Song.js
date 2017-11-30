@@ -6,6 +6,7 @@ export class Song extends MicroEvent {
     this._numKeys = 25;
     this._duration = 60;
     this._rootNote = 60;
+    this._tempo = 60;
   }
 
   get numKeys() {
@@ -33,5 +34,14 @@ export class Song extends MicroEvent {
   set rootNote(rootNote) {
     this._rootNote = rootNote;
     this.trigger('rootNote', this._rootNote);
+  }
+
+  get tempo() {
+    return this._tempo;
+  }
+
+  set tempo(tempo) {
+    this._tempo = Math.max(0, tempo);
+    this.trigger('tempo', this.tempo);
   }
 }
