@@ -3,7 +3,6 @@ export class Note {
     this.freq = freq;
     this._timeStart = timeStart;
     this._timeStop = timeStop;
-    this.selected = false;
   }
 
   static get MIN_LENGTH() { return 0.001; }
