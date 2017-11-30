@@ -31,11 +31,6 @@ function main() {
   songRenderer.song = song;
   container.appendChild(songRenderer.canvas);
 
-  // audio
-  ensureAudioContext();
-  const audio = new AudioContext();
-  const audioPlayback = new AudioPlayback(audio, song);
-
   // mode manager
   const modeManager = new ModeManager();
   modeManager.addModes('layers', 'notes');
@@ -52,6 +47,11 @@ function main() {
   // notes
   const noteRenderer = new NoteRenderer(songRenderer);
   const noteManager = new NoteManager(noteRenderer, songRenderer);
+
+  // audio
+  ensureAudioContext();
+  const audio = new AudioContext();
+  const audioPlayback = new AudioPlayback(audio, song);
   noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
   noteManager.bind('notes', notes => audioPlayback.notes = notes);
   const playhead = new Playhead(song, songRenderer);
@@ -60,8 +60,6 @@ function main() {
   playhead.bind('grabbed', grabbed => {
     if (grabbed && audioPlayback.isPlaying) { audioPlayback.stop(); }
   });
-
-
 
   // ui
   const subdivisionDisplay = document.createElement('span');
