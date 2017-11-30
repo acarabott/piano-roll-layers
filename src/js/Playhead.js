@@ -47,6 +47,8 @@ export class Playhead extends MicroEvent {
     ctx.globalAlpha = alpha;
     ctx.fillRect(...this.rect);
     ctx.globalAlpha = 1.0;
+    ctx.font = '15px Monaco';
+    ctx.fillText(this.time.toFixed(2), this.rect.x + 10, this.rect.y + 16);
 
     ctx.restore();
   }
