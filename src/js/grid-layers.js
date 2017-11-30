@@ -65,7 +65,6 @@ function main() {
   const subdivisionDisplay = document.createElement('span');
   subdivisionDisplay.id = 'subdivision';
   subdivisionDisplay.textContent = layerManager.subdivision;
-  subdivisionDisplay.style.marginRight = '20px';
   layerManager.bind('currentChanged', layer => {
     if (layer !== undefined) { subdivisionDisplay.textContent = layer.subdivision; }
   });
@@ -80,6 +79,7 @@ function main() {
   const subdivisionLabel = document.createElement('label');
   subdivisionLabel.htmlFor = 'subdivision';
   subdivisionLabel.textContent = 'Subdivision: ';
+  subdivisionLabel.style.marginLeft = '10px';
   info.appendChild(subdivisionLabel);
   info.appendChild(subdivisionDisplay);
 
@@ -111,22 +111,21 @@ function main() {
 
   controls.appendChild(playButton);
 
-  const keyboardSizeInput = document.createElement('input');
-  keyboardSizeInput.id = 'keyboardSizeInput';
-  keyboardSizeInput.name = 'keyboardSizeInput';
-  keyboardSizeInput.type = 'number';
-  keyboardSizeInput.value = song.numKeys;
-  keyboardSizeInput.min = 1;
-  keyboardSizeInput.max = Infinity;
-  keyboardSizeInput.style.width = '40px';
-  keyboardSizeInput.style.marginRight = '20px';
-  keyboardSizeInput.addEventListener('input', event => {
-    song.numKeys = keyboardSizeInput.valueAsNumber;
+  const numKeysInput = document.createElement('input');
+  numKeysInput.id = 'numKeysInput';
+  numKeysInput.name = 'numKeysInput';
+  numKeysInput.type = 'number';
+  numKeysInput.value = song.numKeys;
+  numKeysInput.min = 1;
+  numKeysInput.max = Infinity;
+  numKeysInput.style.width = '35px';
+  numKeysInput.addEventListener('input', event => {
+    song.numKeys = numKeysInput.valueAsNumber;
   });
-  const keyboardSizeLabel = document.createElement('label');
-  keyboardSizeLabel.htmlFor = keyboardSizeInput.id;
-  keyboardSizeLabel.textContent = 'Number of keys: ';
-  [keyboardSizeLabel, keyboardSizeInput].forEach(el => controls.appendChild(el));
+  const numKeysLabel = document.createElement('label');
+  numKeysLabel.htmlFor = numKeysInput.id;
+  numKeysLabel.textContent = 'Number of keys: ';
+  [numKeysLabel, numKeysInput].forEach(el => controls.appendChild(el));
 
   const rootNoteInput = document.createElement('input');
   rootNoteInput.id = 'rootNoteInput';
@@ -136,8 +135,7 @@ function main() {
   rootNoteInput.min = 0;
   rootNoteInput.max = Infinity;
   rootNoteInput.step = 12;
-  rootNoteInput.style.width = '40px';
-  rootNoteInput.style.marginRight = '20px';
+  rootNoteInput.style.width = '35px';
   rootNoteInput.addEventListener('change', event => {
     const input = rootNoteInput.valueAsNumber;
     const newRoot = input - (input % 12);
@@ -147,6 +145,7 @@ function main() {
   const rootNoteLabel = document.createElement('label');
   rootNoteLabel.htmlFor = rootNoteInput.id;
   rootNoteLabel.textContent = 'Root note: ';
+  rootNoteLabel.style.marginLeft = '10px';
   [rootNoteLabel, rootNoteInput].forEach(el => controls.appendChild(el));
 
   const durationInput = document.createElement('input');
@@ -156,9 +155,10 @@ function main() {
   durationInput.value = song.duration;
   durationInput.min = 1;
   durationInput.max = Infinity;
-  durationInput.style.width = '40px';
+  durationInput.style.width = '35px';
   durationInput.addEventListener('input', event => {
-    song.duration = durationInput.valueAsNumber;
+    const number = durationInput.valueAsNumber;
+    if (!isNaN(number)) { song.duration = number; }
   });
   const durationLabel = document.createElement('label');
   durationLabel.htmlFor = durationInput.id;
