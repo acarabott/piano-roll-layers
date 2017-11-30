@@ -13,6 +13,16 @@ export class SongRenderer extends MicroEvent {
     this.canvas.width = 800;
     this.canvas.height = 400;
     this.ctx = this.canvas.getContext('2d');
+    this.duration = 30;
+  }
+
+  get duration() {
+    return this._duration;
+  }
+
+  set duration(duration) {
+    this._duration = Math.max(0, duration);
+    this.trigger('duration', this.duration);
   }
 
   get width() {
@@ -47,11 +57,11 @@ export class SongRenderer extends MicroEvent {
   }
 
   timeToPosition(time) {
-    return this.patternRect.x + Math.round((time / this.song.duration) * this.patternRect.width);
+    return this.patternRect.x + Math.round((time / this.duration) * this.patternRect.width);
   }
 
   positionToTime(x) {
-    return ((x - this.patternRect.x) / this.patternRect.width) * this.song.duration;
+    return ((x - this.patternRect.x) / this.patternRect.width) * this.duration;
   }
 
   freqToPosition(freq) {

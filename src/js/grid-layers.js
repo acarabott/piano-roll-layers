@@ -24,7 +24,6 @@ function main() {
   // song
   const song = new Song();
   song.numKeys = 20;
-  song.duration = 30;
   song.rootNote = 60;
 
   const songRenderer = new SongRenderer();
@@ -54,6 +53,8 @@ function main() {
   const audioPlayback = new AudioPlayback(audio, song);
   noteManager.bind('previewNote', note => audioPlayback.previewNote = note);
   noteManager.bind('notes', notes => audioPlayback.notes = notes);
+  songRenderer.bind('duration', duration => audioPlayback.stopTime = duration);
+
   const playhead = new Playhead(song, songRenderer);
   audioPlayback.bind('playheadTime', time => playhead.time = time);
   playhead.bind('time', time => audioPlayback._playheadTime = time);
@@ -169,13 +170,13 @@ function main() {
   durationInput.id = 'durationInput';
   durationInput.name = 'durationInput';
   durationInput.type = 'number';
-  durationInput.value = song.duration;
+  durationInput.value = songRenderer.duration;
   durationInput.min = 1;
   durationInput.max = Infinity;
   durationInput.style.width = '35px';
   durationInput.addEventListener('input', event => {
     const number = durationInput.valueAsNumber;
-    if (!isNaN(number)) { song.duration = number; }
+    if (!isNaN(number)) { songRenderer.duration = number; }
   });
   const durationLabel = document.createElement('label');
   durationLabel.htmlFor = durationInput.id;

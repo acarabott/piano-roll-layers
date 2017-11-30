@@ -16,11 +16,29 @@ export class AudioPlayback extends MicroEvent {
     this.loop = true;
     this._playheadTime = 0;
     const updateIntervalMs = this.lookahead * 0.5 * 1000;
-    this.updateAction = new BackgroundAction(updateIntervalMs);
+    this.updateAction = new BackgroundAction(() => {
+      this.update();
+      return this.isPlaying;
+    }, updateIntervalMs);
 
+    let tempoTimeout;
+    let wasPlaying = false;
     this.song.bind('tempo', (tempo, delta) => {
       this.playheadTime = delta * this.playheadTime;
+      clearTimeout(tempoTimeout);
+      if (this.isPlaying) {
+        this.stop();
+        wasPlaying = true;
+      }
+      tempoTimeout = setTimeout(() => {
+        if (wasPlaying) {
+          this.play();
+          wasPlaying = false;
+        }
+      }, 500);
     });
+
+    this.stopTime = 30;
   }
 
   getNoteDataTemplate(note) {
@@ -46,10 +64,7 @@ export class AudioPlayback extends MicroEvent {
 
   set isPlaying(isPlaying) {
     this._isPlaying = isPlaying;
-    this.updateAction.set(() => {
-      this.update();
-      return this.isPlaying;
-    });
+    this.updateAction.start();
     this.trigger('isPlaying', isPlaying);
   }
 
@@ -63,7 +78,7 @@ export class AudioPlayback extends MicroEvent {
   }
 
   play() {
-    this.audioStart = this.audio.currentTime + this.lookahead - this.playheadTime;
+    this.audioStart = (this.audio.currentTime - this.playheadTime) + this.lookahead ;
     this.isPlaying = true;
   }
 
@@ -159,13 +174,16 @@ export class AudioPlayback extends MicroEvent {
       }
     });
 
-    if (this.currentTime >= this.song.duration) {
+    if (this.currentTime >= this.stopTime) {
       this.stop();
       this.playheadTime = 0;
-      if (this.loop) { this.play(); }
+      if (this.loop) {
+        this.play();
+      }
     }
-
-    this.playheadTime = this.currentTime + this.lookahead;
+    else {
+      this.playheadTime = this.currentTime + this.lookahead;
+    }
   }
 
   set previewNote(note) {

@@ -19,7 +19,7 @@ export class Playhead extends MicroEvent {
   }
 
   set time(time) {
-    this._time = constrain(time, 0, this.song.duration);
+    this._time = constrain(time, 0, this.songRenderer.duration);
     this.trigger('time', this.time);
   }
 

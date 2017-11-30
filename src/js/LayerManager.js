@@ -25,11 +25,11 @@ export class LayerManager extends MicroEvent {
     this.parentLayer = new Layer(midiToFreq(song.rootNote),
                                  midiToFreq(song.rootNote + song.numKeys),
                                  0,
-                                 this.song.duration);
+                                 this.songRenderer.duration);
     song.bind('numKeys', numKeys => {
       this.parentLayer.freqStop = midiToFreq(song.rootNote + numKeys);
     });
-    song.bind('duration', duration => this.parentLayer.timeStop = duration);
+    songRenderer.bind('duration', duration => this.parentLayer.timeStop = duration);
     song.bind('rootNote', rootNote => {
       this.parentLayer.freqStart = midiToFreq(rootNote);
       this.parentLayer.freqStop = midiToFreq(rootNote + song.numKeys);

@@ -1,13 +1,14 @@
 export class BackgroundAction {
-  constructor(deferTimeMs) {
+  constructor(action, deferTimeMs) {
+    this.action = action;
     this.deferTimeMs = deferTimeMs;
     this.timer = undefined;
   }
 
-  set(func) {
+  start() {
     this.cancel();
     this.timer = setInterval(() => {
-      if (!func()) { this.cancel(); }
+      if (!this.action()) { this.cancel(); }
     }, this.deferTimeMs);
   }
 
