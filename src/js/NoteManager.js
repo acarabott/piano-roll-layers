@@ -15,6 +15,7 @@ export class NoteManager extends MicroEvent{
     this.metadata = new Map();
     this._metadataTemplate = {
       hover: false,
+      selected: false,
       grabbed: false,
       grabbedOffset: new Point(0, 0),
       originalGrabbedNote: undefined,
@@ -25,6 +26,7 @@ export class NoteManager extends MicroEvent{
     this.currentNoteChangedFreq = false;
     this.resizeThreshold = 4;
     this.creating = false;
+    this.selecting = false;
     this.copying = false;
 
     song.bind('tempo', (tempo, delta) => {
@@ -100,6 +102,15 @@ export class NoteManager extends MicroEvent{
     return this.resizing.length > 0;
   }
 
+  stopGrabbing(note) {
+    this.setMetadata(note, 'grabbed', false);
+    this.setMetadata(note, 'originalGrabbedNote', undefined);
+  }
+
+  clearSelection() {
+    this.notes.forEach(note => this.setMetadata(note, 'selected', false));
+  }
+
   updateMouseDown(point, snappedPoint, targetRect) {
     this.notes.forEach(note => {
       const noteRect = this.renderer.getRectFromNote(note);
@@ -116,6 +127,10 @@ export class NoteManager extends MicroEvent{
         this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
         this.setMetadata(note, 'originalGrabbedNote', note.clone());
       }
+
+      const selected = noteRect.containsPoint(point) ||
+                       (this.selecting && this.getMetadata(note, 'selected'));
+      this.setMetadata(note, 'selected', selected);
     });
 
     this.previewNote = this.isGrabbing ? this.grabbed[0]
@@ -184,9 +199,8 @@ export class NoteManager extends MicroEvent{
       if (this.copying && meta.grabbed) {
         this.addNote(meta.originalGrabbedNote);
       }
-      this.setMetadata(note, 'grabbed', false);
+      this.stopGrabbing(note);
       this.setMetadata(note, 'resizing', false);
-      this.setMetadata(note, 'originalGrabbedNote', undefined);
     });
   }
 
@@ -215,8 +229,9 @@ export class NoteManager extends MicroEvent{
     this.metadata.get(note)[key] = value;
   }
 
-  getMetadata(note) {
+  getMetadata(note, key) {
     this.ensureMetadata(note);
-    return this.metadata.get(note);
+    const meta = this.metadata.get(note);
+    return key === undefined ? meta : meta[key];
   }
 }

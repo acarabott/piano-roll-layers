@@ -20,9 +20,11 @@ export class NoteRenderer {
   renderNote(ctx, note, style, metadata = {}, copying) {
     ctx.save();
     ctx.fillStyle = style;
-    ctx.globalAlpha = metadata.hover ? 0.8 : 0.5;
+    ctx.globalAlpha = metadata.selected ? 1.0
+                    : metadata.hover    ? 0.8
+                    : 0.5;
     const rect = this.getRectFromNote(note);
-    metadata.hasOwnProperty('grabbed') && metadata.grabbed
+    metadata.grabbed
       ? (() => {
           // dragged note
           const lineWidth = 4;
@@ -35,8 +37,7 @@ export class NoteRenderer {
           ctx.strokeRect(...strokeRect);
 
           // original note
-          if (metadata.hasOwnProperty('originalGrabbedNote') &&
-              metadata.originalGrabbedNote !== undefined)
+          if (metadata.originalGrabbedNote !== undefined)
           {
             ctx.setLineDash([]);
             ctx.strokeStyle = style;

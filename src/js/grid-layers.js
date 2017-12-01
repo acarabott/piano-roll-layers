@@ -346,19 +346,22 @@ function main() {
     playhead.updateMouseMove(point);
   });
 
+  document.addEventListener('contextmenu', event => event.preventDefault());
   document.addEventListener('keydown', event => {
     // right handed
-    if      (event.code === 'KeyQ')   { modeManager.currentMode = modeManager.modes.layers; }
-    else if (event.code === 'KeyW')   { modeManager.currentMode = modeManager.modes.notes; }
-    else if (event.code === 'KeyA')   { layerManager.cycleCurrentLayerBackward(); }
-    else if (event.code === 'KeyS')   { layerManager.cycleCurrentLayerForward(); }
+    if      (event.code === 'KeyQ') { modeManager.currentMode = modeManager.modes.layers; }
+    else if (event.code === 'KeyW') { modeManager.currentMode = modeManager.modes.notes; }
+    else if (event.code === 'KeyA') { layerManager.cycleCurrentLayerBackward(); }
+    else if (event.code === 'KeyS') { layerManager.cycleCurrentLayerForward(); }
     // left handed
-    else if (event.code === 'KeyO')   { modeManager.currentMode = modeManager.modes.layers; }
-    else if (event.code === 'KeyP')   { modeManager.currentMode = modeManager.modes.notes; }
-    else if (event.code === 'KeyK')   { layerManager.cycleCurrentLayerBackward(); }
-    else if (event.code === 'KeyL')   { layerManager.cycleCurrentLayerForward(); }
-    else if (event.key  === 'Shift')  { cursor.snapping = false; }
-    else if (event.key  === 'Alt')    {
+    else if (event.code === 'KeyO') { modeManager.currentMode = modeManager.modes.layers; }
+    else if (event.code === 'KeyP') { modeManager.currentMode = modeManager.modes.notes; }
+    else if (event.code === 'KeyK') { layerManager.cycleCurrentLayerBackward(); }
+    else if (event.code === 'KeyL') { layerManager.cycleCurrentLayerForward(); }
+    // mod keys
+    else if (event.key  === 'Control') { cursor.snapping = false; }
+    else if (event.key  === 'Shift')   { noteManager.selecting = true; }
+    else if (event.key  === 'Alt')     {
       layerManager.copying = true;
       noteManager.copying = true;
     }
@@ -368,6 +371,7 @@ function main() {
     }
     else if (event.key  === 'Escape') {
       layerManager.creation.active = false;
+      noteManager.clearSelection();
       if (document.activeElement !== songRenderer.canvas) { document.activeElement.blur(); }
     }
     else if (event.key === 'Backspace' || event.code === 'KeyX' || event.code === 'KeyM') {
@@ -390,8 +394,9 @@ function main() {
   });
 
   document.addEventListener('keyup', event => {
-    if      (event.key === 'Shift') { cursor.snapping = true; }
-    else if (event.key === 'Alt')   {
+    if      (event.key === 'Control') { cursor.snapping = true; }
+    else if (event.key === 'Shift')   { noteManager.selecting = false; }
+    else if (event.key === 'Alt')     {
       layerManager.copying = false;
       noteManager.copying = false;
     }
