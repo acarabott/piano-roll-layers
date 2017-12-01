@@ -10,8 +10,8 @@ export class NoteRenderer {
 
   getRectFromNote(note) {
     const nextNote = freqToMidi(note.freq) + 1;
-    const rect = this.songRenderer.freqsAndTimesToRect(midiToFreq(nextNote),
-                                                       note.freq,
+    const rect = this.songRenderer.freqsAndTimesToRect(note.freq,
+                                                       midiToFreq(nextNote),
                                                        note.timeStart,
                                                        note.timeStop);
     return rect;
