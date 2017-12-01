@@ -94,12 +94,10 @@ export class LayerManager extends MicroEvent {
   }
 
   getLayerFrame(layer) {
-    const x = this.songRenderer.timeToPosition(layer.timeStart);
-    const y = this.songRenderer.freqToPosition(layer.freqStop);
-    const width = this.songRenderer.timeToPosition(layer.timeStop) - x;
-    const height = this.songRenderer.freqToPosition(layer.freqStart) - y;
-
-    return new Rectangle(x, y, width, height);
+    return this.songRenderer.freqsAndTimesToRect(layer.freqStart,
+                                                 layer.freqStop,
+                                                 layer.timeStart,
+                                                 layer.timeStop);
   }
 
   getLayerRects(layer) {

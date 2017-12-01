@@ -67,12 +67,13 @@ export class SongRenderer extends MicroEvent {
   freqToPosition(freq) {
     const midiNote = freqToMidi(freq);
     const interval = midiNote - this.song.rootNote;
-    return this.patternRect.y + ((this.song.numKeys - interval) * this.noteHeight);
+    return this.patternRect.y + (((this.song.numKeys) - interval) * this.noteHeight);
   }
 
   positionToFreq(y) {
-    const idx = this.song.numKeys - ((y - (y % this.noteHeight)) / this.noteHeight);
-    return midiToFreq(this.song.rootNote + idx);
+    const index = (y - (y % this.noteHeight)) / this.noteHeight;
+    const inverse = (this.song.numKeys - 1) - index;
+    return midiToFreq(this.song.rootNote + inverse);
   }
 
   positionToMidiNote(y) {

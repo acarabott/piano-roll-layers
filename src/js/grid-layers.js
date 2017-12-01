@@ -13,7 +13,6 @@ import { Cursor } from './Cursor.js';
 import { Point } from './Point.js';
 import { Playhead } from './Playhead.js';
 
-
 function main() {
   // DOM
   const container = document.getElementById('container');

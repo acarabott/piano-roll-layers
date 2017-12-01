@@ -2,6 +2,8 @@ import { MicroEvent } from './MicroEvent.js';
 import { Note } from './Note.js';
 import { Point } from './Point.js';
 import * as color from './color.js';
+import { midiToFreq } from './utils.js';
+
 
 export class NoteManager extends MicroEvent{
   constructor(noteRenderer, song) {
@@ -128,7 +130,9 @@ export class NoteManager extends MicroEvent{
 
   updateMouseMove(point, snappedPoint, targetRect, snapping) {
     if (this.creating) {
-      this.previewNote.freq = this.renderer.songRenderer.positionToFreq(point.y);
+      const minFreq = midiToFreq(this.song.rootNote);
+      const freq = this.renderer.songRenderer.positionToFreq(point.y);
+      this.previewNote.freq = Math.max(freq, minFreq);
       const times = this.getInputNoteTimes(point, snappedPoint, targetRect);
       this.previewNote.timeStop = times[1];
       this.trigger('previewNote', this.previewNote);
