@@ -102,6 +102,14 @@ export class NoteManager extends MicroEvent{
     return this.resizing.length > 0;
   }
 
+  get selected() {
+    return this.notes.filter(note => this.getMetadata(note, 'selected'));
+  }
+
+  get someSelected() {
+    return this.notes.some(note => this.getMetadata(note, 'selected'));
+  }
+
   stopGrabbing(note) {
     this.setMetadata(note, 'grabbed', false);
     this.setMetadata(note, 'originalGrabbedNote', undefined);
@@ -112,8 +120,14 @@ export class NoteManager extends MicroEvent{
   }
 
   updateMouseDown(point, snappedPoint, targetRect) {
+    const clickedOnNote = this.notes.some(note => {
+      return this.renderer.getRectFromNote(note).containsPoint(point);
+    });
+    if (!clickedOnNote || !this.selecting) { this.clearSelection(); }
+
     this.notes.forEach(note => {
       const noteRect = this.renderer.getRectFromNote(note);
+      // resizing
       const resizingSide = noteRect.isPointOnLeftLine (point, this.resizeThreshold) ? 'left'
                          : noteRect.isPointOnRightLine(point, this.resizeThreshold) ? 'right'
                          : undefined;
@@ -121,16 +135,19 @@ export class NoteManager extends MicroEvent{
       this.setMetadata(note, 'resizing', resizing);
       this.setMetadata(note, 'resizingSide', resizingSide);
 
-      const grabbed = noteRect.containsPoint(point) && !resizing;
+      // selecting
+      const wasSelected = this.getMetadata(note, 'selected');
+      const clicked = (this.selecting || !this.someSelected) && noteRect.containsPoint(point);
+      const selected = (clicked && !wasSelected) || (!clicked && wasSelected);
+      this.setMetadata(note, 'selected', selected);
+
+      // grabbing
+      const grabbed = !resizing && (noteRect.containsPoint(point) || selected);
       this.setMetadata(note, 'grabbed', grabbed);
       if (grabbed) {
         this.setMetadata(note, 'grabbedOffset', point.subtract(noteRect.tl));
         this.setMetadata(note, 'originalGrabbedNote', note.clone());
       }
-
-      const selected = noteRect.containsPoint(point) ||
-                       (this.selecting && this.getMetadata(note, 'selected'));
-      this.setMetadata(note, 'selected', selected);
     });
 
     this.previewNote = this.isGrabbing ? this.grabbed[0]

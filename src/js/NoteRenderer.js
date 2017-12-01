@@ -47,6 +47,11 @@ export class NoteRenderer {
         })()
       : ctx.fillRect(...rect);
 
+    if (metadata.selected) {
+      ctx.fillStyle = color.black;
+      ctx.strokeRect(...rect);
+    }
+
     ctx.globalAlpha = 1.0;
     ctx.restore();
   }
