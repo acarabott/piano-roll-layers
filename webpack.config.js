@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 const buildPath = 'docs';
@@ -17,10 +17,9 @@ module.exports = {
       template: 'src/index.html',
       inject: 'head'
     }),
-    new CleanWebpackPlugin([buildPath]),
+    new CleanWebpackPlugin(),
     new UglifyJSPlugin(),
   ],
-
   module: {
     rules: [
       {
